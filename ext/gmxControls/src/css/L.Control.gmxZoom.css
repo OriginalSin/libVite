@@ -1,0 +1,54 @@
+.leaflet-control-zoom.leaflet-bar.gmxzoom-container.leaflet-control {
+    background-color: #fff;
+    position: absolute;
+}
+.leaflet-control-zoom.leaflet-bar.gmxzoom-container.leaflet-control  a {
+    color: #606060;
+}
+.leaflet-control-zoom.leaflet-bar.gmxzoom-container.leaflet-control  a.leaflet-disabled {
+    color: #a0a0a0;
+}
+
+.gmxzoom-container .leaflet-control-zoom-out {
+    border-top: 1px solid #ccc;
+}
+.gmxzoom-info {
+    text-align: center;
+	padding-top: 2px;
+    height: 23px;
+    font-size: 14px;
+}
+.gmxZoomRed {
+	color: #ec5252;
+}
+.leaflet-top.leaflet-left .gmxzoom-container {
+    margin-top: 55px;
+}
+.leaflet-top.leaflet-bottom.leaflet-left .gmxzoom-container {
+    margin-top: initial;
+}
+.leaflet-bottom.leaflet-left .gmxzoom-container {
+	bottom: 110px;
+}
+.leaflet-bottom.leaflet-left.gmx-bottom-shift .gmxzoom-container {
+	bottom: 88px;
+}
+.leaflet-bottom.leaflet-right .gmxzoom-container {
+    bottom: 20px;
+    right: 0px;
+}
+.leaflet-bottom.leaflet-right.gmx-bottom-shift .gmxzoom-container {
+    bottom: 0px;
+}
+.leaflet-left.leaflet-right .gmxzoom-container {
+    width: 30px;
+    left: 50%;
+}
+.leaflet-top.leaflet-right .gmxzoom-container {
+    right: 0px;
+	margin-top: 55px;
+}
+.leaflet-top.leaflet-bottom .gmxzoom-container {
+	height: 90px;
+    top: calc(50% - 90px);
+}
