@@ -6,12 +6,22 @@
 .leaflet-popup-content textarea:hover {
     border: 1px solid #999;
 }
+.gmxTooltipBGp,
 .gmxTooltipBG {
     fill: white;
+}
+.gmxTooltipBGph {
+	fill: wheat;
+}
+.gmxTooltipBGph,
+.gmxTooltipBGp,
+.gmxTooltipBG {
     stroke: black;
     stroke-width: 1;
     opacity: 0.85;
+	pointer-events: none;
 }
+
 .leaflet-drawing-lines {
    pointer-events: none;
 }
