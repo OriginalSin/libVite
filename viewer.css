@@ -1,0 +1,29 @@
+body > .all > .header {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.header > .headerWidget {
+    display: table;
+    height: 35px;
+    background: #f3f7fa;
+    border-bottom: 1px solid #d8e1e8;
+}
+
+.leftMenu {
+    position: absolute;
+    height: calc(100% - 36px);
+    overflow: hidden;
+}
+body > .all.leftMenuOn .map {
+    height: calc(100% - 36px);
+	left: 40px;
+    width: calc(100% - 40px);
+}
+/*
+
+body > .all.leftMenuOn .map.activeIconSidebar {
+    left: 400px;
+    width: calc(100% - 400px);
+}
+*/

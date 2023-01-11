@@ -1,5 +1,10 @@
-html, body, #app {
+html, body, .all {
 	height: 100%;
 	width: 100%;
 	margin: 0px;
+}
+.map {
+    height: calc(100vh - 36px);
+	/* width: 100%; */
+	/* margin: 0px; */
 }

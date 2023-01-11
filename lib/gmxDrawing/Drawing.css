@@ -21,7 +21,11 @@
     opacity: 0.85;
 	pointer-events: none;
 }
-
+svg tspan.sup {
+    font-size: 8px;
+    font-weight: bold;
+    baseline-shift: super;
+}
 .leaflet-drawing-lines {
    pointer-events: none;
 }

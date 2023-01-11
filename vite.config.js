@@ -1,8 +1,15 @@
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
+import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { svgBuilder } from 'vite-svg-plugin'
 
 const proxyPrefix = 'https://maps.kosmosnimki.ru';
+// https://vitejs.dev/config/
 export default defineConfig({
+  plugins: [
+    svgBuilder({ path: './svg/', prefix: '' }),
+	svelte()
+  ],
   build: {
 	minify: false,
     lib: {
@@ -29,27 +36,10 @@ export default defineConfig({
     proxy: {
       // string shorthand
       '/TileSender.ashx': proxyPrefix + '/TileSender.ashx',
-      '/Layer': proxyPrefix + '/Layer',
+      '/Layer/CheckVersion.ashx': proxyPrefix + '/Layer/CheckVersion.ashx',
+      // '/Layer': proxyPrefix + '/Layer',
       '/VectorLayer': proxyPrefix + '/VectorLayer',
-      // с options
-      '/api': {
-        target: 'http://jsonplaceholder.typicode.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      },
-      // с регуляркой (RegEx)
-      '^/*.ashx': {
-        target: 'https://maps.kosmosnimki.ru',
-        changeOrigin: true,
-        // rewrite: (path) => path.replace(/^\/fallback/, '')
-      },
-      // использование proxy instance
-      // '/api': {
-        // target: 'http://jsonplaceholder.typicode.com',
-        // changeOrigin: true,
-        // configure: (proxy, options) => {
-          // proxy будет экземпляром 'http-proxy'
-        // }
-      // }
-    }
-  }})
+	}
+  }
+
+})

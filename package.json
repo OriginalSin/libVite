@@ -1,22 +1,18 @@
 {
-  "name": "geomixerv",
+  "name": "libsvelte",
+  "private": true,
+  "version": "0.0.0",
   "type": "module",
-  "files": ["dist"],
-  "main": "./dist/geomixerv.umd.cjs",
-  "module": "./dist/geomixerv.js",
-  "exports": {
-    ".": {
-      "import": "./dist/geomixerv.js",
-      "require": "./dist/geomixerv.umd.cjs"
-    }
-  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^4.0.0"
+    "@sveltejs/vite-plugin-svelte": "^2.0.0",
+    "svelte": "^3.54.0",
+    "vite": "^4.0.0",
+    "vite-svg-plugin": "^1.0.2"
   },
   "dependencies": {
     "self-intersects": "^0.0.3",
