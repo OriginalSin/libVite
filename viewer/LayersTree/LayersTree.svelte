@@ -1,8 +1,9 @@
 <script>
     import { onMount, onDestroy, beforeUpdate, afterUpdate, createEventDispatcher } from 'svelte';
-	import Line from './Line.svelte'
+	import Group from './Group.svelte'
+	// import Line from './Line.svelte'
 
-	export let map;
+	// export let map;
 
 	let rawTree;
 	let gmxMap = L.gmxMap;
@@ -17,7 +18,7 @@
 	<div class="map">
 		<span class="groupLayer ui-draggable" dragg="true">{props.title}</span>
 		<div class="layers">
-			<Line {gmxMap} {type} {props} {childs} />
+			<Group {gmxMap} {type} {props} {childs} />
 		</div>
 	</div>
 

@@ -6,8 +6,8 @@
   
 	export let gmxMap;
 	export let childs = [];
-	export let props = {};
-	export let type = '';
+	// export let props = {};
+	// export let type = '';
 
 	$: arr = childs.slice();
 	// let visible = props.visible ? true : false;
@@ -84,12 +84,11 @@
 		</div>
 		<div swap="true" class="swap ui-droppable" style="font-size: 0px;">
 		</div>
-		<svelte:self bind:gmxMap={gmxMap} bind:type={item.type} bind:props={item.content.properties} bind:childs={item.content.children} />
+		<svelte:self bind:gmxMap={gmxMap} bind:childs={item.content.children} />
 	</li>
 
 {/each}
 </ul>
-<!--	{:else if type === 'layer'} -->
 	{/if}
 
 <style>
@@ -105,7 +104,7 @@ div.line {
     text-overflow: ellipsis;
 }
 .group .hitarea {
-    background: url(./img/icons2.png) -97px -4px no-repeat;
+    background: url('/icons2.png') -97px -4px no-repeat;
     height: 16px;
     width: 6px;
     margin-left: -16px;
