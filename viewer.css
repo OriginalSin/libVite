@@ -15,11 +15,20 @@ body > .all > .header {
     height: calc(100% - 36px);
     overflow: hidden;
 }
+.leftMenu.active ~ div#map {
+	left: 400px;
+	width: calc(100% - 400px);
+}
+
 body > .all.leftMenuOn .map {
     height: calc(100% - 36px);
 	left: 40px;
     width: calc(100% - 40px);
 }
+.leftMenu .group.closed ul.grp {
+	display: none;
+}
+
 /*
 
 body > .all.leftMenuOn .map.activeIconSidebar {
@@ -27,3 +36,26 @@ body > .all.leftMenuOn .map.activeIconSidebar {
     width: calc(100% - 400px);
 }
 */
+/*   Print   */
+
+body .all .print-ui,
+body.printMap .all > .header,
+body.printMap .all .map .leaflet-control-container,
+body.printMap .all .map .zoom-map,
+body.printMap .all .leftMenu {
+	display: none;
+}
+body.printMap .all .leftMenu.active ~ div#map {
+	left: 0px;
+	width: 100%;
+}
+
+body.printMap .all .print-ui {
+	display: block;
+}
+
+@media print {
+  body.printMap .all .print-ui {
+    display: none;
+  }
+}

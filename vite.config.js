@@ -2,23 +2,34 @@ import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { svgBuilder } from 'vite-svg-plugin'
+import {nativeSW} from 'vite-plugin-native-sw'
 
 const proxyPrefix = 'https://maps.kosmosnimki.ru';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     svgBuilder({ path: './svg/', prefix: '' }),
-	svelte()
+    nativeSW({
+      entries: [{
+        src: resolve(__dirname, 'workers/service-worker.js'),
+        dist: 'sw.js',
+      }]
+    }),
+	svelte({
+	  onwarn(warning, defaultHandler) {
+		if (warning.code === 'a11y-distracting-elements') return;
+		if (warning.code === 'a11y-click-events-have-key-events') return;
+		// console.log('warning.code', warning.code);
+		// return;
+
+		// handle all other warnings normally
+		defaultHandler(warning);
+	  }
+	})
   ],
   build: {
+	emptyOutDir: false,
 	minify: false,
-    lib: {
-      // Could also be a dictionary or array of multiple entry points
-      entry: resolve(__dirname, 'lib/main.js'),
-      name: 'Geomixerv',
-      // the proper extensions will be added
-      fileName: 'geomixerv',
-    },
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled
       // into your library
