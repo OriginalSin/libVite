@@ -370,7 +370,7 @@ const utils = {
 				styleOut.iconAnchor = [-dx, -dy];    // For leaflet type iconAnchor
 			}
 		}
-console.log('styleOut ', styleOut);
+// console.log('styleOut ', styleOut);
 		for (key in style) {
 			if (!STYLEKEYS[key]) {
 				styleOut[key] = style[key];
@@ -433,44 +433,53 @@ console.log('styleOut ', styleOut);
 			// attr = prop.tileAttributeIndexes,
 		// prop._maxStyleSize = 128;
 		prop._maxStyleSize = 0;
+		let gmxStyles = [];
 		let out = styles.map(it => {
-				return new Promise(resolve => {
-					let data = utils.parseFilter(it.Filter || ''),
-						renderStyle = it.RenderStyle,
-						iconUrl = renderStyle.iconUrl || (renderStyle.marker && renderStyle.marker.image);
-					data.MinZoom = it.MinZoom || MINZOOM;
-					data.MaxZoom = it.MaxZoom || MAXZOOM;
-					if (renderStyle) {
-						data.renderStyle = utils.decodeOldStyle(renderStyle);
-					}
+			let renderStyle = it.RenderStyle || {};
+			let renderStyleNew = utils.decodeOldStyle(renderStyle);
+			// if (renderStyle) {
+				// renderStyleNew = utils.decodeOldStyle(renderStyle);
+			// }
+			renderStyleNew.MinZoom = it.MinZoom || MINZOOM;
+			renderStyleNew.MaxZoom = it.MaxZoom || MAXZOOM;
+			gmxStyles.push({...renderStyleNew});
+			return new Promise(resolve => {
+				let data = utils.parseFilter(it.Filter || '');
+				data.MinZoom = renderStyleNew.MinZoom;
+				data.MaxZoom = renderStyleNew.MaxZoom;
+				// if (renderStyle) {
+					data.renderStyle = renderStyleNew;
+				// }
 
-					if (iconUrl) {
-						Requests.getBitMap(iconUrl).then(blob => {
-		// .then(function(blob) {
-			// return createImageBitmap(blob, {
-				// premultiplyAlpha: 'none',
-				// colorSpaceConversion: 'none'
-			// });
-							
-							// console.log('dsddd', blob);
-							return createImageBitmap(blob, {
-								premultiplyAlpha: 'none',
-								colorSpaceConversion: 'none'
-							}).then(imageBitmap => {
-								data.imageBitmap = imageBitmap;
-								if (prop._maxStyleSize < imageBitmap.width) { prop._maxStyleSize = imageBitmap.width; }
-								if (prop._maxStyleSize < imageBitmap.height) { prop._maxStyleSize = imageBitmap.height; }
-								resolve(data);
-							}).catch(console.warn);
-							// resolve(data);
-						});
-					} else {
-						if (prop._maxStyleSize < data.renderStyle.weight) { prop._maxStyleSize = data.renderStyle.weight; }
-						resolve(data);
-					}
-					// return data;
-				})
-			});
+				let iconUrl = renderStyle.iconUrl || (renderStyle.marker && renderStyle.marker.image);
+				if (iconUrl) {
+					Requests.getBitMap(iconUrl).then(blob => {
+	// .then(function(blob) {
+		// return createImageBitmap(blob, {
+			// premultiplyAlpha: 'none',
+			// colorSpaceConversion: 'none'
+		// });
+						
+						// console.log('dsddd', blob);
+						return createImageBitmap(blob, {
+							premultiplyAlpha: 'none',
+							colorSpaceConversion: 'none'
+						}).then(imageBitmap => {
+							data.imageBitmap = imageBitmap;
+							if (prop._maxStyleSize < imageBitmap.width) { prop._maxStyleSize = imageBitmap.width; }
+							if (prop._maxStyleSize < imageBitmap.height) { prop._maxStyleSize = imageBitmap.height; }
+							resolve(data);
+						}).catch(console.warn);
+						// resolve(data);
+					});
+				} else {
+					if (prop._maxStyleSize < data.renderStyle.weight) { prop._maxStyleSize = data.renderStyle.weight; }
+					resolve(data);
+				}
+				// return data;
+			})
+		});
+		prop.gmxStyles = gmxStyles;
 		return {
 			stylesPromise: Promise.all(out)
 		};
@@ -568,7 +577,7 @@ console.log('styleOut ', styleOut);
 // };
 
 const chkHost = (hostName) => {
-	console.log('chkVersion:', hostName, hosts);
+	// console.log('chkVersion:', hostName, hosts);
 	let hostLayers = hosts[hostName],
 		ids = hostLayers.ids,
 		arr = [];
@@ -732,7 +741,7 @@ console.log('signals:', pt.signals, pt);
 
 const moveend = (pars) => {
 	pars = pars || {};
-console.log('moveend:', pars);
+// console.log('moveend:', pars);
 	
 	if ('zoom' in pars) { zoom = pars.zoom; }
 	if ('bbox' in pars) { bbox = pars.bbox; }
@@ -1014,7 +1023,7 @@ const checkObservers = () => {
 							}
 						}
 						*/
-			console.log('checkObservers _____1__________:', hosts, arrStyle);
+			// console.log('checkObservers _____1__________:', hosts, arrStyle);
 					});
 				});
 			}
@@ -1029,7 +1038,7 @@ console.log('addObserver_______________:', pars, hosts);
 		let layerID = pars.layerID,
 			zKey = pars.zKey,
 			host = hosts[pars.hostName || HOST],
-			out = {};
+			out = {...pars};
 		if (host && host.parseLayers && host.parseLayers.layersByID[layerID] && host.ids && host.ids[layerID]) {
 			// let stData = host.parseLayers.layersByID[layerID],
 			let	tData = host.ids[layerID];
@@ -1062,7 +1071,7 @@ const removeObserver = (pars) => {
 			delete observers[pars.zKey];
 		}
 	}
-console.log('removeObserver _______________:', pars, hosts);
+// console.log('removeObserver _______________:', pars, hosts);
 };
 
 const setDateInterval = (pars) => {
@@ -1074,7 +1083,7 @@ const setDateInterval = (pars) => {
 	}
 	utils.now();
 
-console.log('setDateInterval:', pars, hosts);
+// console.log('setDateInterval:', pars, hosts);
 };
 
 const _iterateNodeChilds = (node, level, out) => {
@@ -1183,7 +1192,7 @@ const drawTile = (pars) => {
 		parsedLayer.stylesPromise.then(st => {
 			Promise.all(Object.values(ids.tilesPromise)).then((res) => {
 
-	console.log('drawTile tilesPromise ___:', st, res);
+	// console.log('drawTile tilesPromise ___:', st, res);
 				resolve(Requests.extend(
 					drawTest(pars), pars
 				));
@@ -1322,6 +1331,32 @@ pt._ctx.fillText(coords.x + ':' + coords.y + ':' + coords.z, 128, 128);
 	// };
 }
 
+const getTile = (pars) => {
+	let message = pars.attr,
+		hostName = message.hostName,
+		layerID = message.layerID,
+		queue = message.queue,
+		z = message.z,
+		hostLayers = hosts[hostName];
+
+	if (hostLayers && hostLayers.ids && hostLayers.ids[layerID]) {
+		let observers = hostLayers.ids[layerID].observers;
+		for (let key in observers) {
+			if (observers[key].pars.z !== z) {
+				observers[key].resolver(null);
+				delete observers[key];
+			}
+		}
+	}
+// console.log('vvvvvvvvvv ___res____ ', message);
+	return Promise.all(queue.map(coords => 
+		addObserver(Requests.extend({
+			coords: coords,
+			zKey: coords.x + ':' + coords.y + ':' + coords.z
+		}, message))
+	));
+};
+
 const getTiles = (message) => {
 	let hostName = message.hostName,
 		layerID = message.layerID,
@@ -1425,7 +1460,8 @@ const getMap = (pars) => {
 	// let host = hosts[hostName];
 
 	if (pars.mapId) { pars.MapName = pars.mapId; }
-	let attr = {...optDef, ...pars};
+	let attr = {...optDef, ...pars.attr};
+// console.log('getMap', pars);
 	const url = '//' + hostName + '/TileSender.ashx?' + Requests.getFormBody(attr) + '&' + Date.now();
 	const opt = {
 		method: 'get',
@@ -1436,7 +1472,6 @@ const getMap = (pars) => {
 	return fetch(url, opt)
 	.then(res => res.json())
 	.then(function(res) {
-// console.log('gmxMap', res);
 		if (res.Status === 'ok' && res.Result) {
 			const parsed = parseMapTree(res.Result, hostName)
 			hosts[hostName] = {
@@ -1470,8 +1505,9 @@ const parseMapTree = (mapInfo, hostName) => {
 					needStart = true;
 					addSource({id: LayerID, hostName});
 				}
-				c = {...c, ...utils.parseStyles(prp)};
+				// c = {...c, ...utils.parseStyles(prp)};
 			}
+				c = {...c, ...utils.parseStyles(prp)};
 			lArr.push(c);
 			lHash[LayerID] = c;
 		} else if (it.type === 'group') {
@@ -1534,6 +1570,7 @@ const iterateLayers = (treeInfo, callback) => {
 };
 */
 export default {
+	getTile,
 	getTiles,
 	drawTile,
 	addObserver,

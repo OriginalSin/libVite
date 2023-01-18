@@ -5,8 +5,8 @@ import Renderer2d from './src/Renderer2d';
 onmessage = function(e) {
 	const message = e.data || e;
 	const pars = {...message};
-	delete pars.cmd;
-	console.log('onmessage ', pars);
+	// delete pars.cmd;
+	// console.log('onmessage ', pars);
 	switch(message.cmd) {
 		// case 'getMap':
 			// DataVersion.getMapTree({mapID: message.mapId, apiKey: message.apiKey, hostName: message.hostName, search: message.search}).then((json) => {
@@ -16,8 +16,14 @@ onmessage = function(e) {
 			// break;
 		case 'getTiles':
 			DataVersion.getTiles(pars).then(function(res) {
-	console.log('getTiles ', res);
+	// console.log('getTiles ', res);
 				postMessage(res);
+			});
+			break;
+		case 'getTile':
+			DataVersion.getTile(pars).then(function(res) {
+	// console.log('getTile ', res);
+				postMessage(res[0]);
 			});
 			break;
 		case 'getMap':

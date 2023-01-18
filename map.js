@@ -42,6 +42,7 @@ const MapInit = () => {
 			console.log("active", flag);
 		})
 	);
+
 const commonOptions =
 	{
     "srs": 3857,
@@ -52,50 +53,92 @@ const commonOptions =
     "MapName": mapId,
     "ftc": "osm"
 };
+/*
 	const vwworker = L.gmx.vw;
-	vwworker.onmessage = function(e) {
+	// const vwworker = L.gmx.vw;
+	L.gmx.vw.onmessage = function(e) {
 		const res = e.data;
 		if (res.Status === 'ok') {
 			L.gmxMap = new L.gmx.gmxMap(res.Result, commonOptions);
 			L.gmxMap.leafletMap = map;
 
 			viewerInit(map);
-			console.log('loadedMap', L.gmxMap);
+			map.addLayer(tLayer);
+
+			// console.log('loadedMap', L.gmxMap);
 		} else if (res.Status === 'error') {
 			const errorInfo = res.ErrorInfo || {};
 			console.warn(errorInfo.ErrorMessage, res.from);
-		} else if (res[0].bitmap) {
-			drawBitMap(res[0].bitmap);
+		} else if (Array.isArray(res)) {
+			res.forEach(it => {
+				const zKey = it.zKey;
+				
+				if (tLayer.__promises[zKey]) tLayer.__promises[zKey](it);
+				// if (this.__promises[zKey]) this.__promises[zKey].resolve(it.bitmap);
+			});
+		// } else if (res[0].bitmap) {
+			// drawBitMap(res[0].bitmap);
 		}
 		console.log('vwworker received from worker', e.data);
 	}
-	vwworker.postMessage({cmd: 'getMap', ...commonOptions});
-	/*
-	
-	let hostName = message.hostName,
-		layerID = message.layerID,
-		queue = message.queue,
-		z = message.z,
-		hostLayers = hosts[hostName];
+*/
+L.gmx.vw._sendCmd('getMap', commonOptions).then(res => {
+	console.log('getMap res', res);
+	L.gmxMap = new L.gmx.gmxMap(res, commonOptions);
+	L.gmxMap.leafletMap = L.gmx.map;
 
-	const shworker = L.gmx.shw;
-	shworker.port.onmessage = function(e) {
-	viewerInit(map, e.data);
-		console.log('shworker received from worker', e.data);
-		console.log(e.lastEventId);
+	viewerInit(L.gmx.map);
+		// map.addLayer(tLayer);
+
+});
+/*
+var CanvasLayer = L.GridLayer.extend({
+	createTile: function(coords, done) {
+		var tile = L.DomUtil.create('canvas', 'leaflet-tile');
+		var size = this.getTileSize();
+		tile.width = size.x;
+		tile.height = size.y;
+
+		this.__createTile(coords, done, tile);
+		return tile;
+	},
+	__createTile: function(coords, done, tile) {
+		const key = this._tileCoordsToKey(coords);
+		this.__promises = this.__promises || {};
+		new Promise((resolve, reject) => {
+			this.__promises[key] = resolve;
+			L.gmx.vw.postMessage({
+				cmd: 'getTiles',
+				hostName: commonOptions.hostName,
+				layerID: 'E7882FCE9E55484AB370D36CD7210648',
+				queue: [coords],
+				z: coords.z
+			});
+ 		}).then(res => {
+			  // console.log("Fulfilled: ", res);
+				// const ctx = tile.getContext('bitmaprenderer');
+				tile.getContext('bitmaprenderer').transferFromImageBitmap(res.bitmap);
+				done('', tile);
+			},
+			error => {
+				console.log("Rejected: ", error);
+				done(error, tile);
+			}
+		  );
 	}
-		shworker.port.postMessage({cmd: 'getMap', mapId});
-	*/
-	map.on('zoomend', ev => {
-		console.log('zoomend', ev);
-		vwworker.postMessage({
-			cmd: 'getTiles',
-			hostName: commonOptions.hostName,
-			layerID: 'E7882FCE9E55484AB370D36CD7210648',
-			queue: [{x:1, y:0, z:1}],
-			z: map.getZoom()
-		});
-	});
+});
+var tLayer = new CanvasLayer();
+*/
+	// map.on('zoomend', ev => {
+		// console.log('zoomend', ev);
+		// L.gmx.vw.postMessage({
+			// cmd: 'getTiles',
+			// hostName: commonOptions.hostName,
+			// layerID: 'E7882FCE9E55484AB370D36CD7210648',
+			// queue: [{x:1, y:0, z:1}],
+			// z: map.getZoom()
+		// });
+	// });
 	
 	const drawBitMap = async bitmap => {
 		const canvas = document.createElement('canvas');

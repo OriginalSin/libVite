@@ -19,6 +19,8 @@ import './DataManager/Observer.js';
 import './DataManager/TilesTree.js';
 import './DataManager/DataManager.js';
 
+import './Layer/VectorLayern.js';
+/*
 import './Layer/VectorLayer.js';
 import './Layer/ScreenVectorTile.js';
 import './Layer/ObjectsReorder.js';
@@ -40,7 +42,7 @@ import './Layer/external/HeatMap.js';
 import './Layer/external/MarkerCluster.js';
 import './Layer/external/GridCluster.js';
 import './Layer/external/earcut.js';
-
+*/
 import './LayerFactory.js';
 L.gmx = L.gmx || {};
 L.gmx.gmxAPIutils = gmxAPIutils;

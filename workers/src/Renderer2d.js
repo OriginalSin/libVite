@@ -105,7 +105,7 @@ const utils = {
 
 	_updatePolyMerc: function (ph) {
 	// _updatePoly: function (layer, closed) {
-console.log('_updatePolyMerc _____1__________:', ph);
+// console.log('_updatePolyMerc _____1__________:', ph);
 		ph = _reqParse(ph);
 		if (!ph._drawing) { return; }
 
