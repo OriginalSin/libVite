@@ -3,16 +3,25 @@ import {gmxAPIutils} from './Utils.js';
 /** Asynchronously request information about map given server host and map name
 */
 var gmxMapManager = {
-    //serverHost should be host only string like 'maps.kosmosnimki.ru' without any slashes or 'http://' prefixes
-    getMap: function(serverHost, apiKey, mapName, skipTiles, srs) {
-		return gmxMapManager.loadMapProperties({
-			srs: srs,
-			hostName: serverHost,
-			apiKey: apiKey,
-			mapName: mapName,
-			skipTiles: skipTiles
+    getMap: (opt) => {
+		return L.gmx.vw._sendCmd('getMap', opt).then(res => {
+			L.gmx.gmxMap.addLayersToMap(res, opt);
 		});
     },
+/*
+			// mapName: 'DefaultMap',
+			// hostName: 'maps.kosmosnimki.ru',
+			// apiKey: '',
+			// setZIndex: true,
+			// isGeneralized: false,
+			// skipTiles: 'All',
+			// ftc: 'osm',
+			// srs: 3857
+// L.gmx.vw._sendCmd('getMap', commonOptions).then(res => {
+	console.log('getMap res', res);
+	L.gmxMap = new L.gmx.gmxMap(res, commonOptions);
+	L.gmxMap.leafletMap = L.gmx.map;
+	L.gmxMap.addLayersToMap(L.gmx.map);
 
 	_addMapProperties: function(res, serverHost, mapName) {
 		L.gmx._maps[serverHost] = L.gmx._maps[serverHost] || {};
@@ -206,6 +215,7 @@ var gmxMapManager = {
         treeInfo && iterate(treeInfo);
     },
     _maps: {} //Promise for each map. Structure: maps[serverHost][mapID]: {promise:, layers:}
+*/
 };
 
 L.gmx = L.gmx || {};

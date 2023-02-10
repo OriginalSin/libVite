@@ -1,6 +1,8 @@
+// import L from 'leaflet';
 import Utils from './Utils.js';
 import GmxDrawingContextMenu from './ContextMenu.js';
 import PointMarkers from './PointMarkers.js';
+// import Utils from './Utils.js';
 
 const Ring = L.LayerGroup.extend({
     options: {
@@ -8,7 +10,7 @@ const Ring = L.LayerGroup.extend({
         //noClip: true,
         maxPoints: 0,
         smoothFactor: 0,
-		showPointsNum: false, // {skipLast: false, prefix: '', postfix: ''}
+		showPointsNum: false,
 		noClip: true,
         opacity: 1,
         shape: 'circle',
@@ -149,7 +151,6 @@ const Ring = L.LayerGroup.extend({
 		var svgNS = 'http://www.w3.org/2000/svg';
 		var userSelectProperty = L.DomUtil.testProp(['userSelect', 'WebkitUserSelect', 'OUserSelect', 'MozUserSelect', 'msUserSelect']);
 
-		const opt = this.options.showPointsNum || {};
 		const dx = 0, dy = -8;
 		const _createItem = (it, nm, cont) => {
 			let b = document.createElementNS(svgNS, 'rect');
@@ -164,9 +165,7 @@ const Ring = L.LayerGroup.extend({
 			t.style[userSelectProperty] = 'none';
 			t.setAttributeNS(null, 'x', it.x + dx);
 			t.setAttributeNS(null, 'y', it.y + dy);
-			if (opt.prefix) nm = opt.prefix + nm;
-			if (opt.postfix) nm += opt.postfix;
-			t.innerHTML = nm;
+			t.textContent = nm;
 			cont.appendChild(t);
 			var length = t.getComputedTextLength();
 			b.setAttributeNS(null, 'width', length + 8);
@@ -181,10 +180,7 @@ const Ring = L.LayerGroup.extend({
 				}
 				Object.values(this.tPoints.childNodes).forEach(it => { it.remove(); });
 				textArr.forEach((it, i) => {
-					let nm = i + 1;
-					if (!opt.skipLast || nm < textArr.length) {
-						_createItem(it, nm, this.tPoints);
-					}
+					_createItem(it, i + 1, this.tPoints);
 				});
 			}
 		};
@@ -301,7 +297,7 @@ const Ring = L.LayerGroup.extend({
     },
 
     _addHole: function (ring) {
-		ring._map.gmxDrawing.create('Polygon', {hole: true})
+		ring._map.gmxDrawing.create('Polygon', {hole: true, forRing: ring})
         ring._map.gmxDrawing.once('drawstop', function (ev) {
 			var obj = ev.object;
 			this._fireEvent('addHole', { ring, latLngsArr: obj.rings[0].ring._getLatLngsArr() });
@@ -350,6 +346,7 @@ const Ring = L.LayerGroup.extend({
     },
 
     onRemove: function (map) {
+console.log('onRemove', this.options)
 		if (this.tPoints) {
 			const svgCont = map._pathRoot || map._renderer._container;
 			svgCont.removeChild(this.tPoints);
@@ -609,27 +606,31 @@ const Ring = L.LayerGroup.extend({
 
     _chkHolePoint: function (point) {
         if (this.options.hole) {
-			let points = this._parent.rings[0].ring.points._parts[0];
+			let prnt = this.options.forRing;
+			// if (this.mode === 'add') prnt = prnt._parent;
+			let points = prnt.points._parts[0];
+// console.log('_chkHolePoint', points, this.mode, this.options.forRing)
 			if (points && !Utils.isPointInRing(point, points)) {
 				return false;
+			}
+			let holes = prnt._parent.rings[0].holes;
+			for (let i = 0, len = holes.length; i < len; i++) {
+				if (holes[i] !== this) {
+					points = holes[i].points._parts[0];
+					if (points && Utils.isPointInRing(point, points)) return false;
+				}
 			}
 		}
 		return true;
    },
 
     _mouseupPoint: function (ev) {
-		// let _setPoint = this.down && !ev.originalEvent.ctrlKey && this._chkHolePoint(ev.layerPoint);
-		const ctrlKey = ev.originalEvent.ctrlKey;
-		let latlng = ev.latlng;
-		let _setPoint = this.down && !ctrlKey;
-
-        if (ctrlKey && Utils.chkGeoJson(this.points.toGeoJSON()).length) {
-			latlng = this._lastSnapLatlng;
-			_setPoint = true;
+		if (!this._chkHolePoint(ev.layerPoint)) {
+			this._pointUp(ev);
+			return;
 		}
- console.log('_mouseupPoint', _setPoint, ev)
-       if (_setPoint) {
-			this._setPoint(latlng, this.down.num, this.down.type);
+        if (this.down && !ev.originalEvent.ctrlKey) {
+			this._setPoint(ev.latlng, this.down.num, this.down.type);
 		}
 		this._pointUp(ev);
         if (this.__mouseupPointTimer) { cancelIdleCallback(this.__mouseupPointTimer); }
@@ -639,10 +640,6 @@ const Ring = L.LayerGroup.extend({
     },
 
     _pointMove: function (ev) {
-		const ctrlKey = ev.originalEvent.ctrlKey;
-		// if (!this._chkHolePoint(ev.layerPoint)) {
-			// return;
-		// }
 
         if (this.down && this._lastDownTime < Date.now()) {
             if (!this.lineType) {
@@ -651,13 +648,11 @@ const Ring = L.LayerGroup.extend({
 			
             this._clearLineAddPoint();
             this._moved = true;
+		if (!this._chkHolePoint(ev.layerPoint)) {
+			return;
+		}
 
-			let latlng = ev.latlng;
-			if (ctrlKey) {
-				// this._lastSnapLatlng = Utils.snapPoint(ev.latlng, this, this._map);
-				let rp = Utils.snapPoint(ev.latlng, this, this._map);
-				if (rp) latlng = this._lastSnapLatlng = rp;
-			}
+			var latlng = ev.originalEvent.ctrlKey ? Utils.snapPoint(ev.latlng, this, this._map) : ev.latlng;
             this._setPoint(latlng, this.down.num, this.down.type);
 			if (!this.options.toolTipPoints && '_showTooltip' in this._parent) {
 				ev.ring = this;
@@ -1102,15 +1097,12 @@ const Ring = L.LayerGroup.extend({
     // add mode
     _moseMove: function (ev) {
         if (this.points) {
-			// if (!this._chkHolePoint(ev.layerPoint)) {
-				// return;
-			// }
+			if (!this._chkHolePoint(ev.layerPoint)) {
+				return;
+			}
            var points = this._getLatLngsArr(),
 				latlng = ev.latlng;
-            if (ev.originalEvent.ctrlKey) {
-				let p = Utils.snapPoint(latlng, this, this._map);
-				if (p) latlng = p;
-			}
+            if (ev.originalEvent.ctrlKey) { latlng = Utils.snapPoint(latlng, this, this._map); }
             if (points.length === 1) { this._setPoint(latlng, 1); }
 
             this._setPoint(latlng, points.length - 1);
@@ -1128,12 +1120,17 @@ const Ring = L.LayerGroup.extend({
         var timeStamp = Date.now();
         if (ev.delta || timeStamp < this._lastMouseDownTime) {
             this._lastAddTime = timeStamp + 1000;
-			// if (!this._chkHolePoint(ev.layerPoint)) {
-				// return;
-			// }
+			var rTapMouse = ev.originalEvent && ev.originalEvent.which === 3;
+			if (!this._chkHolePoint(ev.layerPoint)) {
+				this.setEditMode();
+				this._pointUp();
+				this._fireEvent('drawstop');
+				return;
+				// rTapMouse = true;
+			}
 
 			var _latlngs = this._getLatLngsArr();
-			if (ev.originalEvent && ev.originalEvent.which === 3
+			if (rTapMouse
 				&& this.points && _latlngs && _latlngs.length) {	// for click right button
 
 				this.setEditMode();

@@ -17,10 +17,10 @@ const MapInit = () => {
 			},
 			squareUnit: 'km2',
 			distanceUnit: 'km',
-			center: new L.LatLng(50, 20),
+			center: new L.LatLng(55.965056, 32.460908),
 			attributionControl: false,
 			zoomControl: true,
-			zoom: 3
+			zoom: 33
 		}
 	);
 	L.gmx.map = map;
@@ -43,16 +43,6 @@ const MapInit = () => {
 		})
 	);
 
-const commonOptions =
-	{
-    "srs": 3857,
-    "skipTiles": "All",
-    "hostName": "maps.kosmosnimki.ru",
-    "setZIndex": true,
-    "isGeneralized": true,
-    "MapName": mapId,
-    "ftc": "osm"
-};
 /*
 	const vwworker = L.gmx.vw;
 	// const vwworker = L.gmx.vw;
@@ -82,15 +72,6 @@ const commonOptions =
 		console.log('vwworker received from worker', e.data);
 	}
 */
-L.gmx.vw._sendCmd('getMap', commonOptions).then(res => {
-	console.log('getMap res', res);
-	L.gmxMap = new L.gmx.gmxMap(res, commonOptions);
-	L.gmxMap.leafletMap = L.gmx.map;
-
-	viewerInit(L.gmx.map);
-		// map.addLayer(tLayer);
-
-});
 /*
 var CanvasLayer = L.GridLayer.extend({
 	createTile: function(coords, done) {
@@ -140,19 +121,51 @@ var tLayer = new CanvasLayer();
 		// });
 	// });
 	
-	const drawBitMap = async bitmap => {
-		const canvas = document.createElement('canvas');
-		// resize it to the size of our ImageBitmap
-		canvas.width = bitmap.width;
-		canvas.height = bitmap.height;
-		// get a bitmaprenderer context
-		const ctx = canvas.getContext('bitmaprenderer');
-		ctx.transferFromImageBitmap(bitmap);
-		// get it back as a Blob
-		const blob2 = await new Promise((res) => canvas.toBlob(res));
-		console.log(blob2); // Blob
-		const img = document.body.appendChild(new Image());
-		img.src = URL.createObjectURL(blob2);
-	}
+	// const drawBitMap = async bitmap => {
+		// const canvas = document.createElement('canvas');
+		// canvas.width = bitmap.width; // resize it to the size of our ImageBitmap
+		// canvas.height = bitmap.height;
+		
+		// const ctx = canvas.getContext('bitmaprenderer'); // get a bitmaprenderer context
+		// ctx.transferFromImageBitmap(bitmap);
+		
+		// const blob2 = await new Promise((res) => canvas.toBlob(res)); // get it back as a Blob
+		// console.log(blob2); // Blob
+		// const img = document.body.appendChild(new Image());
+		// img.src = URL.createObjectURL(blob2);
+	// }
+const opt =
+	{
+    "srs": 3857,
+    "skipTiles": "All",
+    "hostName": "maps.kosmosnimki.ru",
+    "setZIndex": true,
+    "isGeneralized": true,
+    "MapName": mapId,
+    "ftc": "osm"
+};
+L.gmx.gmxMapManager.getMap(opt).then(res => {
+// L.gmx.vw._sendCmd('getMap', commonOptions).then(res => {
+	console.log('getMap res', res);
+	// L.gmxMap = new L.gmx.gmxMap(res, commonOptions);
+	// L.gmxMap.leafletMap = L.gmx.map;
+	// L.gmxMap.addLayersToMap(L.gmx.map);
+
+	viewerInit(L.gmx.map);
+		// map.addLayer(tLayer);
+
+});
+map.on('layeradd', (ev) => {
+	// console.log('layeradd', ev);
+	const layer = ev.layer;
+	L.gmx.vw._sendCmd('layeradd', {id: layer.options.layerID});
+	layer._map.panBy({x:0,y:1});
+	// const bounds =L.gmxUtil.getGeometryBounds(layer._gmx.geometry).toLatLngBounds();
+	// map.fitBounds(bounds);
+}).on('layerremove', (ev) => {
+	L.gmx.vw._sendCmd('layerremove', {id: ev.layer.options.layerID});
+});
+
+
 }
 export default MapInit;

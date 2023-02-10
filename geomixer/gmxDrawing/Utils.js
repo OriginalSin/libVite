@@ -87,44 +87,14 @@ const Utils = {
     },
 
     snapPoint: function (latlng, obj, map) {
-		var res = false;
+		var res = latlng;
 		if (L.GeometryUtil) {
-			let item = [];
-			if (obj.options.hole) {	// дырки
-				obj._parent.rings.forEach(it => {
-					it.holes.forEach(it1 => {
-						if (it1 === obj) {
-							item.push(it.ring);
-						}
-					});
-				});
-			} else {
-				var drawingObjects = map.gmxDrawing.getFeatures()
-					// .filter(function(it) { return it !== obj._parent && it._obj !== obj; })
-					.filter(function(it) { return it._obj !== obj; })
-					.map(function(it) { return it.options.type === 'Point' ? it._obj : it; });
-				item = drawingObjects[0];	// другие фичи
-				if (item === obj._parent) {	// соседние полигоны
-					item = [];
-					drawingObjects.forEach(it => {
-						it.rings.forEach(it1 => {
-							if (it1.ring !== obj) {
-								item.push(it1.ring);
-							}
-						});
-					});
-					if (!item.length) {	// соседние сегменты
-						let arr = obj.lines.getLatLngs().slice();
-						arr.pop();
-						let num = obj.down.num;
-						arr = arr.slice(num + 1).concat(arr.slice(0, num).reverse());
-						item = [arr];
-					}
-				}
-			}
-			const snaping = Number(map.options.snaping || Utils.snaping);
-			const closest = L.GeometryUtil.closestLayerSnap(map, item, latlng, snaping, true);
-			// const closest = L.GeometryUtil.closestLayerSnap(map, drawingObjects, latlng, snaping, true);
+			var drawingObjects = map.gmxDrawing.getFeatures()
+					.filter(function(it) { return it !== obj._parent && it._obj !== obj; })
+					.map(function(it) { return it.options.type === 'Point' ? it._obj : it; }),
+					snaping = Number(map.options.snaping || Utils.snaping),
+					closest = L.GeometryUtil.closestLayerSnap(map, drawingObjects, latlng, snaping, true);
+
 			if (closest) {
 				res = closest.latlng;
 			}
@@ -250,6 +220,15 @@ const Utils = {
 			j = i;
         }
         return isIn;
+    },
+    isClockwise: function(ring) {
+        var area = 0;
+        for (var i = 0, j, len = ring.length; i < len; i++) {
+            j = (i + 1) % len;
+            area += ring[i][0] * ring[j][1];
+            area -= ring[j][0] * ring[i][1];
+        }
+        return (area < 0);
     },
 
 };

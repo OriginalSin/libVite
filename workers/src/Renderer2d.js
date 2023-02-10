@@ -29,6 +29,71 @@ const _reqParse = (ph) => {
 };
 
 const utils = {
+	_updatePolyMerc: function (ph) {
+		ph = _reqParse(ph);
+		if (!ph._drawing) { return; }
+
+		let mInPixel = ph.mInPixel,
+			item = ph.itemData.item,
+			geo = item[item.length - 1],
+			type = geo.type,
+			coordinates = geo.coordinates,
+			hiddenLines = ph.itemData.hiddenLines,
+			ctx = ph._ctx;
+
+		if (!coordinates.length) return;
+	 	if (type.substr(0, 5) !== 'MULTI') {
+			coordinates = [coordinates];
+			hiddenLines = [hiddenLines];
+		}
+		coordinates.forEach((it, i) => {
+			it.forEach((it1, i1) => {
+				let rarr = [];
+				let hit1 = hiddenLines[i][i1].slice(0);
+				let hn = hit1.shift();
+				it1.forEach((p, j) => {
+					let m = j === 0;
+					if (j === hn) { m = true; hn = hit1.shift(); }
+					let x = Math.round(p[0] * mInPixel - ph.tpx);
+					let y = Math.round(ph.tpy - p[1] * mInPixel);
+					rarr = rarr.concat([m ? 'M' : 'L', x, y]);
+				});
+				let rstr = rarr.join(' ');
+				utils._fillStroke(ph, false, true);
+				// ctx.fill(new Path2D(rstr.replace(/ M/g, ' L')));
+				ctx.fill(new Path2D(rstr.replace(/ M/g, ' L')), 'evenodd');
+				utils._fillStroke(ph, true);
+				ctx.stroke(new Path2D(rstr));
+				ctx.globalAlpha = 0;
+			});
+		});
+	},
+
+	_fillStroke: function (ph, stroke, fill) {
+		ph = _reqParse(ph);
+		let options = ph.options,
+			ctx = ph._ctx;
+
+// console.log('_fillStroke', options);
+		if (fill && options.fillColor) {
+			ctx.globalAlpha = options.fillOpacity !== undefined ? options.fillOpacity : 1;
+			ctx.fillStyle = options.fillColor;
+			// ctx.fill(options.fillRule || 'evenodd');
+		}
+
+		if (stroke && options.weight !== 0) {
+			if (ctx.setLineDash) {
+				ctx.setLineDash(options && options._dashArray || []);
+			}
+			ctx.globalAlpha = options.opacity !== undefined ? options.opacity : 1;
+			ctx.lineWidth = options.weight;
+			ctx.strokeStyle = options.color;
+			ctx.lineCap = options.lineCap;
+			ctx.lineJoin = options.lineJoin;
+			// ctx.stroke();
+		}
+	},
+
 	_clear: function (ph) {
 		ph = _reqParse(ph);
 		if (ph.bounds) {
@@ -103,138 +168,6 @@ const utils = {
 		// TODO optimization: 1 fill/stroke for all features with equal style instead of 1 for each feature
 	},
 
-	_updatePolyMerc: function (ph) {
-	// _updatePoly: function (layer, closed) {
-// console.log('_updatePolyMerc _____1__________:', ph);
-		ph = _reqParse(ph);
-		if (!ph._drawing) { return; }
-
-		let i, j, len2, p,
-			// coords = ph.coords,
-			parts = ph.itemData.pixels || ph._parts,
-			mInPixel = ph.mInPixel,
-			item = ph.itemData.item,
-			geo = item[item.length - 1],
-			type = geo.type,
-			coordinates = geo.coordinates,
-			hiddenLines = ph.itemData.hiddenLines,
-			len = coordinates.length,
-			ctx = ph._ctx;
-
-	 	if (type.substr(0, 5) !== 'MULTI') {
-			coordinates = [coordinates];
-			hiddenLines = [hiddenLines];
-		}
-		if (!len) { return; }
-		// let path = new Path2D();
-		coordinates.forEach((it, i) => {
-			it.forEach((it1, i1) => {
-				// ctx.beginPath();
-				let rarr = [];
-				let hit1 = hiddenLines[i][i1].slice(0);
-				let hn = hit1.shift();
-				it1.forEach((p, j) => {
-					let m = j === 0;
-					if (j === hn) { m = true; hn = hit1.shift(); }
-					let x = Math.round(p[0] * mInPixel - ph.tpx);
-					let y = Math.round(ph.tpy - p[1] * mInPixel);
-					rarr = rarr.concat([m ? 'M' : 'L', x, y]);
-				});
-				let rstr = rarr.join(' ');
-		utils._fillStroke(ph, false, true);
-				// ctx.globalAlpha = 0.2;
-				ctx.fill(new Path2D(rstr.replace(/ M/g, ' L')), 'evenodd');
-				// ctx.globalAlpha = 1;
-		utils._fillStroke(ph, true);
-				ctx.stroke(new Path2D(rstr));
-
-				// rarr.push('Z');
-// let p = new Path2D(rstr);
-// path.addPath(p);
-// console.log('fff ', path, rstr);
-				// ctx.closePath();
-			});
-		});
-
-// path1.rect(10, 10, 100, 100);
-
-// let path2 = new Path2D(path);
-// path2.moveTo(220, 60);
-// path2.arc(170, 60, 50, 0, 2 * Math.PI);
-
-/*
-ctx.globalAlpha = 0.2;
-ctx.fill(path, 'evenodd');
-ctx.globalAlpha = 1;
-ctx.stroke(path);
-  ctx.save();
-  
-  // let 	sx = 5,
-		// sy = 5;
-// ctx.lineWidth = 1 / 5;
-
-		// ctx.scale(sx, sy);
-  // ctx.strokeRect(1 , 20 , 10 * sx , 10 * sy);
-  // ctx.restore();
-  // ctx.strokeRect(1 , 70 , 10 , 10);
-		// ctx.translate(ph.tpx / mInPixel, ph.tpy / mInPixel);
-		// ctx.translate(ph.tpx, -ph.tpy);
-		// ctx.translate(ph.tpx, 0);
-		// ctx.translate(22, 0);
-		ctx.scale(mInPixel, mInPixel);
-		ctx.translate(ph.tpx * mInPixel, -ph.tpy * mInPixel);
-		// ctx.translate(ph.tpx, ph.tpy);
-		ctx.lineWidth = ctx.lineWidth / mInPixel;
-  // ctx.fillRect(1 / mInPixel, 10 / mInPixel, 10 / mInPixel, 10 / mInPixel);
-  // ctx.strokeRect(1 / mInPixel, 10 / mInPixel, 10 / mInPixel, 10 / mInPixel);
-  // ctx.strokeRect(1 * mInPixel, 10 * mInPixel, 10 * mInPixel, 10 * mInPixel);
-  // ctx.fillRect(2 / mInPixel, 20 / mInPixel, 20 / mInPixel, 20 / mInPixel);
-  // ctx.restore();
-
-		coordinates.forEach((it, i) => {
-			it.forEach((it1, i1) => {
-				ctx.beginPath();
-				let hit1 = hiddenLines[i][i1].slice(0);
-				let hn = hit1.shift();
-				it1.forEach((p, j) => {
-					let m = j === 0;
-					if (j === hn) {
-						m = true;
-						hn = hit1.shift();
-					}
-console.log('fff ', m, j, p);
-					ctx[m ? 'moveTo' : 'lineTo'](p[0], p[1]);
-				});
-				ctx.closePath();
-			});
-		});
-
-		for (i = 0; i < len; i++) {
-			for (j = 0, len2 = coordinates[i].length; j < len2; j++) {
-				p = coordinates[i][j];
-				ctx[j ? 'lineTo' : 'moveTo'](p[0], p[1]);
-			}
-			// for (j = 0, len2 = parts[i].length; j < len2; j++) {
-				// p = parts[i][j];
-				// ctx[j ? 'lineTo' : 'moveTo'](p.x, p.y);
-			// }
-			if (ph.closed) {
-				ctx.closePath();
-			}
-		}
-*/
-  // ctx.restore();
-// ctx.strokeText(coords.z + '.' + coords.x + '.' + coords.y, 150, 150);
-
-
-		// utils._fillStroke(ph, true, true);
-/*
-*/
-  // ctx.restore();
-
-		// TODO optimization: 1 fill/stroke for all features with equal style instead of 1 for each feature
-	},
-
 
 	_updateCircle: function (ph) {
 	// _updateCircle: function (layer) {
@@ -260,31 +193,6 @@ console.log('fff ', m, j, p);
 		}
 
 		utils._fillStroke(ph);
-	},
-
-	_fillStroke: function (ph, stroke, fill) {
-	// _fillStroke: function (ctx, layer) {
-		ph = _reqParse(ph);
-		let options = ph.options,
-			ctx = ph._ctx;
-
-		if (fill) {
-			ctx.globalAlpha = options.fillOpacity;
-			ctx.fillStyle = options.fillColor || options.color;
-			// ctx.fill(options.fillRule || 'evenodd');
-		}
-
-		if (stroke && options.weight !== 0) {
-			if (ctx.setLineDash) {
-				ctx.setLineDash(options && options._dashArray || []);
-			}
-			ctx.globalAlpha = options.opacity !== undefined ? options.opacity : 1;
-			ctx.lineWidth = options.weight;
-			ctx.strokeStyle = options.color;
-			ctx.lineCap = options.lineCap;
-			ctx.lineJoin = options.lineJoin;
-			// ctx.stroke();
-		}
 	}
 }
 

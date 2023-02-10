@@ -5,8 +5,19 @@ import Renderer2d from './Renderer2d';
 var _self = self;
 (_self.on || _self.addEventListener).call(_self, 'message', e => {
     const message = e.data || e;
-// console.log('in message ', e);
+console.log('in message ', e);
     switch (message.cmd) {
+		case 'getMap':
+			DataVersion.getMapTree({mapID: message.mapID, apiKey: message.apiKey, hostName: message.hostName, search: message.search}).then((json) => {
+			// Requests.getMapTree({mapID: message.mapID, hostName: message.hostName, search: message.search}).then((json) => {
+				message.out = json;
+				_self.postMessage(message);
+			});
+			break;
+
+			
+			
+			
 		case 'getTiles':
 console.log('getTiles ', message);
 /*
@@ -80,13 +91,6 @@ console.log('getTiles111 ', arr);
 				let pt = {};
 				json.Result.fields.forEach((name, i) => { pt[name] = i; });
 				json.Result.fieldKeys = pt;
-				_self.postMessage(message);
-			});
-			break;
-		case 'getMap':
-			DataVersion.getMapTree({mapID: message.mapID, apiKey: message.apiKey, hostName: message.hostName, search: message.search}).then((json) => {
-			// Requests.getMapTree({mapID: message.mapID, hostName: message.hostName, search: message.search}).then((json) => {
-				message.out = json;
 				_self.postMessage(message);
 			});
 			break;

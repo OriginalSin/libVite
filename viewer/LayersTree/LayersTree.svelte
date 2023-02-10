@@ -6,7 +6,7 @@
 	// export let map;
 
 	let rawTree;
-	let gmxMap = L.gmxMap;
+	let gmxMap = L.gmx.gmxMap;
 	let type = 'map';
 	let props = gmxMap.properties || {};
 	let childs = gmxMap.rawTree.children;

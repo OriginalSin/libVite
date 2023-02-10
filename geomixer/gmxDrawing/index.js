@@ -1,16 +1,13 @@
 ﻿import './gmxStyles.css';
 import {gmxAPIutils} from './Utils.js';
-
-import './Layer/VectorLayern.js';
-import './MapManager.js';
-import './GeomixerMap.js';
-/*
 import './Parsers.js';
 import './Deferred.js';
 //import './ImageBitmapLoader.js';
 import './ImageLoader.js';
 import './DrawCanvas.js';
 import './SessionManager.js';
+import './MapManager.js';
+import './GeomixerMap.js';
 import './EventsManager.js';
 import './Locale.js';
 import './lang_ru.js';
@@ -21,6 +18,9 @@ import './DataManager/VectorTile.js';
 import './DataManager/Observer.js';
 import './DataManager/TilesTree.js';
 import './DataManager/DataManager.js';
+
+import './Layer/VectorLayern.js';
+/*
 import './Layer/VectorLayer.js';
 import './Layer/ScreenVectorTile.js';
 import './Layer/ObjectsReorder.js';

@@ -23,6 +23,10 @@ let cmdNum = 0;
 worker._cmdResolver = {};
 worker.onmessage = function(e) {
 	const res = e.data;
+	if (!res) {
+		console.log('worker skip', e);
+		return;
+	}
 	const from = res.from || res;
 	const cmd = from.cmd;
 	const attr = from.attr || res;
@@ -77,6 +81,14 @@ worker._sendCmd = (cmd, pars) => {
 			case 'getTile':
 				worker.postMessage({cmd: 'getTile', attr});
 				break;
+			default:
+				worker.postMessage({cmd, attr});
+			// case 'layerremove':
+				// worker.postMessage({cmd: 'layerremove', attr});
+				// break;
+			// case 'layeradd':
+				// worker.postMessage({cmd: 'layeradd', attr});
+				// break;
 		}
 	});
 }

@@ -1,8 +1,94 @@
 //Helper class, that represents layers of single Geomixer's map
 //Creates layers from given map description
-var gmxMap = L.Class.extend({
-    includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
+var gmxMap = {
+    layers: [],
+    layersByTitle: {},
+    layersByID: {},
+    layersByTitle: {},
+    options: {},
+    properties: {},
+    rawTree: {},
+    notLayerTypes: {},
+	addLayersToMap: (res, opt) => {
+		gmxMap.rawTree = res;
+		gmxMap.options = opt;
+		gmxMap.properties = res.properties;
+		gmxMap.iterateNode(res);
+		gmxMap.leafletMap = L.gmx.map;
+			console.log('addLayersToMap', res, opt, gmxMap);
+		return gmxMap;
+	},
+    iterateNode: (treeInfo) => {
+        let iterate = (node) => {
+			let arr = node.children || [];
+			arr.forEach(it => {
+                if (it.type === 'group') {
+                    iterate(it.content);
+                } else if (it.type === 'layer') {
+					gmxMap.createLayer(it.content);
+                }
+            });
+        };
 
+        treeInfo && iterate(treeInfo);
+	},
+    createLayer: (layerInfo, opt) => {
+		const mapProps = gmxMap.properties;
+		const props = layerInfo.properties;
+		const options = {
+			mapID: mapProps.mapID,
+			hostName: gmxMap.options.hostName,
+			sessionKey: gmxMap.options.sessionKey,
+			layerID: props.name
+		};
+
+		props.hostName = gmxMap.options.hostName;
+		props.srs = gmxMap.options.srs;
+
+		const type = props.ContentID || props.type,
+			meta = props.MetaProperties || {},
+			layerOptions = L.extend(options, opt);
+
+		if (type in L.gmx._layerClasses) {
+			gmxMap.addLayer(L.gmx.createLayer(layerInfo, layerOptions));
+		} else {
+			gmxMap.notLayerTypes[type] = gmxMap.notLayerTypes[type] || [];
+			gmxMap.notLayerTypes[type].push({
+				info: layerInfo,
+				options: layerOptions
+			});
+		}
+    },
+
+	addLayer: function(layer) {
+		const props = layer.getGmxProperties();
+		// const props = {};
+
+		gmxMap.layers.push(layer);
+		gmxMap.layersByTitle[props.title] = layer;
+		gmxMap.layersByID[props.name] = layer;
+		// this.fire('layeradd', {layer: layer});
+		if (props.visible) {
+			L.gmx.map.addLayer(layer);
+		}
+		return layer;
+	},
+/*
+    iterateLayers: function(treeInfo, callback) {
+        var iterate = function(arr) {
+            for (var i = 0, len = arr.length; i < len; i++) {
+                var layer = arr[i];
+
+                if (layer.type === 'layer') {
+                    callback(layer.content);
+                } else if (layer.type === 'group') {
+                    iterate(layer.content.children || []);
+                }
+            }
+        };
+
+        treeInfo && iterate(treeInfo.children);
+    },
     initialize: function(mapInfo, commonLayerOptions) {
 		this.layers = [];
 		this.layersByTitle = {};
@@ -76,7 +162,7 @@ var gmxMap = L.Class.extend({
 			//load missing layer types
 			var loaders = [];
 			for (var type in missingLayerTypes) {
-				loaders.push(L.gmx._loadLayerClass(type).then(/*eslint-disable no-loop-func */function (type) {/*eslint-enable */
+				loaders.push(L.gmx._loadLayerClass(type).then(function (type) {
 					var it = missingLayerTypes[type];
 					for (var i = 0, len = it.length; i < len; i++) {
 						_this.addLayer(L.gmx.createLayer(it[i].info, it[i].options));
@@ -203,17 +289,7 @@ var gmxMap = L.Class.extend({
 
 		return this;
 	},
-
-	addLayersToMap: function(leafletMap) {
-		for (var l = this.layers.length - 1; l >= 0; l--) {
-			var layer = this.layers[l];
-			if (layer instanceof L.Layer && layer.getGmxProperties().visible) {
-				leafletMap.addLayer(layer);
-			}
-		}
-
-		return this;
-	}
-});
+*/
+};
 L.gmx = L.gmx || {};
 L.gmx.gmxMap = gmxMap;

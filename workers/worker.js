@@ -5,36 +5,35 @@ import Renderer2d from './src/Renderer2d';
 onmessage = function(e) {
 	const message = e.data || e;
 	const pars = {...message};
-	// delete pars.cmd;
-	// console.log('onmessage ', pars);
+	console.log('onmessage ', pars);
 	switch(message.cmd) {
+		case 'getTile':
+			DataVersion.getTile(pars).then(function(res) {
+				postMessage(res[0]);
+			});
+			break;
+		case 'layeradd':
+			DataVersion.addSource(pars);
+			break;
+		case 'layerremove':
+			DataVersion.removeSource(pars);
+			break;
+		case 'getMap':
+			DataVersion.getMap(pars).then(postMessage);
+			break;
 		// case 'getMap':
 			// DataVersion.getMapTree({mapID: message.mapId, apiKey: message.apiKey, hostName: message.hostName, search: message.search}).then((json) => {
 				// message.out = json;
 				// postMessage(message);
 			// });
 			// break;
-		case 'getTiles':
-			DataVersion.getTiles(pars).then(function(res) {
-	// console.log('getTiles ', res);
-				postMessage(res);
-			});
-			break;
-		case 'getTile':
-			DataVersion.getTile(pars).then(function(res) {
-	// console.log('getTile ', res);
-				postMessage(res[0]);
-			});
-			break;
-		case 'getMap':
-			DataVersion.getMap(pars).then(postMessage);
-			// DataVersion.getMap(pars).then(function(res) {
-	// console.log('loadMap ', res);
+		// case 'getTiles':
+			// DataVersion.getTiles(pars).then(function(res) {
 				// postMessage(res);
 			// });
-
-			break
+			// break;
 		default:
+			break;
 	}
 }
 const utils = {

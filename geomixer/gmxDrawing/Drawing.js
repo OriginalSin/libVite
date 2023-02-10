@@ -6,10 +6,8 @@ import Feature from './Feature.js';
 
 const rectDelta = 0.0000001;
 const stateVersion = '1.0.0';
+
 const GmxDrawing = L.Class.extend({
-	/*
-		Редактор рисования объектов
-	*/
     options: {
 		showPointsNum: false,
         type: ''
@@ -17,6 +15,7 @@ const GmxDrawing = L.Class.extend({
     includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
 
     initialize: function (map, options) {
+console.log('initialize', options)
         options = L.setOptions(this, options);
         this._map = map;
         this.items = [];
@@ -28,6 +27,52 @@ const GmxDrawing = L.Class.extend({
 			bbox: [{text: 'Save'}, {text: 'Cancel'}],
 			fill: [{text: 'Rotate'}, {text: 'Move'}]
 		});
+        if (!L.gmxLocale) {
+			const keys = {
+				rus: {
+					Coordinates : 'Координаты',
+					Length : 'Длина',
+					angleLength : 'Азимут, растояние',
+					nodeLength : 'Длина от начала',
+					edgeLength : 'Длина сегмента',
+					'Rotate around Point' : 'Поворот вокруг вершины',
+					'Remove point': 'Удалить точку',
+					'Delete feature': 'Удалить объект',
+					'Add hole': 'Добавить дырку',
+					'Add polygon': 'Добавить контур',
+					'Add line': 'Добавить линию',
+					Rotate : 'Поворот',
+					Move : 'Сдвиг',
+					Save : 'Применить',
+					Cancel : 'Отменить',
+					Angle : 'Угол',
+					Area : 'Площадь',
+					Perimeter : 'Периметр',
+					units: {
+						m: 'м',
+						nm: 'м.мили',
+						km: 'км',
+						m2: 'кв. м',
+						km2: 'кв. км',
+						ha: 'га',
+						m2html: 'м<sup>2',
+						km2html: 'км<sup>2'
+					}
+				}
+			};
+			L.gmxLocale = {
+				getText: function(key) {
+					let rus = keys[window.language] || {};
+					let out = rus[key];
+					if (!out) {
+						let arr = key.split('.');
+						out = (rus[arr[0]] || {})[arr[1]] || arr[1];
+					}
+					return out || key;
+				}
+				// getLanguage: function() { return window.language; }
+			};
+		}
 
         if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
 			var svgNS = 'http://www.w3.org/2000/svg';
@@ -272,6 +317,15 @@ const GmxDrawing = L.Class.extend({
                 type: type,
                 eventName: type === 'Rectangle' ? (L.Browser.mobile ? 'touchstart' : 'mousedown') : 'click',
                 fn: function (ev) {
+                    var opt = {};
+					if (drawOptions.hole && options.forRing) {
+						opt.forRing = options.forRing;
+			let points = options.forRing.points._rings[0];
+			if (points && !Utils.isPointInRing(ev.layerPoint, points)) {
+				return false;
+			}
+						console.log('drawOptions', options, drawOptions, my);
+					}
 					var originalEvent = ev && ev.originalEvent,
                         ctrlKey = false, shiftKey = false, altKey = false;
 					if (originalEvent) {
@@ -283,10 +337,9 @@ const GmxDrawing = L.Class.extend({
 					}
                     my._createType = '';
                     var obj, key,
-                        opt = {},
                         latlng = ev.latlng;
                     if (this.options.showPointsNum) {
-                        opt.showPointsNum = this.options.showPointsNum;
+						opt.showPointsNum = this.options.showPointsNum;
 					}
 
                     for (key in drawOptions) {
@@ -528,10 +581,12 @@ const GmxDrawing = L.Class.extend({
         return item;
     }
 });
+L.gmx = L.gmx || {};
 
 L.Map.addInitHook(function () {
-	const map = this;
-    map.gmxDrawing = new GmxDrawing(map, map.options.drawOptions);
+	L.gmx.gmxDrawing = new GmxDrawing(this);
+    this.gmxDrawing = L.gmx.gmxDrawing;
+	console.log('addInitHook', this.gmxDrawing);
 });
 
 export default GmxDrawing;

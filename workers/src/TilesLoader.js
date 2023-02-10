@@ -51,7 +51,9 @@ const load = (pars) => {
 	pars = pars || {};
 	if (!pars.signals) { pars.signals = {}; }
 	if (!pars.tilesPromise) { pars.tilesPromise = {}; }
+	if (!pars.isGeneralized) { pars.isGeneralized = {}; }
 	
+// console.log('load', pars);
 	// return new Promise((resolve) => {
 		let tilesOrder = pars.tilesOrder,
 			pb = pars.tiles,
@@ -82,7 +84,8 @@ const load = (pars) => {
 						}
 					}
 					parseValues(json);
-					console.log('json', json);
+					if (json.isGeneralized) pars.isGeneralized[tkey] = json.isGeneralized;
+					// console.log('json', json);
 					return json;
 				})
 				.catch(err => {

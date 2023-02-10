@@ -2,7 +2,61 @@
 * @name L.gmxUtil
 * @namespace
 */
+const WORLDWIDTHFULL = 40075016.685578496,
+	W = WORLDWIDTHFULL / 2,
+	// WORLDBBOX = JSON.stringify([[-W, -W, W, W]]);
+	WORLDBBOX = [[-W, -W, W, W]];
+
 var gmxAPIutils = {
+	getBboxes: function(map) {
+		if (map.options.allWorld) {
+			return WORLDBBOX;
+		}
+		let bbox = map.getBounds(),
+			ne = bbox.getNorthEast(),
+			sw = bbox.getSouthWest();
+		if ((ne.lng - sw.lng) > 180) {
+			return WORLDBBOX;
+		}
+		let zoom = map.getZoom(),
+			ts = L.gmxUtil.tileSizes[zoom],
+			pb = {x: ts, y: ts},
+			mbbox = L.bounds(
+				L.CRS.EPSG3857.project(sw)._subtract(pb),
+				L.CRS.EPSG3857.project(ne)._add(pb)
+			),
+
+			minY = mbbox.min.y, maxY = mbbox.max.y,
+			minX = mbbox.min.x, maxX = mbbox.max.x,
+			minX1 = null, maxX1 = null,
+			ww = WORLDWIDTHFULL,
+			size = mbbox.getSize(),
+			out = [];
+
+		if (size.x > ww) {
+			return WORLDBBOX;
+		}
+
+		if (maxX > W || minX < -W) {
+			var hs = size.x / 2,
+				center = ((maxX + minX) / 2) % ww;
+
+			center = center + (center > W ? -ww : (center < -W ? ww : 0));
+			minX = center - hs; maxX = center + hs;
+			if (minX < -W) {
+				minX1 = minX + ww; maxX1 = W; minX = -W;
+			} else if (maxX > W) {
+				minX1 = -W; maxX1 = maxX - ww; maxX = W;
+			}
+		}
+		out.push([minX, minY, maxX, maxY]);
+
+		if (minX1) {
+			out.push([minX1, minY, maxX1, maxY]);
+		}
+		return out;
+		// return JSON.stringify(out);
+	},
     lastMapId: 0,
 	debug: (function() { var arr = /\bdebug=(\d)\b/.exec(location.search); return arr ? Number(arr[1]) : false; })(),
 	fromWebMercY: function(y) {
@@ -3012,8 +3066,8 @@ gmxAPIutils.Bounds.prototype = {
 
         return result;
     },
-    toLatLngBounds: function(isWebMerc) {
-		var proj = L.Projection.Mercator,
+    toLatLngBounds: function(isWebMerc, fromMercator) {
+		var proj = fromMercator ? L.Projection.Mercator : L.CRS.EPSG3857,
 			min = proj.unproject(this.min),
 			max = proj.unproject(this.max),
 			arr = [[min.lat, min.lng], [max.lat, max.lng]];
@@ -3122,6 +3176,7 @@ if (!L.gmxUtil) { L.gmxUtil = {}; }
 var	pNavigation = self.performance && self.performance.getEntriesByType('navigation')[0];
 
 L.extend(L.gmxUtil, {
+	getBboxes: gmxAPIutils.getBboxes,
 	isHTTP2: pNavigation && pNavigation.nextHopProtocol === 'h2',
 	debug: gmxAPIutils.debug,
 	createWorker: gmxAPIutils.createWorker,

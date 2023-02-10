@@ -10,6 +10,7 @@
 	// export let type = '';
 
 	$: arr = childs.slice();
+	let cont;
 	// let visible = props.visible ? true : false;
 	// let list = props.list ? true : false;
 // console.log('ggggg', gmxMap);
@@ -25,6 +26,7 @@
 		// props = content.properties || {};
 		// console.log('yyy', type, props.title, props);
 	});
+
 	const toggle = ev => {
 		const node = ev.target;
 		const nm = node.parentNode.getAttribute('data-nm');
@@ -44,7 +46,7 @@
 			it.content.properties.visible = !it.content.properties.visible;
 			const layerID = it.content.properties.name;
 			const layer = gmxMap.layersByID[layerID];
-// console.log('ggggg', layerID, layer);
+console.log('ggggg', layerID, layer);
 			if (it.content.properties.visible) {
 				gmxMap.leafletMap.addLayer(layer);
 			} else {
@@ -52,6 +54,22 @@
 			}
 			arr = arr.slice();
 		}
+	}
+	const showPos = ev => {
+		const node = ev.target;
+		const nm = node.getAttribute('data-nm');
+
+		const it = arr[nm];
+		if (it && it.content.geometry) {
+			const bounds = L.gmxUtil.getGeometryBounds(it.content.geometry).toLatLngBounds();
+			gmxMap.leafletMap.fitBounds(bounds);
+// console.log('ggggg', bounds);
+		}
+	}
+	const findItem = ev => {
+		const node = ev.target;
+		const nm = node.parentNode.getAttribute('data-nm');
+		
 	}
 </script>
 
@@ -76,7 +94,7 @@
 				</div>
 			</span>
 			<div titlediv="true" style="display: inline; position: relative; border-bottom: none; padding-right: 3px;">
-				<span class="layer ui-draggable" dragg="true">{prp.title}</span>
+				<span data-nm={i} class="layer ui-draggable" dragg="true" on:click={showPos}>{prp.title}</span>
 			</div>
 			<span class="layerDescription"></span>
 			{#if meta}<span class="layerInfoButton">i</span>{/if}
@@ -113,6 +131,9 @@ div.line {
 }
 .group.closed .hitarea {
     background-position: -115px -3px;
+}
+.group .line {
+    cursor: pointer;
 }
 	
 </style>

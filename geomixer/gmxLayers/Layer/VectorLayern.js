@@ -13,16 +13,33 @@ L.gmx.VectorLayer = L.GridLayer.extend({
 	getGmxProperties: function() {
 		return this._gmx.properties;
 	},
+	// _update: function(center) {
+		// this._map._animateToZoom
+
+		// this._gmx.mapPos = {bbox: L.gmxUtil.getBboxes(this._map), zoom: this._map.getZoom()};
+        // L.GridLayer.prototype._update.call(this, center);
+	// },
 	createTile: function(coords, done) {
 		var tile = L.DomUtil.create('canvas', 'leaflet-tile');
 		var size = this.getTileSize();
 		tile.width = size.x;
 		tile.height = size.y;
 
-		this.__createTile(coords, done, tile);
+		this._map.once('moveend', () => {
+			if (this._map) {
+				let	zoom = this._map.getZoom();
+			// console.log('__createTile', coords, zoom);
+				if (zoom === coords.z) {
+					let	mapPos = {bbox: L.gmxUtil.getBboxes(this._map), zoom};
+					this.__createTile(coords, done, tile, mapPos);
+				} else {
+					done('skip', tile);
+				}
+			}
+		});
 		return tile;
 	},
-	__createTile: function(coords, done, tile) {
+	__createTile: function(coords, done, tile, mapPos) {
 		const key = this._tileCoordsToKey(coords);
 		this.__promises = this.__promises || {};
 		new Promise((resolve, reject) => {
@@ -30,15 +47,17 @@ L.gmx.VectorLayer = L.GridLayer.extend({
 			let opt = {
 				cmd: 'getTile',
 				hostName: this.options.hostName,
-				layerID: 'E7882FCE9E55484AB370D36CD7210648',
+				layerID: this.options.layerID,
 				queue: [coords],
+				mapPos: mapPos,
 				z: coords.z
 			};
+
 			L.gmx.vw._sendCmd('getTile', opt).then(res => {
 				// console.log("getTile------- ", res);
 				tile.getContext('bitmaprenderer').transferFromImageBitmap(res.bitmap);
 				done('', tile);
 			});
- 		});
+		});
 	}
 });
