@@ -148,24 +148,6 @@ var gmxAPIutils = {
 		}
 		return null;
 	},
-    createWorker: function(url)	{		// Создание Worker-а
-return;
-        return new Promise(function(resolve, reject) {
-			if ('createImageBitmap' in window && 'Worker' in window) {
-				if (location.origin.substr(0, 4) === 'http' && url.indexOf(location.origin) === 0) {
-					resolve(new Worker(url));
-				} else {
-					fetch(url, {mode: 'cors'})
-					.then(function(resp) { return resp.blob(); })
-					.then(function(blob) {
-						resolve(new Worker(window.URL.createObjectURL(blob, {type: 'application/javascript; charset=utf-8'})));
-					});
-				}
-			} else {
-				reject({error: 'Browser don`t support `createImageBitmap` or `Worker`'});
-			}
-		});
-    },
 
     isPageHidden: function()	{		// Видимость окна браузера
         return document.hidden || document.msHidden || document.webkitHidden || document.mozHidden || false;
@@ -2782,7 +2764,30 @@ return;
             tileAttributeTypes: tileAttributeTypes,
             tileAttributeIndexes: tileAttributeIndexes
         };
-	}
+    },
+
+/*
+    getTileAttributes: function(prop) {
+	},
+    createWorker: function(url)	{		// Создание Worker-а
+return;
+        return new Promise(function(resolve, reject) {
+			if ('createImageBitmap' in window && 'Worker' in window) {
+				if (location.origin.substr(0, 4) === 'http' && url.indexOf(location.origin) === 0) {
+					resolve(new Worker(url));
+				} else {
+					fetch(url, {mode: 'cors'})
+					.then(function(resp) { return resp.blob(); })
+					.then(function(blob) {
+						resolve(new Worker(window.URL.createObjectURL(blob, {type: 'application/javascript; charset=utf-8'})));
+					});
+				}
+			} else {
+				reject({error: 'Browser don`t support `createImageBitmap` or `Worker`'});
+			}
+		});
+    },
+*/
 };
 
 gmxAPIutils.lambertCoefX = 100 * gmxAPIutils.distVincenty(0, 0, 0.01, 0);				// 111319.5;

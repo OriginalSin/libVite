@@ -378,8 +378,8 @@ const utils = {
     getTileBounds: function(coords) {
 		var tileSize = WORLDWIDTHFULL / Math.pow(2, coords.z),
             minx = coords.x * tileSize - W,
-            miny = W - coords.y * tileSize;
-        return Requests.bounds([[minx, miny], [minx + tileSize, miny + tileSize]]);
+            maxy = W - coords.y * tileSize;
+        return Requests.bounds([[minx, maxy - tileSize], [minx + tileSize, maxy]]);
     },
 
     getTileNumFromLeaflet: function (tilePoint, zoom) {
@@ -549,6 +549,47 @@ const utils = {
 			return 0;
 		}
 		return -1;
-	}
+	},
+
+    isPointInPolygonArr: function(chkPoint, coords) { // Проверка точки на принадлежность полигону в виде массива
+        var isIn = false,
+            x = chkPoint[0],
+            y = chkPoint[1],
+            vectorSize = 1,
+            p1 = coords[0];
+
+        if (typeof coords[0] === 'number') {
+            vectorSize = 2;
+            p1 = [coords[0], coords[1]];
+        }
+
+        for (var i = vectorSize, len = coords.length; i < len; i += vectorSize) {
+            var p2 = vectorSize === 1 ? coords[i] : [coords[i], coords[i + 1]],
+                xmin = Math.min(p1[0], p2[0]),
+                xmax = Math.max(p1[0], p2[0]),
+                ymax = Math.max(p1[1], p2[1]);
+            if (x > xmin && x <= xmax && y <= ymax && p1[0] !== p2[0]) {
+                var xinters = (x - p1[0]) * (p2[1] - p1[1]) / (p2[0] - p1[0]) + p1[1];
+                if (p1[1] === p2[1] || y <= xinters) { isIn = !isIn; }
+            }
+            p1 = p2;
+        }
+        return isIn;
+    },
+
+    /** Is point in polygon with holes
+     * @memberof L.gmxUtil
+     * @param {chkPoint} chkPoint - point in [x, y] format
+     * @param {coords} coords - polygon from geoJSON coordinates data format
+     * @return {Boolean} true if polygon contain chkPoint
+    */
+    isPointInPolygonWithHoles: function(chkPoint, coords) {
+        if (!utils.isPointInPolygonArr(chkPoint, coords[0])) { return false; }
+        for (var j = 1, len = coords.length; j < len; j++) {
+            if (utils.isPointInPolygonArr(chkPoint, coords[j])) { return false; }
+        }
+        return true;
+    },
+
 };
 export default utils;

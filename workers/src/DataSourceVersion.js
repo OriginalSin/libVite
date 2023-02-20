@@ -2,6 +2,7 @@ import Utils from './Utils';
 import Requests from './Requests';
 import TilesLoader from './TilesLoader';
 import Renderer2d from './Renderer2d';
+import Observer from './Observer';
 
 let hosts = {},
     zoom = 3,
@@ -9,221 +10,6 @@ let hosts = {},
 	// dataManagersLinks = {},
     // hostBusy = {},
     // needReq = {}
-
-const _checkVectorTiles = ({arrTiles, observers, styles, indexes, sort}) => {
-	for (let i = 0, len = arrTiles.length; i < len; i++) {
-		let tile = arrTiles[i];
-		if (tile) {
-			let pixels = tile.pixels,
-				styleNums = tile.styleNums,
-				itemsbounds = tile.itemsbounds,
-				hiddenLines = tile.hiddenLines;
-			if (!styleNums) {styleNums = tile.styleNums = [];}
-			if (!itemsbounds) {itemsbounds = tile.itemsbounds = [];}
-			if (!hiddenLines) {hiddenLines = tile.hiddenLines = [];}
-			if (!pixels) {pixels = tile.pixels = [];}
-			for (let zKey in observers) {
-				let observer = observers[zKey];
-				// let flag = observer.bounds.intersects(tile.bounds);
-
-				// if (!observer.bounds.intersects(tile.bounds)) {
-					// continue;
-				// }
-
-				if (!observer.tcnt) {observer.tcnt = 0;}
-				observer.tcnt++;
-				observer.items = [];
-				tile.values.forEach((it, n) => {
-					// let parsed = 
-					_parseItem({
-						hiddenLines: hiddenLines[n],
-						bounds: itemsbounds[n],
-						st: styleNums[n],
-						pars: observer.pars,
-						item: it
-					});
-					
-					let geo = it[it.length - 1],
-						st = styleNums[n],
-						bounds = itemsbounds[n];
-					if (st === undefined) {
-						st = Utils.getStyleNum(it, styles, indexes, observer.pars.z);
-						tile.styleNums[n] = styleNums[n] = st;
-					}
-					if (!bounds) {
-						bounds = Requests.geoItemBounds(geo);
-						tile.itemsbounds[n] = itemsbounds[n] =  bounds;
-					}
-
-					let pt = {
-						tbbox: tile.bbox,
-						st: st,
-						style: styles[st],
-						itemData: {
-							bounds: bounds,
-							hiddenLines: hiddenLines[n],
-							item: it
-						}
-					};
-					// TODO: если НЕТ сортировки объектов то тут отрисовка иначе после сортировки
-					if (sort) {
-						observer.items.push(pt);
-					} else {
-						pt.observer = observer;
-						drawItem(pt);
-					}
-				});
-			}
-		}
-	}
-// console.log('checkObservers _____1__________:', hosts);
-};
-
-let _checkObserversTimer = null;
-const _waitCheckObservers = () => {
-	if (_checkObserversTimer) { clearTimeout(_checkObserversTimer); }
-	_checkObserversTimer = setTimeout(checkObservers, 25);
-};
-
-const checkObservers = () => {
-	// console.log('checkObservers _______________:', hosts);
-	Object.keys(hosts).forEach(host => {
-		let	hostItem = hosts[host];
-		Object.keys(hostItem.ids).forEach(layerID => {
-			let	tData = hostItem.ids[layerID],
-				layerData = hostItem.parseLayers.layersByID[layerID],
-				styles = layerData.styles,
-				// oKeys = Object.keys(tData.observers),
-				observers = tData.observers || {},
-				indexes = tData.tileAttributeIndexes,
-				tilesPromise = tData.tilesPromise;
-			if (tilesPromise && Object.keys(observers).length) {
-				if(styles) {
-					// const styles = arrStyle || [];
-					let _maxStyleSize = layerData.properties._maxStyleSize || 128;
-					Object.keys(observers).forEach(key => {
-						let observer = observers[key];
-						if (!observer.bounds) {
-							let coords = observer.pars.coords,
-								z = observer.pars.z;
-							_maxStyleSize = Utils._getMaxStyleSize(z, styles);
-
-							// var mercSize = 2 * _maxStyleSize * WORLDWIDTHFULL / Math.pow(2, 8 + z); //TODO: check formula
-
-							observer.bounds = Utils.getTileBounds(coords);
-						}
-						
-					});
-					Promise.all(Object.values(tilesPromise)).then((arrTiles) => {
-						_checkVectorTiles({
-							sort: layerData.sorting,
-							arrTiles: arrTiles,
-							observers: observers,
-							styles: styles,
-							indexes: indexes
-						});
-						for (let zKey in observers) {
-							let observer = observers[zKey],
-								pars = observer.pars;
-
-							if (observer.canvas) {
-								pars.bitmap = observer.canvas.transferToImageBitmap();
-							}
-							observer.resolver(pars);
-							delete observers[zKey];
-						}
-						/*
-						for (let i = 0, len = arrTiles.length; i < len; i++) {
-							let tile = arrTiles[i],
-								styleNums = tile.styleNums,
-								itemsbounds = tile.itemsbounds;
-							if (!styleNums) {styleNums = tile.styleNums = [];}
-							if (!itemsbounds) {itemsbounds = tile.itemsbounds = [];}
-							for (let j = 0, len1 = oKeys.length; j < len1; j++) {
-								let zKey = oKeys[j],
-									observer = tData.observers[zKey];
-
-								if (!observer || !observer.bounds.intersects(tile.bounds)) {continue;}
-
-								if (!observer.tcnt) {observer.tcnt = 0;}
-								observer.tcnt++;
-								observer.items = [];
-								tile.values.forEach((it, n) => {
-									let geo = it[it.length - 1],
-										st = styleNums[n],
-										bounds = itemsbounds[n];
-									if (st === undefined) {st = styleNums[n] = getStyleNum(it, styles, tData.tileAttributeIndexes, observer.pars.z);}
-									if (!bounds) {bounds = itemsbounds[n] = Requests.geoItemBounds(geo);}
-
-									observer.items.push(it);
-								});
-							}
-						}
-						*/
-			// console.log('checkObservers _____1__________:', hosts, arrStyle);
-					});
-				}
-			}
-		});
-	});
-};
-
-const addObserver = (pars) => {
-
-// console.log('addObserver_______________:', pars, hosts);
-	return new Promise((resolve) => {
-		let layerID = pars.layerID,
-			zKey = pars.zKey,
-			host = hosts[pars.hostName || HOST],
-			out = {...pars};
-		if (host && host.ids) {
-		// if (host && host.ids && host.ids[layerID]) {
-		// if (host && host.parseLayers && host.parseLayers.layersByID[layerID] && host.ids && host.ids[layerID]) {
-			// let stData = host.parseLayers.layersByID[layerID],
-			let	tData = host.ids[layerID] || {};
-			if (!tData.observers) { tData.observers = {}; }
-			// let bounds = Requests.bounds();
-			if (pars.bbox) { bounds = bounds.extendBounds(pars.bbox); }
-			tData.observers[zKey] = {
-				// bounds: bounds,
-				pars: pars,
-				resolver: resolve
-			};
-			host.ids[layerID] = tData;
-// console.log('addObserver ____1_______:', stData, tData);
-			// start Recheck Observers on next frame
-			_waitCheckObservers();
-		} else {
-			out.error = 'Нет слоя: ' + layerID;
-			resolve(out);
-		}
-	});
-};
-
-const removeObserver = (pars) => {
-	let host = hosts[pars.hostName];
-	if (host && host.ids[pars.layerID]) {
-		let observers = host.ids[pars.layerID].observers;
-		if (observers) {
-			observers[pars.zKey].resolver([]);
-			delete observers[pars.zKey];
-		}
-	}
-console.log('removeObserver _______________:', pars, hosts);
-};
-
-
-// const chkSignal = (signalName, signals, opt) => {
-	// opt = opt || {};
-	// let sObj = signals[signalName];
-	
-	// if (sObj) { sObj.abort(); }
-	// sObj = signals[signalName] = new AbortController();
-	// sObj.signal.addEventListener('abort', (ev) => console.log('Отмена fetch:', ev));
-	// opt.signal = sObj.signal;
-	// signals[signalName] = sObj;
-	// return opt;
-// };
 
 const setBbox = (mapPos) => {
 	if (zoom !== mapPos.zoom) {
@@ -325,7 +111,7 @@ const chkVersion = () => {
 							pt.tilesOrder = it.tilesOrder;
 							pt.isGeneralized = pt.isGeneralized || {};
 							TilesLoader.load(pt);
-							Promise.all(Object.values(pt.tilesPromise)).then(_waitCheckObservers);
+							Promise.all(Object.values(pt.tilesPromise)).then(Observer.waitCheckObservers);
 						});
 					}
 				}
@@ -809,7 +595,6 @@ const parseTree = (json) => {
         }
         return dataOption;
     }
-*/
 
 const _parseItem = ({item, st, bounds, hiddenLines, pars}) => {
 	// let geo = item[item.length - 1],
@@ -826,6 +611,7 @@ const _parseItem = ({item, st, bounds, hiddenLines, pars}) => {
 	};
 };
 // const COMPARS = {WrapStyle: 'None', ftc: 'osm', srs: 3857};
+*/
 const optDef = {
 	...Requests.COMPARS,
 	ModeKey: 'map',
@@ -893,7 +679,9 @@ const parseMapTree = (mapInfo, hostName) => {
 		if (it.type === 'layer') {
 			let c = {...it.content};
 			let prp = c.properties;
-				c = {...c, ...Utils.parseStyles(prp)};
+			// let pl = Utils.parseLayerProps(prp);
+			c = {...c, ...Utils.parseStyles(prp)};
+			// c = {...c, ...Utils.parseStyles(prp)};
 			const LayerID = prp.LayerID;
 			if (prp.type === 'Vector') {
 				if (prp.visible) {
@@ -1001,22 +789,30 @@ const getTile = (pars) => {
 			}
 		}
 	}
+	// const parseLayers = hostLayers && hostLayers.parseLayers && hostLayers.parseLayers.layersByID[layerID];
+	// if (parseLayers && parseLayers.layersByID[layerID]) {
+		// const layer = parseLayers.layersByID[layerID];
+		// if (hostLayers && hostLayers.parseLayers && hostLayers.parseLayers[layerID]) {
+				// hostLayers.parseLayers.isVisible.forEach(it => {addSource(it)});
+		// }
+	// }
 // console.log('vvvvvvvvvv ___res____ ', message);
 	return Promise.all(queue.map(coords => 
-		addObserver({ coords: coords, zKey: coords.x + ':' + coords.y + ':' + coords.z , ...message})
+		Observer.addObserver({ type: 'screen', coords, zKey: coords.x + ':' + coords.y + ':' + coords.z , ...message})
 	));
 };
 
 export default {
+	hosts,
 	getMap,
 	getTile,
 	// getTiles,
-	// drawTile,
+	drawItem,
 	// getMapTree,
 	// moveend,
 	// setDateInterval,
-	addObserver,
-	removeObserver,
+	addObserver: Observer.addObserver,
+	removeObserver: Observer.removeObserver,
 	removeSource,
 	addSource
 };

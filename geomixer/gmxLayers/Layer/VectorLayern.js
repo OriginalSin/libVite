@@ -8,11 +8,26 @@ L.gmx.VectorLayer = L.GridLayer.extend({
         gmx.properties = ph.properties;
         gmx.geometry = ph.geometry;
 		this._gmx = gmx;
+		// this.options.zIndexOffset = 100000;
+		// this.options.zIndex = 1;
         return this;
 	},
 	getGmxProperties: function() {
 		return this._gmx.properties;
 	},
+	/* переопределенные методы GridLayer */
+    _updateZIndex: function () {
+        if (this._container) {
+            var options = this.options,
+                zIndex = options.zIndex || 1,
+                zIndexOffset = options.zIndexOffset || 100000;
+
+           this._container.style.zIndex = zIndexOffset + zIndex;
+        }
+	   this.fire('zindexupdated')
+	},
+	// setZIndex: function(nm) {
+	// },
 	// _update: function(center) {
 		// this._map._animateToZoom
 

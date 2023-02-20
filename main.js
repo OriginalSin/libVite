@@ -38,6 +38,8 @@ worker.onmessage = function(e) {
 		case 'getTile':
 			worker._cmdResolver[num](res);
 			break;
+		default:
+			worker._cmdResolver[num](res);
 	}
 	delete worker._cmdResolver[num];
 	// console.log('vwworker received from worker', e.data);
@@ -80,6 +82,9 @@ worker._sendCmd = (cmd, pars) => {
 				break;
 			case 'getTile':
 				worker.postMessage({cmd: 'getTile', attr});
+				break;
+			case 'mousemove':
+				worker.postMessage({cmd: 'mousemove', attr});
 				break;
 			default:
 				worker.postMessage({cmd, attr});

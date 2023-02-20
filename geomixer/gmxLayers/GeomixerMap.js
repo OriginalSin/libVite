@@ -65,6 +65,7 @@ var gmxMap = {
 		// const props = {};
 
 		gmxMap.layers.push(layer);
+		if (layer.options) layer.options.zIndex = gmxMap.layers.length;
 		gmxMap.layersByTitle[props.title] = layer;
 		gmxMap.layersByID[props.name] = layer;
 		// this.fire('layeradd', {layer: layer});

@@ -221,7 +221,7 @@ var gmxMapManager = {
 L.gmx = L.gmx || {};
 L.gmx._maps = {};			// свойства слоев по картам
 L.gmx._clientLayers = {};	// свойства слоев без карт (клиентские слои)
-
+/*
 if (location.protocol === 'https:') {
 	L.gmx._sw = '1';	// признак загрузки данных через Service Worker
 	if ('serviceWorker' in navigator) {
@@ -239,5 +239,5 @@ if (location.protocol === 'https:') {
 		console.error('Your browser does not support Service Workers.');
 	}
 }
-
+*/
 L.gmx.gmxMapManager = gmxMapManager;

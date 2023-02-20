@@ -164,6 +164,31 @@ map.on('layeradd', (ev) => {
 	// map.fitBounds(bounds);
 }).on('layerremove', (ev) => {
 	L.gmx.vw._sendCmd('layerremove', {id: ev.layer.options.layerID});
+// }).on('click', (ev) => {
+}).on('mousemove', (ev) => {
+	const oEv = ev.originalEvent;
+	const pars = {
+		ctrlKey: oEv.ctrlKey,
+		altKey: oEv.altKey,
+		shiftKey: oEv.shiftKey,
+		latlng: ev.latlng,
+		merc: L.Projection.SphericalMercator.project(ev.latlng),
+		layerPoint: ev.layerPoint
+	};
+	// pars.bbox = 
+	// console.log('mousemove', pars);
+	
+	L.gmx.vw._sendCmd('mousemove', pars).then(res => {
+		// console.log('mousemove res', res);
+		let cursor = '';
+		if (res.items) {
+			cursor = 'pointer';
+			// foundLayer = layer;
+		}
+		if (map._lastCursor !== cursor) {
+			map._container.style.cursor = map._lastCursor = cursor;
+		}
+	});
 });
 
 

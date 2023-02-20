@@ -1,14 +1,15 @@
-import Requests from './src/Requests.js';
 import DataVersion from './src/DataSourceVersion';
-import Renderer2d from './src/Renderer2d';
+import gmxEventsManager from './src/gmxEventsManager';
+// import Renderer2d from './src/Renderer2d';
 
 onmessage = function(e) {
 	const message = e.data || e;
 	const pars = {...message};
-	console.log('onmessage ', pars);
+	// console.log('onmessage ', pars);
 	switch(message.cmd) {
 		case 'getTile':
 			DataVersion.getTile(pars).then(function(res) {
+	// console.log('getTile ', res);
 				postMessage(res[0]);
 			});
 			break;
@@ -20,6 +21,9 @@ onmessage = function(e) {
 			break;
 		case 'getMap':
 			DataVersion.getMap(pars).then(postMessage);
+			break;
+		case 'mousemove':
+			gmxEventsManager.mousemove(pars).then(postMessage);
 			break;
 		// case 'getMap':
 			// DataVersion.getMapTree({mapID: message.mapId, apiKey: message.apiKey, hostName: message.hostName, search: message.search}).then((json) => {
@@ -36,6 +40,8 @@ onmessage = function(e) {
 			break;
 	}
 }
+/*
+
 const utils = {
 	getFormBody: function(par) {
 		return Object.keys(par).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(par[key]); }).join('&');
@@ -63,7 +69,6 @@ const utils = {
 		return resp.text();
 	},
 }
-
 const getMap = (MapName) => {
 	// const MapName = mapId;
 	const par = {
@@ -91,3 +96,4 @@ const getMap = (MapName) => {
 		// return utils.chkResponse(res, options.type);
 	})
 }
+*/
