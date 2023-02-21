@@ -4,7 +4,7 @@ const TILE_PREFIX = 'gmxAPI._vectorTileReceiver(';
 const edgeLimit = 0.05;
 
 const chkLimit = (x1, x2, b) => {
-	return Math.abs(x1 - b) < edgeLimit && Math.abs(x2 - b) < edgeLimit;
+	return Math.abs(x1 - b) <= edgeLimit && Math.abs(x2 - b) <= edgeLimit;
 };
 const chkOnEdge = (p1, p2, ext) => { // отрезок на границе
 	return (
@@ -13,11 +13,22 @@ const chkOnEdge = (p1, p2, ext) => { // отрезок на границе
 	);
 };
 
+const getHidden = (ring, tb) => {  // массив точек на границах тайлов
+	let prev = null;
+	return ring.reduce((p, c, i) => {
+		if (prev && chkOnEdge(c, prev, tb)) p.push(i);
+		prev = c;
+		return p;
+	}, []);
+};
+
 const parseValues = (json) => {
 	const tb = Requests.bounds(json.bbox);
 	json.bounds = tb;
 
 	const hiddenLines = [];
+	const paths = [];
+	// let paths;
 	json.values.forEach(it => {
 		const geo = it[it.length - 1];
 
@@ -28,23 +39,37 @@ const parseValues = (json) => {
 				return it.map(it1 => {return getHidden(it1, tb)})
 			});
 			hiddenLines.push(hr);
+			paths.push(getPaths(coords, hr));
+
 		}
 		if (type === 'POLYGON') {
 			let hr = coords.map(it => {return getHidden(it, tb)});
 			hiddenLines.push(hr);
+			paths.push(getPaths([coords], [hr]));
 		}
 	});
 	json.hiddenLines = hiddenLines;
+	json.paths = paths;
 	// console.log('hiddenLines', json);
 };
 
-const getHidden = (ring, tb) => {  // массив точек на границах тайлов
-	let prev = null;
-	return ring.reduce((p, c, i) => {
-		if (prev && chkOnEdge(c, prev, tb)) p.push(i);
-		prev = c;
-		return p;
-	}, []);
+const getPaths = (coords, hl) => {  // массивы Path2D
+	return coords.map((it, i) => {
+		return it.map((it1, i1) => {
+			let hit1 = (hl[i][i1] || []).slice(0);
+			let hn = hit1.shift();
+			let pf = new Path2D(), ps = new Path2D();
+			it1.forEach((p, j) => {
+				let m = j === 0;
+				if (j === hn) { m = true; hn = hit1.shift(); }
+				let x = p[0], y = -p[1];
+				ps[m ? 'moveTo' : 'lineTo'](x, y);
+				pf[j ? 'lineTo' : 'moveTo'](x, y);
+			});
+			pf.closePath();
+			return [it1.length, pf, ps];
+		});
+	});
 };
 
 const load = (pars) => {

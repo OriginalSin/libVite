@@ -95,23 +95,27 @@ const chkVersion = () => {
 					if (res.Status === 'ok' && res.Result) {
 						res.Result.forEach(it => {
 							let id = it.name;
-							let pt = ids[id],
-								props = it.properties;
-							if (props) {
-								pt.v = props.LayerVersion;
-								pt.properties = props;
-								pt.geometry = it.geometry;
-								if (!pt.tileAttributeIndexes) {
-									Requests.extend(pt, Utils.getTileAttributes(props));
+							if (ids[id]) {
+								let pt = ids[id],
+									props = it.properties;
+								if (props) {
+									pt.v = props.LayerVersion;
+									pt.properties = props;
+									pt.geometry = it.geometry;
+									if (!pt.tileAttributeIndexes) {
+										Requests.extend(pt, Utils.getTileAttributes(props));
+									}
 								}
+								pt.id = id;
+								pt.hostName = host;
+								pt.tiles = it.tiles;
+								pt.tilesOrder = it.tilesOrder;
+								pt.isGeneralized = pt.isGeneralized || {};
+								TilesLoader.load(pt);
+								Promise.all(Object.values(pt.tilesPromise)).then(Observer.waitCheckObservers);
+							} else {
+console.log('chkVersion layer skiped', id, it);
 							}
-							pt.id = id;
-							pt.hostName = host;
-							pt.tiles = it.tiles;
-							pt.tilesOrder = it.tilesOrder;
-							pt.isGeneralized = pt.isGeneralized || {};
-							TilesLoader.load(pt);
-							Promise.all(Object.values(pt.tilesPromise)).then(Observer.waitCheckObservers);
 						});
 					}
 				}
@@ -150,7 +154,10 @@ const addSource = (pars) => {
 			// }
 
 		// }
-		hostItem.ids[id] = pars;
+		if (hostItem.ids[id] && hostItem.ids[id].observers) {
+			// pars.observers = hostItem.ids[id].observers;
+			hostItem.ids[id] = {...hostItem.ids[id], ...pars};
+		} else hostItem.ids[id] = pars;
 		let parseLayers = hostItem.parseLayers;
 		let linkAttr = parseLayers.layersByID[id];
 		Requests.extend(linkAttr, Utils.parseStyles(linkAttr.properties));

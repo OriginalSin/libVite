@@ -20,6 +20,7 @@ const MapInit = () => {
 			center: new L.LatLng(55.965056, 32.460908),
 			attributionControl: false,
 			zoomControl: true,
+			minZoom: 1,
 			zoom: 33
 		}
 	);
@@ -158,12 +159,15 @@ L.gmx.gmxMapManager.getMap(opt).then(res => {
 map.on('layeradd', (ev) => {
 	// console.log('layeradd', ev);
 	const layer = ev.layer;
-	L.gmx.vw._sendCmd('layeradd', {id: layer.options.layerID});
-	layer._map.panBy({x:0,y:1});
+	const id = layer.options.layerID;
+	if (id) L.gmx.vw._sendCmd('layeradd', {id});
+	// layer._map.panBy({x:0,y:1});
 	// const bounds =L.gmxUtil.getGeometryBounds(layer._gmx.geometry).toLatLngBounds();
 	// map.fitBounds(bounds);
 }).on('layerremove', (ev) => {
-	L.gmx.vw._sendCmd('layerremove', {id: ev.layer.options.layerID});
+	const layer = ev.layer;
+	const id = layer.options.layerID;
+	if (id) L.gmx.vw._sendCmd('layerremove', {id});
 // }).on('click', (ev) => {
 }).on('mousemove', (ev) => {
 	const oEv = ev.originalEvent;

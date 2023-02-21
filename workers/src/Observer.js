@@ -30,6 +30,7 @@ const checkObservers = () => {
 				observers = tData.observers || {},
 				indexes = tData.tileAttributeIndexes,
 				tilesPromise = tData.tilesPromise;
+	// console.log('checkObservers _______________:', observers);
 			if (tilesPromise && Object.keys(observers).length) {
 				if(styles) {
 					// const styles = arrStyle || [];
@@ -117,6 +118,7 @@ const _checkVectorTiles = ({arrTiles, observers, styles, indexes, sort}) => {
 			let pixels = tile.pixels,
 				styleNums = tile.styleNums,
 				itemsbounds = tile.itemsbounds,
+				paths = tile.paths || [],
 				hiddenLines = tile.hiddenLines;
 			if (!styleNums) {styleNums = tile.styleNums = [];}
 			if (!itemsbounds) {itemsbounds = tile.itemsbounds = [];}
@@ -153,6 +155,7 @@ const _checkVectorTiles = ({arrTiles, observers, styles, indexes, sort}) => {
 								style: styles[st],
 								itemData: {
 									bounds: itemsbounds[nm],
+									paths: paths[nm],
 									hiddenLines: hiddenLines[nm],
 									item: it
 								}
@@ -294,7 +297,6 @@ const _chkHoverItem = (geo, boundsArr, merc, bounds) => {
 const addObserver = (pars) => {
 	const hosts = DataVersion.hosts;
 
-// console.log('addObserver_______________:', pars, hosts);
 	return new Promise((resolve) => {
 		let layerID = pars.layerID,
 			type = pars.type || 'screen',
@@ -312,34 +314,39 @@ const addObserver = (pars) => {
 					resolver: resolve
 				};
 				host.ids[layerID] = tData;
+// console.log('addObserver_______________:', zKey, layerID, host.ids[layerID], hosts);
 			} else {
 				const merc = pars.attr.merc;
 				const bounds = Requests.bounds().extend(merc.x, merc.y).addBuffer(0.5);
 				const arr = Object.values(host.ids).map(it => {
 					return new Promise(function(done, cancel) {
-						layerID = it.id;
-						it.observers[zKey] = {
-							layerID,
-							bounds,
-							type,
-							pars: pars,
-							resolver: done
-						};
+						if (it.observers) {
+							layerID = it.id;
+							it.observers[zKey] = {
+								layerID,
+								bounds,
+								type,
+								pars: pars,
+								resolver: done
+							};
+						} else done();
 					})
 				});
 				Promise.all(arr).then(res => {
 // console.log('arr   :', res);
 				let items = {};
 					res.forEach(it => {
-						(it.items || []).forEach(it1 => {
-							(it1 || []).forEach(it2 => {
-// console.log('arr ____1_______:', it2);
-								let layerID = it2.layerID;
-								if (!items[layerID]) items[layerID] = [];
-								items[layerID].push(it2.items);
-						// it.items
+						if (it) {
+							(it.items || []).forEach(it1 => {
+								(it1 || []).forEach(it2 => {
+	// console.log('arr ____1_______:', it2);
+									let layerID = it2.layerID;
+									if (!items[layerID]) items[layerID] = [];
+									items[layerID].push(it2.items);
+							// it.items
+								});
 							});
-						});
+						}
 					});
 					resolve(items);
 				});

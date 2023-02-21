@@ -23,7 +23,8 @@ onmessage = function(e) {
 			DataVersion.getMap(pars).then(postMessage);
 			break;
 		case 'mousemove':
-			gmxEventsManager.mousemove(pars).then(postMessage);
+			let prom = gmxEventsManager.mousemove(pars);
+			if (prom) prom.then(postMessage);
 			break;
 		// case 'getMap':
 			// DataVersion.getMapTree({mapID: message.mapId, apiKey: message.apiKey, hostName: message.hostName, search: message.search}).then((json) => {

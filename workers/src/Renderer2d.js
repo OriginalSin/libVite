@@ -34,11 +34,13 @@ const utils = {
 		if (!ph._drawing) { return; }
 
 		let mInPixel = ph.mInPixel,
-			item = ph.itemData.item,
+			itemData = ph.itemData,
+			item = itemData.item,
 			geo = item[item.length - 1],
 			type = geo.type,
 			coordinates = geo.coordinates,
-			hiddenLines = ph.itemData.hiddenLines,
+			hiddenLines = itemData.hiddenLines,
+			paths = itemData.paths,
 			ctx = ph._ctx;
 
 		if (!coordinates.length) return;
@@ -46,27 +48,57 @@ const utils = {
 			coordinates = [coordinates];
 			hiddenLines = [hiddenLines];
 		}
+		const matrix = new DOMMatrix([
+		  mInPixel, 0, 0, mInPixel,
+		  -ph.tpx, ph.tpy
+		]);
+		let fPath = new Path2D(), sPath = new Path2D();
+		paths.forEach(it => it.forEach(it2 => {
+			if (it2[0]) {
+				fPath.addPath(it2[1], matrix);
+				sPath.addPath(it2[2], matrix);
+			}
+		}));
+/*
+		paths.forEach(it => {
+			it.forEach(it2 => {
+					if (it2[0]) {
+						fPath.addPath(it2[1], matrix);
+						sPath.addPath(it2[2], matrix);
+					}
+			});
+		});
 		coordinates.forEach((it, i) => {
 			it.forEach((it1, i1) => {
-				let rarr = [];
+					let rarr = [];
 				let hit1 = hiddenLines[i][i1].slice(0);
 				let hn = hit1.shift();
+				let pathf = new Path2D();
+				let paths = new Path2D();
 				it1.forEach((p, j) => {
 					let m = j === 0;
 					if (j === hn) { m = true; hn = hit1.shift(); }
-					let x = Math.round(p[0] * mInPixel - ph.tpx);
-					let y = Math.round(ph.tpy - p[1] * mInPixel);
-					rarr = rarr.concat([m ? 'M' : 'L', x, y]);
+					let x = p[0], y = -p[1];
+					paths[m ? 'moveTo' : 'lineTo'](x, y);
+					pathf[j ? 'lineTo' : 'moveTo'](x, y);
+					// if (m) paths.moveTo(x, y);
+					// else paths.lineTo(x, y);
+						// let x = Math.round(p[0] * mInPixel - ph.tpx);
+						// let y = Math.round(ph.tpy - p[1] * mInPixel);
+						// rarr = rarr.concat([m ? 'M' : 'L', x, y]);
 				});
-				let rstr = rarr.join(' ');
-				utils._fillStroke(ph, false, true);
-				// ctx.fill(new Path2D(rstr.replace(/ M/g, ' L')));
-				ctx.fill(new Path2D(rstr.replace(/ M/g, ' L')), 'evenodd');
-				utils._fillStroke(ph, true);
-				ctx.stroke(new Path2D(rstr));
-				ctx.globalAlpha = 0;
+				// paths.closePath();
+				pathf.closePath();
+				sPath.addPath(paths, matrix);
+				fPath.addPath(pathf, matrix);
 			});
 		});
+*/
+		utils._fillStroke(ph, false, true);
+		ctx.fill(fPath);
+		utils._fillStroke(ph, true);
+		ctx.stroke(sPath);
+		ctx.globalAlpha = 0;
 	},
 
 	_fillStroke: function (ph, stroke, fill) {

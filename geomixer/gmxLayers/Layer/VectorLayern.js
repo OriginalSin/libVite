@@ -39,7 +39,9 @@ L.gmx.VectorLayer = L.GridLayer.extend({
 		var size = this.getTileSize();
 		tile.width = size.x;
 		tile.height = size.y;
-
+			// console.log('__createTile', coords.z, this._tileZoom);
+					this.__createTile(coords, done, tile);
+/*
 		this._map.once('moveend', () => {
 			if (this._map) {
 				let	zoom = this._map.getZoom();
@@ -52,13 +54,15 @@ L.gmx.VectorLayer = L.GridLayer.extend({
 				}
 			}
 		});
+		*/
 		return tile;
 	},
-	__createTile: function(coords, done, tile, mapPos) {
+	__createTile: function(coords, done, tile) {
 		const key = this._tileCoordsToKey(coords);
-		this.__promises = this.__promises || {};
-		new Promise((resolve, reject) => {
-			this.__promises[key] = resolve;
+		let	mapPos = {bbox: L.gmxUtil.getBboxes(this._map), zoom: this._tileZoom};
+		// this.__promises = this.__promises || {};
+		// new Promise((resolve, reject) => {
+			// this.__promises[key] = resolve;
 			let opt = {
 				cmd: 'getTile',
 				hostName: this.options.hostName,
@@ -73,6 +77,6 @@ L.gmx.VectorLayer = L.GridLayer.extend({
 				tile.getContext('bitmaprenderer').transferFromImageBitmap(res.bitmap);
 				done('', tile);
 			});
-		});
+		// });
 	}
 });
