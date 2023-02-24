@@ -1,8 +1,8 @@
 import './geomixer/index.js';
 import viewerInit from './viewer/index.js';
 
-const mapId = 'FEZ2G';
-
+const mapId = L.gmxUtil.getLocSearch() || 'DefaultMap';
+window.language = 'rus';
 const MapInit = () => {
 	const node = document.querySelector('#map');
 	const map = new L.Map(node,
@@ -135,15 +135,14 @@ var tLayer = new CanvasLayer();
 		// const img = document.body.appendChild(new Image());
 		// img.src = URL.createObjectURL(blob2);
 	// }
-const opt =
-	{
-    "srs": 3857,
-    "skipTiles": "All",
-    "hostName": "maps.kosmosnimki.ru",
-    "setZIndex": true,
-    "isGeneralized": true,
-    "MapName": mapId,
-    "ftc": "osm"
+const opt =	{
+    // srs: 3857,
+    // skipTiles: 'All',
+    // hostName: 'maps.kosmosnimki.ru',
+    // setZIndex: true,
+    // isGeneralized: true,
+    MapName: mapId,
+    // ftc: 'osm'
 };
 L.gmx.gmxMapManager.getMap(opt).then(res => {
 // L.gmx.vw._sendCmd('getMap', commonOptions).then(res => {

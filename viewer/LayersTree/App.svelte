@@ -25,7 +25,6 @@
 		
 	}
 </script>
-
 <div class="iconSidebarControl">
 	<ul class="tabs">
 		<li class="tab {activeTab === 'layers-tree' ? 'active' : ''}" data-id="layers-tree" on:click={setActive}>
@@ -37,7 +36,7 @@
 	</ul>
 	<div class="panes">
 		<div data-id="layers-tree" class="layers {activeTab === 'layers-tree' ? 'active' : ''}">
-		<LayersTree {map} />
+			<LayersTree {map} />
 		</div>
 		<div data-id="forestView" class="layers {activeTab === 'forestView' ? 'active' : ''}">forestView
 		</div>

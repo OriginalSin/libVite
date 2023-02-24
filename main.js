@@ -5,17 +5,17 @@ import mapInit from './map.js';
 import Worker from './workers/worker?worker'
 
 L.gmx = L.gmx || {};
-const mapId = 'FEZ2G';
-const commonOptions =
-	{
-    "srs": 3857,
-    "skipTiles": "All",
-    "hostName": "maps.kosmosnimki.ru",
-    "setZIndex": true,
-    "isGeneralized": true,
-    "MapName": mapId,
-    "ftc": "osm"
-};
+// const mapId = 'FEZ2G';
+// const commonOptions =
+	// {
+    // "srs": 3857,
+    // "skipTiles": "All",
+    // "hostName": "maps.kosmosnimki.ru",
+    // "setZIndex": true,
+    // "isGeneralized": true,
+    // "MapName": mapId,
+    // "ftc": "osm"
+// };
 
 const worker = new Worker()
 L.gmx.vw = worker;

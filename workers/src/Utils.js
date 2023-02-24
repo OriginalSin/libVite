@@ -213,18 +213,22 @@ const utils = {
     },
 */
     parseFilter: function(str) {
-		let regex1 = /"(.+?)" in \((.+?)\)/g,
-			regex2 = /"(.+?)"/g,
-			regexMath = /(floor\()/g,
-			body = str ? str
-				.replace(/[[\]]/g, '"')
-				.replace(regex1, '[$2].includes(props[indexes[\'$1\']])')
-				.replace(regex2, 'props[indexes[\'$1\']]')
-				.replace(/[^><]=[^><]/g, '===')
+		let body = true;
+		let test = false;
+		if (str) {
+			body = str.replace(/[[\]]/g, '"')
+				.replace(/"(.+?)" in \((.+?)\)/g, '[$2].includes(props[indexes[\'$1\']])')
+				.replace(/"(.+?)"/g, 'props[indexes[\'$1\']]')
+				.replace(/([^><])=([^><])/g, '$1 === $2')
+				.replace(/! ===/g, '!==')
+				.replace(/<>/g, ' !== ')
+
 				.replace(/\bAND\b/g, '&&')
 				.replace(/\bOR\b/g, '||')
-				.replace(regexMath, 'Math.$1')
-				: true;
+				.replace(/(floor\()/g, 'Math.$1');
+			// test = new Function('props', 'indexes', 'return ' + body + ';');
+			// console.log('test', test);
+		}
 		return {
 			filter: str,
 			filterParsed: body,

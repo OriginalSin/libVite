@@ -8,6 +8,19 @@ const WORLDWIDTHFULL = 40075016.685578496,
 	WORLDBBOX = [[-W, -W, W, W]];
 
 var gmxAPIutils = {
+	getLocSearch: (name, str = window.location.search.substring(1)) => {
+		return name ?
+			new URLSearchParams(str).get(name) :
+			str.split('&').filter(it => it.search(/=/) === -1)[0];
+
+	},
+	delay: timeout => new Promise(resolve => {
+		const id = window.setInterval(() => {
+			window.clearInterval(id);
+			resolve({});
+		}, timeout);
+	}),
+
 	getBboxes: function(map) {
 		if (map.options.allWorld) {
 			return WORLDBBOX;
@@ -3181,6 +3194,8 @@ if (!L.gmxUtil) { L.gmxUtil = {}; }
 var	pNavigation = self.performance && self.performance.getEntriesByType('navigation')[0];
 
 L.extend(L.gmxUtil, {
+	delay: gmxAPIutils.delay,
+	getLocSearch: gmxAPIutils.getLocSearch,
 	getBboxes: gmxAPIutils.getBboxes,
 	isHTTP2: pNavigation && pNavigation.nextHopProtocol === 'h2',
 	debug: gmxAPIutils.debug,

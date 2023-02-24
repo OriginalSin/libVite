@@ -1,9 +1,14 @@
 ﻿import './gmxStyles.css';
 import {gmxAPIutils} from './Utils.js';
+import './Locale.js';
+import './lang_ru.js';
+import './lang_en.js';
 
 import './Layer/VectorLayern.js';
 import './MapManager.js';
 import './GeomixerMap.js';
+import Notification from  './Notification/Notification.js'
+L.gmxUtil.Notification = new Notification({closeIcon: false});
 /*
 import './Parsers.js';
 import './Deferred.js';
@@ -12,9 +17,6 @@ import './ImageLoader.js';
 import './DrawCanvas.js';
 import './SessionManager.js';
 import './EventsManager.js';
-import './Locale.js';
-import './lang_ru.js';
-import './lang_en.js';
 
 import './DataManager/VectorTileLoader.js';
 import './DataManager/VectorTile.js';

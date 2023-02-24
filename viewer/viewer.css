@@ -23,7 +23,7 @@ body > .all > .header {
 body > .all.leftMenuOn .map {
     height: calc(100% - 36px);
 	left: 40px;
-    width: calc(100% - 40px);
+    /* width: calc(100% - 40px); */
 }
 .leftMenu .group.closed ul.grp {
 	display: none;

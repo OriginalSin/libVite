@@ -203,7 +203,8 @@ L.gmx.createLayer = function(layerInfo, options) {
 
     if (!options) { options = properties; }
 
-	if (type in L.gmx._layerClasses) {
+	// if (type in L.gmx._layerClasses) {
+	if (L.gmx._layerClasses[type]) {
         try {
             layer = new L.gmx._layerClasses[type](options || layerInfo.properties);
             layer = layer.initFromDescription(layerInfo);

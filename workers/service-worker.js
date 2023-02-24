@@ -41,6 +41,7 @@ self.addEventListener('message', e => {
 var CACHE_NAME = 'Geomixer';
 var OFFLINE_TILE = './offline.png';
 var offlineVersion = false;
+// var offlineVersion = true;
 
 console.log("SW startup");
 
@@ -86,6 +87,7 @@ self.addEventListener('fetch', function(event) {
       });
     event.respondWith(cached);
   }
+    // event.respondWith(request);
 });
 //
 // Helper to fetch and store in cache.

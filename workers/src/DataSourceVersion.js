@@ -642,7 +642,7 @@ const getMap = (pars) => {
 	// let host = hosts[hostName];
 
 	if (pars.mapId) { pars.MapName = pars.mapId; }
-	let attr = {...optDef, ...pars.attr};
+	let attr = {...optDef, ...pars.attr, sw: 0};
 // console.log('getMap', pars);
 	const url = '//' + hostName + '/TileSender.ashx?' + Requests.getFormBody(attr) + '&' + Date.now();
 	const opt = {
@@ -652,7 +652,17 @@ const getMap = (pars) => {
 	// body: JSON.stringify(params)	// TODO: сервер почему то не хочет работать так 
 	};
 	return fetch(url, opt)
-	.then(res => res.json())
+	// .then(res => res.json())
+	.then(res => {
+		const contentType = res.headers.get('Content-Type');
+		let out = {};
+		if (contentType.indexOf('application/json') > -1 ||				// application/json; charset=utf-8
+			contentType.indexOf('text/javascript') > -1) {	 			// text/javascript; charset=utf-8
+console.log('getMap', res.headers.get('Content-Type'));
+			out = res.json();
+		}
+		return out;
+	})
 	.then(function(res) {
 		if (res.Status === 'ok' && res.Result) {
 			const parsed = parseMapTree(res.Result, hostName)
