@@ -3,7 +3,7 @@
   // import svelteLogo from './assets/svelte.svg'
   // import Counter from './lib/Counter.svelte'
   
-	export let map;
+	// export let map;
 	export let cont;
 
 	cont.parentNode.classList.add('leftMenuOn');
@@ -36,7 +36,7 @@
 	</ul>
 	<div class="panes">
 		<div data-id="layers-tree" class="layers {activeTab === 'layers-tree' ? 'active' : ''}">
-			<LayersTree {map} />
+			<LayersTree />
 		</div>
 		<div data-id="forestView" class="layers {activeTab === 'forestView' ? 'active' : ''}">forestView
 		</div>
@@ -58,7 +58,7 @@
 }
 .iconSidebarControl .panes {
     float: right;
-	width: 348px;
+	width: 362px;
 }
 .iconSidebarControl .tabs {
     width: 40px;

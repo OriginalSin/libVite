@@ -72,8 +72,3 @@ body.printMap .all .print-ui {
   }
 }
 
-svg.time {
-    height: 16px;
-    width: 16px;
-	vertical-align: -3px;
-}

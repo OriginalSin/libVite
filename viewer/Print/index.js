@@ -9,8 +9,8 @@ const app = () => {
 	const print = new Print({
 	  target: cont,
 	  props: {
-		  map,
-		  cont
+		  // map,
+		  // cont
 	  }
 	});
 	print.$on('visible', async ev => {

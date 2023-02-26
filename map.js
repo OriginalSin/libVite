@@ -146,7 +146,7 @@ const opt =	{
 };
 L.gmx.gmxMapManager.getMap(opt).then(res => {
 // L.gmx.vw._sendCmd('getMap', commonOptions).then(res => {
-	console.log('getMap res', res);
+	// console.log('getMap res', res);
 	// L.gmxMap = new L.gmx.gmxMap(res, commonOptions);
 	// L.gmxMap.leafletMap = L.gmx.map;
 	// L.gmxMap.addLayersToMap(L.gmx.map);

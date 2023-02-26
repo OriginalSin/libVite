@@ -25,7 +25,7 @@
 		</div>
 
 		<div class="layers">
-			<Group {gmxMap} {type} {props} {childs} />
+			<Group {childs} />
 		</div>
 	</div>
 </div>

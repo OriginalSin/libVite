@@ -1,4 +1,5 @@
 import './Leaflet-1.92/leaflet.js'
+import './Leaflet-1.92/leaflet.css'
 import './Leaflet.contextmenu/dist/leaflet.contextmenu.js'
 import './Leaflet.contextmenu/dist/leaflet.contextmenu.css'
 import Drawing from './gmxDrawing/Drawing.js'

@@ -1,10 +1,10 @@
 <script>
     import { beforeUpdate, createEventDispatcher } from 'svelte';
 
-    export let map;
     export let visible = false;
 
     const dispatch = createEventDispatcher();
+    const map = L.gmx.map;
 
 	const mapCont = map.getContainer();
 	const BIG = 1150, SMALL = BIG / 1.4142;

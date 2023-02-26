@@ -8,7 +8,7 @@
 
     export let dateInterval = {};
     export let value = '';
-    export let position = 'bottom';
+    // export let position = 'bottom';
     export let exchange = false;
     export let className = '';
 	
@@ -20,6 +20,7 @@
 
     let open = false,
         mouseMove = false,
+		timeIcon = L.gmxUtil.setSVGIcon('time'),
 		btime = '00',
 		etime = '24',
         placeholder = 'День / Месяц / Год',
@@ -104,7 +105,7 @@ const optHours = (Array(25).join().split(',').map((it, i) => '<option value="' +
     <input value={end} on:change={change} class="end {mouseMove ? 'active' : ''}" type='date' placeholder />
 	<span on:click={change} class="icon right"></span>
 	<span class="time">
-		{@html L.gmxUtil.setSVGIcon('time')}
+		{@html timeIcon}
 		<input value="{btime}" on:change={change} class="btime" type="number" min=0 max=24 />
 		<span>-</span>
 		<input value="{etime}" on:change={change} class="etime" type="number" min=0 max=24 />
@@ -113,14 +114,6 @@ const optHours = (Array(25).join().split(',').map((it, i) => '<option value="' +
 		<span class="itypeTxt"><input on:change={change} class="itype" type="checkbox" checked=true />Единый интервал для слоев</span>
 		<span class="dailyTxt"><input on:change={change} class="daily" type="checkbox" checked=true />посуточно</span>
 	</div>
-	<div class="unsync-layers-container" style="display: none">
-		<select class="layersList" id="ui-id-1" style="display: none;"></select>
-		<span class="ui-selectmenu-button ui-widget ui-state-default ui-corner-all" tabindex="0" id="ui-id-1-button" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-owns="ui-id-1-menu" aria-haspopup="true" style="width: 0px;">
-			<span class="ui-icon ui-icon-triangle-1-s"></span>
-			<span class="ui-selectmenu-text">&nbsp;</span>
-		</span>
-	</div>
-
 </div>
 <style>
 

@@ -4,7 +4,7 @@
     /* height: 40px; */
     /* background-color: #FFFFFF; */
     z-index: 9;
-    text-align: center;
+    /* text-align: center; */
     padding: 4px 0px 4px;
 	user-select: none;
 }
@@ -19,9 +19,6 @@
 
 .date-range-container .icon.left:before { content: '<'; }
 .date-range-container .icon.right:before { content: '>'; }
-/*
-.date-range-container .icon-left:before { content: '\003c'; }
- .date-range-container .icon-left:before { content: '\'; } */
 
 .date-range-container [class*="icon"]:before {
     /* font-family: "fontello"; */
@@ -52,11 +49,11 @@
 	/* color: #bf1400; */
 }
 .date-range-container .time {
-    /* margin-left: 4px; */
+    margin-left: 4px;
 }
 
 .date-range-container .time input {
-    width: 18px;
+    width: 16px;
 }
 /* Chrome, Safari, Edge, Opera */
 .date-range-container .time input::-webkit-outer-spin-button,
@@ -70,16 +67,20 @@
 	-moz-appearance: textfield;
 }
 .date-range-container .sync-type span {
-    position: relative;
     /* display: flex; */
 }
 .date-range-container .sync-type span.itypeTxt {
-    left: -22px;
+    /* left: -22px; */
 }
 .date-range-container .sync-type span.dailyTxt {
-    right: -24px;
+    position: relative;
+    right: -64px;
 }
-
+.date-range-container svg.time {
+    height: 16px;
+    width: 16px;
+	vertical-align: -3px;
+}
 
     /* make the native arrow invisible and stretch it over the whole field so you can click anywhere in the input field to trigger the native datepicker
     input[type="date"]::-webkit-calendar-picker-indicator {
