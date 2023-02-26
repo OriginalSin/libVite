@@ -104,6 +104,7 @@ const optHours = (Array(25).join().split(',').map((it, i) => '<option value="' +
     <input value={end} on:change={change} class="end {mouseMove ? 'active' : ''}" type='date' placeholder />
 	<span on:click={change} class="icon right"></span>
 	<span class="time">
+		{@html L.gmxUtil.setSVGIcon('time')}
 		<input value="{btime}" on:change={change} class="btime" type="number" min=0 max=24 />
 		<span>-</span>
 		<input value="{etime}" on:change={change} class="etime" type="number" min=0 max=24 />

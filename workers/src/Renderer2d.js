@@ -105,23 +105,33 @@ const utils = {
 		ph = _reqParse(ph);
 		let options = ph.options,
 			ctx = ph._ctx;
+                // out.canvasPattern = (pt.canvasPattern ? pt.canvasPattern : gmxAPIutils.getPatternIcon(item, pt, indexes));
 
 // console.log('_fillStroke', options);
-		if (fill && options.fillColor) {
-			ctx.globalAlpha = options.fillOpacity !== undefined ? options.fillOpacity : 1;
-			ctx.fillStyle = options.fillColor;
+		// if (fill && options.fillColor) {
+			// ctx.globalAlpha = options.fillOpacity !== undefined ? options.fillOpacity : 1;
+			// ctx.fillStyle = options.fillColor;
+		if (fill) {
+			// if (options.fillColor) ctx.fillStyle = options.fillColor;
+			
 			// ctx.fill(options.fillRule || 'evenodd');
+			if (options.imageBitmap) {
+				ctx.fillStyle = ctx.createPattern(options.imageBitmap, 'repeat');
+			} else if (options.fillColor) {
+				ctx.fillStyle = options.fillColor;
+			}
+			ctx.globalAlpha = options.fillOpacity !== undefined ? options.fillOpacity : 1;
 		}
 
 		if (stroke && options.weight !== 0) {
 			if (ctx.setLineDash) {
-				ctx.setLineDash(options && options._dashArray || []);
+				ctx.setLineDash(options && options.dashArray || []);
 			}
 			ctx.globalAlpha = options.opacity !== undefined ? options.opacity : 1;
 			ctx.lineWidth = options.weight;
 			ctx.strokeStyle = options.color;
-			ctx.lineCap = options.lineCap;
-			ctx.lineJoin = options.lineJoin;
+			ctx.lineCap = options.lineCap || 'round';
+			ctx.lineJoin = options.lineJoin || 'round';
 			// ctx.stroke();
 		}
 	},

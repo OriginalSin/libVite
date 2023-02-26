@@ -174,7 +174,7 @@ const utils = {
             prev = null;
         for (var i = 0, len = coords.length; i < len; i += vectorSize) {
             var p = vectorSize === 1 ? coords[i] : [coords[i], coords[i + 1]];
-            if (prev && gmxAPIutils.chkOnEdge(p, prev, tb)) {
+            if (prev && utils.chkOnEdge(p, prev, tb)) {
                 hiddenLines.push(i);
             }
             prev = p;
@@ -299,6 +299,13 @@ const utils = {
 	// });
     // return gmxStyles;
 // };
+
+    dec2hex: function(i) {					// convert decimal to hex
+        return (i + 0x1000000).toString(16).substr(-6);
+    },
+    dec2color: function(i, a)   {   // convert decimal to canvas color
+        return a < 1 ? this.dec2rgba(i, a) : '#' + this.dec2hex(i);
+    },
     dec2rgba: function(i, a)	{				// convert decimal to rgb
         var r = (i >> 16) & 255,
             g = (i >> 8) & 255,
@@ -345,11 +352,16 @@ const utils = {
 										// styleOut[STYLEFUNCKEYS[newKey]] = func;
 									// }
 								// }
+								// L.gmxUtil.getPatternIcon(options)
 							}
+						// } else if (key1 === 'pattern') {
+							// zn = utils.getPatternIcon(null, {fillPattern: zn});
+// console.log('sssss ', key, key1, zn, st);
 						} else if (key1 === 'opacity') {
 							zn /= 100;
 						} else if (key1 === 'color') {
-							zn = utils.dec2rgba(zn, st.opacity !== undefined ? st.opacity : 1);
+							zn = utils.dec2rgba(zn, 1);
+							// zn = utils.dec2rgba(zn, st.opacity !== undefined ? st.opacity / 100 : 1);
 						}
 						styleOut[newKey] = zn;
 					}
@@ -379,6 +391,139 @@ const utils = {
 		};
 */
 	},
+    getPatternIcon: function(item, style, indexes) { // получить bitmap стиля pattern
+        if (!style.fillPattern) { return null; }
+// console.log('getPatternIcon', style);
+
+        var notFunc = true,
+            pattern = style.fillPattern,
+            prop = item ? item.properties : null,
+            step = pattern.step > 0 ? pattern.step : 0,
+            patternDefaults = {
+                minWidth: 1,
+                maxWidth: 1000,
+                minStep: 0,
+                maxStep: 1000
+            };
+        if (pattern.patternStepFunction && prop !== null) {
+            step = pattern.patternStepFunction(prop, indexes);
+            notFunc = false;
+        }
+        if (step > patternDefaults.maxStep) {
+            step = patternDefaults.maxStep;
+        }
+        else if (step < patternDefaults.minStep) {
+            step = patternDefaults.minStep;
+        }
+
+        var size = pattern.width > 0 ? pattern.width : 8;
+        if (pattern.patternWidthFunction && prop !== null) {
+            size = pattern.patternWidthFunction(prop, indexes);
+            notFunc = false;
+        }
+        if (size > patternDefaults.maxWidth) {
+            size = patternDefaults.maxWidth;
+        } else if (size < patternDefaults.minWidth) {
+            size = patternDefaults.minWidth;
+        }
+
+        var op = 1;
+        // var op = style.fillOpacity;
+        if (style.opacityFunction && prop !== null) {
+            op = style.opacityFunction(prop, indexes) / 100;
+            notFunc = false;
+        }
+
+        var rgb = [0xff0000, 0x00ff00, 0x0000ff],
+            arr = (pattern.colors != null ? pattern.colors : rgb),
+            count = arr.length,
+            resColors = [],
+            i = 0;
+
+        for (i = 0; i < count; i++) {
+            var col = arr[i];
+            if (pattern.patternColorsFunction && pattern.patternColorsFunction[i] !== null) {
+                col = (prop !== null ? pattern.patternColorsFunction[i](prop, indexes) : rgb[i % 3]);
+                notFunc = false;
+            }
+            resColors.push(col);
+        }
+        if (count === 0) { resColors = [0]; op = 0; count = 1; }   // pattern without colors
+
+        var delta = size + step,
+            allSize = delta * count,
+            center = 0,
+            //radius,
+            rad = 0,
+            hh = allSize,				// высота битмапа
+            ww = allSize,				// ширина битмапа
+            type = pattern.style || 'horizontal',
+            flagRotate = false;
+
+        if (type === 'diagonal1' || type === 'diagonal2' || type === 'cross' || type === 'cross1') {
+            flagRotate = true;
+        } else if (type === 'circle') {
+            ww = hh = 2 * delta;
+            center = Math.floor(ww / 2);	// центр круга
+            //radius = Math.floor(size / 2);	// радиус
+            rad = 2 * Math.PI / count;		// угол в рад.
+        } else if (type === 'vertical') {
+            hh = 1;
+        } else if (type === 'horizontal') {
+            ww = 1;
+        }
+        if (ww * hh > patternDefaults.maxWidth) {
+            console.log({'func': 'getPatternIcon', 'Error': 'MAX_PATTERN_SIZE', 'alert': 'Bitmap from pattern is too big'});
+            return null;
+        }
+
+		let canvas = new OffscreenCanvas(ww, hh);
+		canvas.width = ww; canvas.height = hh;
+
+        // var canvas = document.createElement('canvas');
+        // canvas.width = ww; canvas.height = hh;
+        var ptx = canvas.getContext('2d');
+        ptx.clearRect(0, 0, canvas.width, canvas.height);
+        if (type === 'diagonal2' || type === 'vertical') {
+            ptx.translate(ww, 0);
+            ptx.rotate(Math.PI / 2);
+        }
+
+        for (i = 0; i < count; i++) {
+            ptx.beginPath();
+            var fillStyle = utils.dec2color(resColors[i], op);
+            ptx.fillStyle = fillStyle;
+
+            if (flagRotate) {
+                var x1 = i * delta; var xx1 = x1 + size;
+                ptx.moveTo(x1, 0); ptx.lineTo(xx1, 0); ptx.lineTo(0, xx1); ptx.lineTo(0, x1); ptx.lineTo(x1, 0);
+
+                x1 += allSize; xx1 = x1 + size;
+                ptx.moveTo(x1, 0); ptx.lineTo(xx1, 0); ptx.lineTo(0, xx1); ptx.lineTo(0, x1); ptx.lineTo(x1, 0);
+                if (type === 'cross' || type === 'cross1') {
+                    x1 = i * delta; xx1 = x1 + size;
+                    ptx.moveTo(ww, x1); ptx.lineTo(ww, xx1); ptx.lineTo(ww - xx1, 0); ptx.lineTo(ww - x1, 0); ptx.lineTo(ww, x1);
+
+                    x1 += allSize; xx1 = x1 + size;
+                    ptx.moveTo(ww, x1); ptx.lineTo(ww, xx1); ptx.lineTo(ww - xx1, 0); ptx.lineTo(ww - x1, 0); ptx.lineTo(ww, x1);
+                }
+            } else if (type === 'circle') {
+                ptx.arc(center, center, size, i * rad, (i + 1) * rad);
+                ptx.lineTo(center, center);
+            } else {
+                ptx.fillRect(0, i * delta, ww, size);
+            }
+            ptx.closePath();
+            ptx.fill();
+        }
+ 		let canvas1 = new OffscreenCanvas(ww, hh);
+		// canvas.width = ww; canvas.height = hh;
+       // var canvas1 = document.createElement('canvas');
+        canvas1.width = ww; canvas1.height = hh;
+        var ptx1 = canvas1.getContext('2d');
+        ptx1.drawImage(canvas, 0, 0, ww, hh);
+        return {'notFunc': notFunc, 'canvas': canvas1};
+    },
     getTileBounds: function(coords) {
 		var tileSize = WORLDWIDTHFULL / Math.pow(2, coords.z),
             minx = coords.x * tileSize - W,
@@ -441,6 +586,9 @@ const utils = {
 				let data = utils.parseFilter(it.Filter || '');
 				data.MinZoom = renderStyleNew.MinZoom;
 				data.MaxZoom = renderStyleNew.MaxZoom;
+				// if (renderStyleNew.fillPattern) {
+					// renderStyleNew.canvasPattern = utils.getPatternIcon(null, renderStyleNew);
+				// }
 				// if (renderStyle) {
 					data.renderStyle = renderStyleNew;
 				// }
@@ -466,10 +614,23 @@ const utils = {
 						}).catch(console.warn);
 						// resolve(data);
 					});
+				} else if (renderStyleNew.fillPattern) {
+					let canv = utils.getPatternIcon(null, renderStyleNew);
+					canv.canvas.convertToBlob().then(blob => {
+						// console.log(blob)
+						return createImageBitmap(blob, {
+							premultiplyAlpha: 'none',
+							colorSpaceConversion: 'none'
+						}).then(imageBitmap => {
+							data.renderStyle.imageBitmap = imageBitmap;
+							resolve(data);
+						}).catch(console.warn);
+					});
 				} else {
 					if (prop._maxStyleSize < data.renderStyle.weight) { prop._maxStyleSize = data.renderStyle.weight; }
 					resolve(data);
 				}
+					// offscreen.convertToBlob().then((blob) => console.log(blob));
 				// return data;
 			})
 		});

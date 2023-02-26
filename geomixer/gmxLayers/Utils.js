@@ -21,18 +21,18 @@ var gmxAPIutils = {
 		}, timeout);
 	}),
 
-	getBboxes: function(map) {
+	getBboxes: function(map, zoom, bbox) {
 		if (map.options.allWorld) {
 			return WORLDBBOX;
 		}
-		let bbox = map.getBounds(),
-			ne = bbox.getNorthEast(),
+		if (bbox === undefined) bbox = map.getBounds();
+		let	ne = bbox.getNorthEast(),
 			sw = bbox.getSouthWest();
 		if ((ne.lng - sw.lng) > 180) {
 			return WORLDBBOX;
 		}
-		let zoom = map.getZoom(),
-			ts = L.gmxUtil.tileSizes[zoom],
+		if (zoom === undefined) zoom = map.getZoom();
+		let	ts = L.gmxUtil.tileSizes[zoom],
 			pb = {x: ts, y: ts},
 			mbbox = L.bounds(
 				L.CRS.EPSG3857.project(sw)._subtract(pb),
@@ -713,7 +713,8 @@ var gmxAPIutils = {
             size = patternDefaults.minWidth;
         }
 
-        var op = style.fillOpacity;
+        var op = 1;
+        // var op = style.fillOpacity;
         if (style.opacityFunction && prop !== null) {
             op = style.opacityFunction(prop, indexes) / 100;
             notFunc = false;
@@ -805,8 +806,8 @@ var gmxAPIutils = {
         ptx1.drawImage(canvas, 0, 0, ww, hh);
         return {'notFunc': notFunc, 'canvas': canvas1};
     },
-    setSVGIcon: function(id) {
-		return '<svg role="img" class="svgIcon"><use xlink:href="#' + id + '" href="#' + id + '"></use></svg>';
+    setSVGIcon: function(id, className = '') {
+		return `<svg role="img" class="svgIcon ${id} ${className}"><use href="#${id}"></use></svg>`;
     },
 
     getSVGIcon: function (options) {

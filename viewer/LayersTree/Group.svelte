@@ -2,7 +2,7 @@
     import { onMount, onDestroy, beforeUpdate, afterUpdate, createEventDispatcher } from 'svelte';
 	// import MyIcon from '../svg/s-tree.svg';
   // import svelteLogo from './assets/svelte.svg'
-	// import Line from './Line.svelte'
+	import Line from './Line.svelte'
   
 	export let gmxMap;
 	export let childs = [];
@@ -13,7 +13,6 @@
 	let cont;
 	// let visible = props.visible ? true : false;
 	// let list = props.list ? true : false;
-// console.log('ggggg', gmxMap);
 
 	onMount(() => {
 		// console.log('onMount', type, props, childs);
@@ -46,7 +45,7 @@
 			it.content.properties.visible = !it.content.properties.visible;
 			const layerID = it.content.properties.name;
 			const layer = gmxMap.layersByID[layerID];
-console.log('ggggg', layerID, layer);
+console.log('ggggg', layerID, gmxMap);
 			if (it.content.properties.visible) {
 				gmxMap.leafletMap.addLayer(layer);
 			} else {
@@ -76,8 +75,16 @@ console.log('ggggg', layerID, layer);
 {#if arr.length}
 <ul class="grp">
 {#each arr as item, i}
+{@const type = item.type || {}}
 {@const content = item.content || {}}
 {@const prp = content.properties || {}}
+{@const layerID = prp.LayerID || ''}
+{@const layerItem = gmxMap.layersByID[layerID] || {}}
+{@const _gmx = layerItem[_gmx] || {}}
+{@const props = _gmx.properties || {}}
+{@const gmxStyles = props.gmxStyles || []}
+{@const gmxStyle = gmxStyles.length === 1 ? gmxStyles[0] : null}
+
 {@const closed = prp.expanded ? '' : 'closed'}
 {@const visible = prp.visible ? true : false}
 {@const showCheckbox = item.type === 'layer' || prp.ShowCheckbox ? true : false}
@@ -85,23 +92,26 @@ console.log('ggggg', layerID, layer);
 
 	<li class="group {item.type} {closed}" data-nm={i}>
 		{#if item.type === 'group'}<div class="hitarea" on:click={toggle}></div>{/if}
-		<div layerid={prp.name} class="line ui-droppable">
+		<Line {layerID} {prp} {type} />
+<!--	
+		<div layerid={layerID} class="line ui-droppable">
 			{#if showCheckbox}<input type="checkbox" name="root" class="box" checked={visible} on:click={toggleLayer} />{/if}
+		{#if gmxStyle}
 			<span styletype="color">
 				<div class="colorIcon" styletype="color" title="Редактировать стили" style="display: inline-block;">
-					<div class="borderIcon" styletype="color" style="border-color: rgb(0, 0, 255); opacity: 1;"></div>
-					<div class="fillIcon" style="background-color: rgb(255, 255, 255); opacity: 0.2;"></div>
+					<div class="borderIcon" style={gmxStyle.color ? 'border-color: ' + gmxStyle.color : ''}></div>
+					<div class="fillIcon" style={gmxStyle.fillColor ? 'background-color: ' + gmxStyle.fillColor : ''}></div>
 				</div>
 			</span>
-			<div titlediv="true" style="display: inline; position: relative; border-bottom: none; padding-right: 3px;">
-				<span data-nm={i} class="layer ui-draggable" dragg="true" on:click={showPos}>{prp.title}</span>
-			</div>
+		{/if}
+			<span data-nm={i} class="layer ui-draggable" dragg="true" on:click={showPos}>{props.title}</span>
 			<span class="layerDescription"></span>
 			{#if meta}<span class="layerInfoButton">i</span>{/if}
 			<div multistyle="true" style="display: none;"></div>
 		</div>
 		<div swap="true" class="swap ui-droppable" style="font-size: 0px;">
-		</div>
+		</div
+-->
 		<svelte:self bind:gmxMap={gmxMap} bind:childs={item.content.children} />
 	</li>
 
@@ -110,31 +120,6 @@ console.log('ggggg', layerID, layer);
 	{/if}
 
 <style>
-ul.grp {
-	padding-inline-start: 24px;
-}
-li.group {
-	list-style-type: none;
-}
-div.line {
-	white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.group .hitarea {
-    background: url('/icons2.png') -97px -4px no-repeat;
-    height: 16px;
-    width: 6px;
-    margin-left: -16px;
-    float: left;
-    cursor: pointer;
-}
-.group.closed .hitarea {
-    background-position: -115px -3px;
-}
-.group .line {
-    cursor: pointer;
-}
 
 
 </style>

@@ -32,13 +32,13 @@ const utils = {
     },
 
     stop: function() {
-		console.log('stop:', intervalID, delay);
+		// console.log('stop:', intervalID, delay);
         if (intervalID) { clearInterval(intervalID); }
         intervalID = null;
     },
 
     start: function(msec) {
-		console.log('start:', intervalID, msec);
+		// console.log('start:', intervalID, msec);
         if (msec) { delay = msec; }
         utils.stop();
         intervalID = setInterval(chkVersion, delay);
@@ -114,7 +114,7 @@ const chkVersion = () => {
 								TilesLoader.load(pt);
 								Promise.all(Object.values(pt.tilesPromise)).then(Observer.waitCheckObservers);
 							} else {
-console.log('chkVersion layer skiped', id, it);
+// console.log('chkVersion layer skiped', id, it);
 							}
 						});
 					}
@@ -184,7 +184,7 @@ const removeSource = (pars) => {
 		let hostName = pars.hostName || Utils.HOST;
 		if (hosts[hostName]) {
 			let pt = hosts[hostName].ids[id];
-console.log('signals:', pt.signals, pt);
+// console.log('signals:', pt.signals, pt);
 			if (pt.signals) {
 				Object.values(pt.signals).forEach((it) => {
 					it.abort();
@@ -658,7 +658,7 @@ const getMap = (pars) => {
 		let out = {};
 		if (contentType.indexOf('application/json') > -1 ||				// application/json; charset=utf-8
 			contentType.indexOf('text/javascript') > -1) {	 			// text/javascript; charset=utf-8
-console.log('getMap', res.headers.get('Content-Type'));
+// console.log('getMap', res.headers.get('Content-Type'));
 			out = res.json();
 		}
 		return out;
@@ -789,11 +789,12 @@ const drawItem = (pars) => {
 
 const getTile = (pars) => {
 	let message = pars.attr;
-	setBbox(message.mapPos);
+	// setBbox(message.mapPos);
 	// if (setBbox(message.mapPos)) 
 	let hostName = message.hostName,
 		layerID = message.layerID,
 		queue = message.queue,
+		cmdNum = message.cmdNum,
 		z = message.z,
 		hostLayers = hosts[hostName];
 
@@ -815,7 +816,7 @@ const getTile = (pars) => {
 	// }
 // console.log('vvvvvvvvvv ___res____ ', message);
 	return Promise.all(queue.map(coords => 
-		Observer.addObserver({ type: 'screen', coords, zKey: coords.x + ':' + coords.y + ':' + coords.z , ...message})
+		Observer.addObserver({ type: 'screen', coords, zKey: coords.x + ':' + coords.y + ':' + coords.z + '_' + cmdNum , ...message})
 	));
 };
 

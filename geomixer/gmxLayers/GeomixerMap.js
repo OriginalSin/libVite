@@ -15,7 +15,7 @@ var gmxMap = {
 		gmxMap.properties = res.properties;
 		gmxMap.iterateNode(res);
 		gmxMap.leafletMap = L.gmx.map;
-			console.log('addLayersToMap', res, opt, gmxMap);
+			// console.log('addLayersToMap', res, opt, gmxMap);
 		return gmxMap;
 	},
     iterateNode: (treeInfo) => {

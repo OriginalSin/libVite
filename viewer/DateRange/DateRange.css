@@ -6,12 +6,15 @@
     z-index: 9;
     text-align: center;
     padding: 4px 0px 4px;
+	user-select: none;
 }
 .date-range-container input[type="date"]:focus,
 .date-range-container input[type="date"] {
+	font-family: unset;
     border: unset;
 	outline: none;
     width: 96px;
+	opacity: 0.7;
 }
 
 .date-range-container .icon.left:before { content: '<'; }
@@ -45,7 +48,11 @@
 }
 .date-range-container input[type="date"]:hover {
 	font-weight: bold;
-	color: #bf1400;
+	opacity: 1;
+	/* color: #bf1400; */
+}
+.date-range-container .time {
+    /* margin-left: 4px; */
 }
 
 .date-range-container .time input {
@@ -70,7 +77,7 @@
     left: -22px;
 }
 .date-range-container .sync-type span.dailyTxt {
-    right: -30px;
+    right: -24px;
 }
 
 

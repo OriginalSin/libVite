@@ -8,12 +8,45 @@ L.gmx.VectorLayer = L.GridLayer.extend({
         gmx.properties = ph.properties;
         gmx.geometry = ph.geometry;
 		this._gmx = gmx;
+		this._needSend = [];
 		// this.options.zIndexOffset = 100000;
 		// this.options.zIndex = 1;
         return this;
 	},
 	getGmxProperties: function() {
 		return this._gmx.properties;
+	},
+	_sendQueue: function() {
+		if (this._map) {
+			let	mapPos = {bbox: L.gmxUtil.getBboxes(this._map), zoom: this._map.getZoom()};
+			let opt = {
+				cmd: 'getTile',
+				hostName: this.options.hostName,
+				layerID: this.options.layerID,
+				mapPos: mapPos
+			};
+			let done = this._tileReady;
+			this._needSend.forEach(it => {
+				let coords = it.coords;
+				let tile = it.tile;
+				let done = it.done;
+				opt.queue = [it.coords];
+				opt.z = it.coords.z;
+				const key = this._tileCoordsToKey(coords);
+				tile.key = key;
+				tile.classList.add(key);
+				tile.classList.add('createTile');
+				L.gmx.vw._sendCmd('getTile', opt).then(res => {
+					tile.getContext('bitmaprenderer').transferFromImageBitmap(res.bitmap);
+					tile.classList.remove('createTile');
+					done('', tile);
+				});
+			});
+		}
+
+		// let	mapPos = {};
+// console.log('_sendQueue', this._needSend, mapPos, this._tileZoom);
+		this._needSend = [];
 	},
 	/* переопределенные методы GridLayer */
     _updateZIndex: function () {
@@ -26,57 +59,14 @@ L.gmx.VectorLayer = L.GridLayer.extend({
         }
 	   this.fire('zindexupdated')
 	},
-	// setZIndex: function(nm) {
-	// },
-	// _update: function(center) {
-		// this._map._animateToZoom
-
-		// this._gmx.mapPos = {bbox: L.gmxUtil.getBboxes(this._map), zoom: this._map.getZoom()};
-        // L.GridLayer.prototype._update.call(this, center);
-	// },
 	createTile: function(coords, done) {
 		var tile = L.DomUtil.create('canvas', 'leaflet-tile');
 		var size = this.getTileSize();
 		tile.width = size.x;
 		tile.height = size.y;
-			// console.log('__createTile', coords.z, this._tileZoom);
-					this.__createTile(coords, done, tile);
-/*
-		this._map.once('moveend', () => {
-			if (this._map) {
-				let	zoom = this._map.getZoom();
-			// console.log('__createTile', coords, zoom);
-				if (zoom === coords.z) {
-					let	mapPos = {bbox: L.gmxUtil.getBboxes(this._map), zoom};
-					this.__createTile(coords, done, tile, mapPos);
-				} else {
-					done('skip', tile);
-				}
-			}
-		});
-		*/
+		this._needSend.push({tile, coords, done});
+		if (this._timerSend) cancelIdleCallback(this._timerSend);
+		this._timerSend = requestIdleCallback(this._sendQueue.bind(this), {timeout: 250});
 		return tile;
 	},
-	__createTile: function(coords, done, tile) {
-		const key = this._tileCoordsToKey(coords);
-		let	mapPos = {bbox: L.gmxUtil.getBboxes(this._map), zoom: this._tileZoom};
-		// this.__promises = this.__promises || {};
-		// new Promise((resolve, reject) => {
-			// this.__promises[key] = resolve;
-			let opt = {
-				cmd: 'getTile',
-				hostName: this.options.hostName,
-				layerID: this.options.layerID,
-				queue: [coords],
-				mapPos: mapPos,
-				z: coords.z
-			};
-
-			L.gmx.vw._sendCmd('getTile', opt).then(res => {
-				// console.log("getTile------- ", res);
-				tile.getContext('bitmaprenderer').transferFromImageBitmap(res.bitmap);
-				done('', tile);
-			});
-		// });
-	}
 });

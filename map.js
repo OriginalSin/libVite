@@ -20,7 +20,7 @@ const MapInit = () => {
 			center: new L.LatLng(55.965056, 32.460908),
 			attributionControl: false,
 			zoomControl: true,
-			minZoom: 1,
+			// minZoom: 1,
 			zoom: 33
 		}
 	);
