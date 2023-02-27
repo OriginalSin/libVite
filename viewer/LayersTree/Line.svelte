@@ -1,94 +1,150 @@
 <script>
 import Group from './Group.svelte'
 import { onMount, onDestroy, beforeUpdate, afterUpdate, createEventDispatcher } from 'svelte';
+import { _layerTree } from '../stores.js';
 
 export let layerID;
 export let prp = {};
+	export let layersCont;
 // export let type;
 // export let props;
+const dispatch = createEventDispatcher();
 
-let gmxMap = L.gmx.gmxMap;
-let item = gmxMap.layersByID[layerID] || {};
-let _gmx = item._gmx || {};
-let props = _gmx.properties || {};
-let gmxStyles = props.gmxStyles || [];
-let gmxStyle = gmxStyles.length === 1 ? gmxStyles[0] : null;
-let iconImage =	'';
-let iconStyle =	'';
-if (gmxStyle) {
-	if (gmxStyle.color) iconStyle += 'border: 1px ' + (gmxStyle.dashArray ? 'dashed ' : 'solid ') + gmxStyle.color + ';';
-	if (gmxStyle.fillColor) iconStyle += 'background-color: ' + gmxStyle.fillColor + ';';
-	if (gmxStyle.fillPattern) {
-		let ic = L.gmxUtil.getPatternIcon(null, gmxStyle);
-		iconStyle = 'rotate: 180deg; background-image: url(' + ic.canvas.toDataURL() + ');';
-// console.log('item', layerID, ic);
+let gmxMap;
+let nodeItem;
+
+let item = {}, gmxStyle = {},
+	iconStyle =	'',
+	iconImage =	'',
+	beforeIcon =	'',
+	name =	'',
+	closed = 'closed',
+	showCheckbox = false,
+	meta = false,
+	visible = false,
+	_gmx = {};
+
+const recalcItem = (id) => {
+	gmxMap = L.gmx.gmxMap;
+	item = gmxMap.layersByID[id] || {};
+	_gmx = item._gmx || {};
+	let props = _gmx.properties || {};
+	let gmxStyles = props.gmxStyles || [];
+	gmxStyle = gmxStyles.length === 1 ? gmxStyles[0] : null;
+	iconImage =	''; iconStyle =	'';
+	if (gmxStyle) {
+		if (gmxStyle.color) iconStyle += 'border: 1px ' + (gmxStyle.dashArray ? 'dashed ' : 'solid ') + gmxStyle.color + ';';
+		if (gmxStyle.fillColor) iconStyle += 'background-color: ' + gmxStyle.fillColor + ';';
+		if (gmxStyle.fillPattern) {
+			let ic = L.gmxUtil.getPatternIcon(null, gmxStyle);
+			iconStyle = 'rotate: 180deg; background-image: url(' + ic.canvas.toDataURL() + ');';
+	// console.log('item', layerID, ic);
+		}
+		if (gmxStyle.iconUrl) {
+			let arr = gmxStyle.iconUrl.split('.'); 
+			iconImage =	'<img class="icon ' + arr[arr.length - 1] + '" src="' + gmxStyle.iconUrl + '" />';
+			iconStyle += 'margin-right: 4px;';
+			// iconImage =	'<img class="icon" src="' + gmxStyle.iconUrl + '" style="width: 7px; height: 14px;" />';
+	// <img class="icon" styletype="icon" src="img/camera18.png" title="Редактировать стили" style="width: 14px; height: 12px;">
+	// console.log('iconUrl', layerID, gmxStyle);
+		}
 	}
-}
-	
+	meta = Object.keys(props.MetaProperties || {}).length ? true : false;
+	name = props.title || prp.title || '';
+	beforeIcon = props.IsRasterCatalog ? L.gmxUtil.setSVGIcon('timeline') : '';
+	closed = prp.expanded ? '' : 'closed';
+	visible = props.visible ? true : false;
+	showCheckbox = prp.LayerID || prp.ShowCheckbox ? true : false;
+};
+$: layerID = recalcItem(layerID);
 
-let meta = Object.keys(props.MetaProperties || {}).length ? true : false;
-let name = props.title || prp.title || '';
-let beforeIcon = props.IsRasterCatalog ? L.gmxUtil.setSVGIcon('timeline') : '';
-let closed = prp.expanded ? '' : 'closed';
-let visible = props.visible ? true : false;
-let showCheckbox = prp.LayerID || prp.ShowCheckbox ? true : false;
-let dragItem;
+beforeUpdate(() => {
+	// if (!rawTree) getGmxMap();
+	// content = rawTree.content || {};
+	// props = content.properties || {};
+	// console.log('line', layerID, prp, item);
+});
 
 onMount(() => {
-/*
-*/
-				// dragItem.style.cursor = 'move';
-				// L.DomUtil.setPosition(dragItem);
-	let draggable = new L.Draggable(dragItem).on({
+	let toNode;
+	let li = nodeItem.parentNode;
+	let draggable = new L.Draggable(li).on({
 		dragstart: function (ev) {
-console.log('dragstart', ev);
-			// dragItem.style.cursor = 'move';
-			L.DomUtil.addClass(dragItem, 'gmx_drag');
-			// L.DomUtil.addClass(node, 'gmx_drag');
+// console.log('dragstart', ev);
+			toNode = undefined;
+			li.classList.add('gmx_drag');
+			layersCont.classList.add('gmx_drag_cont');
 		},
 		drag: function (ev) {
-console.log('drag', ev);
-			// var target = ev.originalEvent.target,
-				// tagName = target.tagName.toLowerCase();
-			// if (tagName === 'li') {
-				// toNode = target;
-			// }
+			let node = ev.originalEvent.target;
+			if (node.classList.contains('swapBegin') || node.classList.contains('swapEnd')) {
+				toNode = node;
+				return;
+			}
+			toNode = node.closest('li');
+			if (toNode === li) {
+				toNode = null;
+			}
+// console.log('drag', toNode);
 		},
 		dragend: function (ev) {
-console.log('dragend', ev);
-			L.DomUtil.removeClass(dragItem, 'gmx_drag');
-			L.DomUtil.setPosition(dragItem);
-			// dragItem.style.cursor = 'move';
-			// setTimeout(function() {
-				// this._dragNode.draggable.disable();
-				// L.DomUtil.removeClass(node, 'gmx_drag');
-				// L.DomUtil.setPosition(node);
-				// node.style.transform = '';
-				// if (toNode) { 
-					// toNode.parentNode.parentNode.insertBefore(node.parentNode, toNode.parentNode);
-				// }
-			// }.bind(this), 100);
+// console.log('dragend', ev, toNode);
+			li.classList.remove('gmx_drag');
+			layersCont.classList.remove('gmx_drag_cont');
+			L.DomUtil.setPosition(li);
+			if (toNode && toNode !== li) recalcTree(li, toNode);
 		}
 	}, this)
-	L.DomEvent.on(dragItem, 'mouseover', ev => {
-draggable.enable();
-		// dragItem.style.position = 'absolute';
-		// dragItem.style.cursor = 'move';
-		// let target = ev.originalEvent.target;
-		// L.DomUtil.addClass(dragItem, 'gmx_drag');
-		// target.style.cursor = 'move';
-// console.log('mouseover', ev);
+	L.DomEvent.on(nodeItem, 'mouseover', ev => {
+		draggable.enable();
 	});
-	L.DomEvent.on(dragItem, 'mouseout', ev => {
-draggable.disable();
+	L.DomEvent.on(nodeItem, 'mouseout', ev => {
+// draggable.disable();
 		// L.DomUtil.removeClass(dragItem, 'gmx_drag');
 		// dragItem.style.cursor = '';
 // console.log('mousedown', ev);
 	});
-
-				// draggable._onDown(ev);
-	// console.log('onMount', type, props, childs);
 });
+
+const getTreeLink = (node, flag) => {
+	let grp = flag && node.classList.contains('group');
+	let arr = [];
+	while(node) {
+		arr.push(node.getAttribute('data-nm'));
+		node = node.tagName === 'LI' ? node.parentNode.closest('li') : null;
+	}
+	let link = {content: gmxMap.rawTree};
+	let res = {};
+	let out = {};
+	arr = arr.reverse();
+	arr.reduce((a, c, i) => {
+		let ch = a.content.children;
+		res = ch[c];
+		if (i === arr.length - 1) {
+			out = ch;
+			if (grp) {
+				out = res.content.children;
+				arr[i] = 0; }
+		}
+		return res;
+	}, link);
+	return {children: out, ind: arr.pop()};
+};
+
+const recalcTree = (f, t) => {
+	const ff = getTreeLink(f);
+	const it = ff.children.splice(ff.ind, 1)[0];
+	const rawTree = gmxMap.rawTree;
+	if (t.classList.contains('swapBegin')) {
+		rawTree.children.unshift(it);
+	} else if (t.classList.contains('swapEnd')) {
+		rawTree.children.push(it);
+	} else {
+		const tt = getTreeLink(t, true);
+		tt.children.splice(tt.ind, 0, it);
+	}
+	_layerTree.set(rawTree);
+};
 
 const clickMe = ev => {
 	const node = ev.target;
@@ -96,7 +152,7 @@ const clickMe = ev => {
 console.log('clickMe', layerID, node.classList);
 };
 const toggleLayer = ev => {
-	// const node = ev.target;
+	const node = ev.target;
 	if (gmxMap.layersByID[layerID]) {
 		const layer = gmxMap.layersByID[layerID];
 // console.log('ggggg', layerID, gmxMap);
@@ -116,21 +172,18 @@ const showPos = ev => {
 
 </script>
 
-<div layerid={layerID} class="line ui-droppable">
-{#if beforeIcon}
+<div bind:this={nodeItem} class="line">
 	<span class="beforeIcon" on:click={clickMe}>{@html beforeIcon}</span>
-{/if}
 	{#if showCheckbox}<input type="checkbox" name="root" class="box" checked={visible} on:click={toggleLayer} />{/if}
 {#if gmxStyle}
 	<span class="colorIcon" title="Редактировать стили" style={iconStyle}>{@html iconImage}</span>
 {/if}
-	<span class="layer ui-draggable" bind:this={dragItem} on:click={showPos}>{name}</span>
+	<span class="layer" on:click={showPos}>{name}</span>
 	<span class="layerDescription"></span>
 	{#if meta}<span class="layerInfoButton">i</span>{/if}
 	<div multistyle="true" style="display: none;"></div>
+<div class="swap end"></div>
 </div>
-<div swap="true" class="swap ui-droppable" style="font-size: 0px;"></div>
-
 
 <style>
 </style>

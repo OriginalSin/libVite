@@ -79,14 +79,17 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
-
 .layers-before,
+.layers-tree,
 .layers {
 	border: 1px solid #DDD;
     /* padding: 10px 0px 10px 0px; */
     margin: 10px 5px;
 }
-.layers .mainmap-title {
+.leftPanelCont  div.layers > ul {
+    margin-left: -8px;
+}
+.layers-tree .mainmap-title {
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
@@ -99,38 +102,83 @@ button:focus-visible {
 .layers span.layer {
 	cursor: pointer;
 }
-.layers span.layer.gmx_drag {
-	cursor: move;
-	position: absolute;
-    margin-left: 4px;
-    background-color: #DDD;
-    padding: 0px 10px;
-    border: 1px dotted red;
+
+.layers span.colorIcon img.svg {
+    width: 7px;
 }
 
 .layers span.colorIcon {
     width: 10px;
     height: 12px;
 	display: inline-block;
+    user-select: none;
+	cursor: pointer;
 }
 .layers ul.grp {
-	padding-inline-start: 24px;
+	padding-inline-start: 14px;
+	margin-top: 0;
+	margin-bottom: 0;
 }
+.layers li.layer,
 .layers li.group {
 	list-style-type: none;
+}
+.layers li.layer.gmx_drag span.leaflet-drag-target,
+.layers li.layer.gmx_drag,
+.layers li.group.gmx_drag {
+	pointer-events: none;
+}
+.layers.gmx_drag_cont li.layer.gmx_drag span.layer,
+.layers.gmx_drag_cont li.group.gmx_drag span.layer {
+	cursor: move;
+	position: absolute;
+    margin-left: 4px;
+    background-color: #DDD;
+    padding: 0px 10px;
+    border: 1px dotted red;
+	 z-index: 10000;
+}
+.layers .swap {
+    background-color: transparent;
+	height: 2px;
+}
+.layers div.swapEnd,
+.layers > div.swapBegin {
+    background-color: transparent;
+	height: 8px;
+}
+.layers.gmx_drag_cont li.group.closed div.line:hover {
+	background-color: #b1afb65c;
+}
+/* .layers li.layer.closed .swap:hover, */
+/* .layers.gmx_drag_cont li.layer.closed div.line:hover .swap { */
+.layers div.swapEnd:hover,
+.layers > div.swapBegin:hover,
+.layers.gmx_drag_cont li.layer.closed div.line:hover .swap {
+    background: url(/img/swap.gif) no-repeat;
+	/* background-color: #b1afb65c; */
+    /* background-color: aqua; */
+    /* border: 1px dotted red; */
 }
 .layers div.line {
 	white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    left: -6px;
+    position: relative;
+    /* z-index: -1; */
 }
 .layers .group .hitarea {
     background: url('/icons2.png') -97px -4px no-repeat;
     height: 16px;
     width: 6px;
-	margin: 4px 0 0 -14px;
+	margin: 4px 0 0 0px;
     float: left;
     cursor: pointer;
+
+    z-index: 2;
+    position: relative;
+
 }
 .layers .group.closed .hitarea {
     background-position: -115px -3px;
@@ -142,6 +190,10 @@ button:focus-visible {
     width: 13px;
     height: 13px;
 	fill: #999999;
-
 }
-  
+.layers .line .beforeIcon {
+	width: 12px;
+    display: inline-block;
+    /* margin-left: -16px; */
+    /* position: absolute; */
+}

@@ -353,6 +353,9 @@ const utils = {
 									// }
 								// }
 								// L.gmxUtil.getPatternIcon(options)
+							} else if (key1 === 'image') {
+								let fc = zn.substr(0, 1);
+								if (fc !== '/' && fc !== 'h') zn = '/' + zn;
 							}
 						// } else if (key1 === 'pattern') {
 							// zn = utils.getPatternIcon(null, {fillPattern: zn});
@@ -593,7 +596,8 @@ const utils = {
 					data.renderStyle = renderStyleNew;
 				// }
 
-				let iconUrl = renderStyle.iconUrl || (renderStyle.marker && renderStyle.marker.image);
+				// let iconUrl = renderStyleNew.iconUrl || renderStyle.iconUrl || (renderStyle.marker && renderStyle.marker.image);
+				let iconUrl = renderStyleNew.iconUrl || renderStyle.iconUrl;
 				if (iconUrl) {
 					Requests.getBitMap(iconUrl).then(blob => {
 	// .then(function(blob) {

@@ -35,10 +35,10 @@
 		</li>
 	</ul>
 	<div class="panes">
-		<div data-id="layers-tree" class="layers {activeTab === 'layers-tree' ? 'active' : ''}">
+		<div data-id="layers-tree" class="pane layers-tree {activeTab === 'layers-tree' ? 'active' : ''}">
 			<LayersTree />
 		</div>
-		<div data-id="forestView" class="layers {activeTab === 'forestView' ? 'active' : ''}">forestView
+		<div data-id="forestView" class="pane forest {activeTab === 'forestView' ? 'active' : ''}">forestView
 		</div>
 	</div>
 </div>
@@ -88,5 +88,9 @@
     left: -4px;
 	pointer-events: none;
 }
-
+.iconSidebarControl  .panes .pane {
+    border: 1px solid #DDD;
+    /* padding: 10px 0px 10px 0px; */
+    margin: 10px 5px;
+}
 </style>
