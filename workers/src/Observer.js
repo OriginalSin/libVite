@@ -8,6 +8,8 @@ const waitCheckObservers = () => {
 	_checkObserversTimer = setTimeout(checkObservers, 25);
 };
 
+const labelObserver = { type: 'labels', zKey: 'labels' };
+
 // const mousemove = (pars) => {
 	// const {hostName = 'maps.kosmosnimki.ru'} = pars;
 	// const ids = DataVersion.hosts[hostName].ids;
@@ -21,7 +23,7 @@ const checkObservers = () => {
 	// console.log('checkObservers _______________:', hosts);
 	Object.keys(hosts).forEach(host => {
 		let	hostItem = hosts[host];
-						let out = [];
+						// let out = [];
 		Object.keys(hostItem.ids).forEach(layerID => {
 			let	tData = hostItem.ids[layerID],
 				layerData = hostItem.parseLayers.layersByID[layerID],
@@ -37,6 +39,7 @@ const checkObservers = () => {
 					let _maxStyleSize = layerData.properties._maxStyleSize || 128;
 					Object.keys(observers).forEach(key => {
 						let observer = observers[key];
+				observer.items = [];
 						if (!observer.bounds) {
 							let coords = observer.pars.coords,
 								z = observer.pars.z;
@@ -49,22 +52,31 @@ const checkObservers = () => {
 						
 					});
 					Promise.all(Object.values(tilesPromise)).then((arrTiles) => {
-						out.push(_checkVectorTiles({
+						// out.push(_checkVectorTiles({
+						_checkVectorTiles({
 							sort: layerData.sorting,
 							arrTiles: arrTiles,
 							observers: observers,
 							styles: styles,
 							indexes: indexes
-						}));
+						});
 			// console.log('checkObservers _____2__________:', out);
 						for (let zKey in observers) {
 							let observer = observers[zKey],
 								pars = observer.pars;
+								
+							if (observer.type === 'screen' && observer.items) {
+								observer.items.forEach(pt => {
+									pt.observer = observer;
+									DataVersion.drawItem(pt);
+								});
+							}
 
 							if (observer.canvas) {
 								pars.bitmap = observer.canvas.transferToImageBitmap();
 							} else {
-								pars.items = out;
+								// pars.items = out;
+								pars.items = observer.items;
 								// pars.data = {layerID: observer.layerID, items: out};
 								// pars.data = {items: out};
 							}
@@ -110,22 +122,30 @@ const checkObservers = () => {
 };
 
 const _checkVectorTiles = ({arrTiles, observers, styles, indexes, sort}) => {
-	let out = [];
+	// let out = [];
+	labelObserver.items = [];
+	labelObserver.bounds = DataVersion.getBound();
+	labelObserver.pars = { z: DataVersion.getZoom() };
+
 // console.log('_checkVectorTiles ____:', arrTiles.length);
 	for (let i = 0, len = arrTiles.length; i < len; i++) {
 		let tile = arrTiles[i];
 		if (tile) {
-			let pixels = tile.pixels,
-				styleNums = tile.styleNums,
+			// let pixels = tile.pixels,
+			let styleNums = tile.styleNums,
+				layerID = tile.LayerName,
 				itemsbounds = tile.itemsbounds,
 				paths = tile.paths || [],
+				
 				hiddenLines = tile.hiddenLines;
 			if (!styleNums) {styleNums = tile.styleNums = [];}
 			if (!itemsbounds) {itemsbounds = tile.itemsbounds = [];}
 			if (!hiddenLines) {hiddenLines = tile.hiddenLines = [];}
-			if (!pixels) {pixels = tile.pixels = [];}
-			for (let zKey in observers) {
-				let observer = observers[zKey];
+			// if (!pixels) {pixels = tile.pixels = [];}
+			let oarr = ['labels', ...Object.keys(observers)];
+			oarr.forEach(zKey => {
+			// for (let zKey in observers) {
+				let observer = observers[zKey] || labelObserver;
 				// let flag = observer.bounds.intersects(tile.bounds);
 
 				// if (!observer.bounds.intersects(tile.bounds)) {
@@ -134,7 +154,7 @@ const _checkVectorTiles = ({arrTiles, observers, styles, indexes, sort}) => {
 
 				if (!observer.tcnt) {observer.tcnt = 0;}
 				observer.tcnt++;
-				observer.items = [];
+				// observer.items = [];
 				tile.values.forEach((it, nm) => {
 					if (_isValidItem({
 						// hiddenLines: hiddenLines[n],
@@ -162,22 +182,23 @@ const _checkVectorTiles = ({arrTiles, observers, styles, indexes, sort}) => {
 								}
 							};
 							// TODO: если НЕТ сортировки объектов то тут отрисовка иначе после сортировки
-							if (sort) {
+							// if (sort) {
 								observer.items.push(pt);
-							} else {
-								pt.observer = observer;
-								DataVersion.drawItem(pt);
-							}
+							// } else {
+								// pt.observer = observer;
+								// DataVersion.drawItem(pt);
+							// }
 						} else {
+							observer.items.push({layerID: observer.layerID, items: it});
 							// out.push(it);
-							out.push({layerID: observer.layerID, items: it});
+							// out.push({layerID, items: it});
 						}
 					}
 				});
-			}
+			});
 		}
 	}
-	return out;
+	// return out;
 // console.log('checkObservers _____1__________:', hosts);
 };
 
@@ -339,13 +360,13 @@ const addObserver = (pars) => {
 					res.forEach(it => {
 						if (it) {
 							(it.items || []).forEach(it1 => {
-								(it1 || []).forEach(it2 => {
+								// (it1 || []).forEach(it2 => {
 	// console.log('arr ____1_______:', it2);
-									let layerID = it2.layerID;
+									let layerID = it1.layerID;
 									if (!items[layerID]) items[layerID] = [];
-									items[layerID].push(it2.items);
+									items[layerID].push(it1.items);
 							// it.items
-								});
+								// });
 							});
 						}
 					});

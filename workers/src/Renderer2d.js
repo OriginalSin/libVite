@@ -99,7 +99,7 @@ const utils = {
 		ctx.fill(fPath);
 		utils._fillStroke(ph, true);
 		ctx.stroke(sPath);
-console.log('setValsByStyle ',ph);
+// console.log('setValsByStyle ',ph);
 	 	if (labelValue) {
 			const coord = ph.itemData.bounds.bounds.getCenter();
 			const point = new DOMPoint(coord[0], coord[0]);

@@ -194,6 +194,9 @@ map.on('layeradd', (ev) => {
 	const id = layer.options.layerID;
 	if (id) L.gmx.vw._sendCmd('layerremove', {id});
 // }).on('click', (ev) => {
+}).on('moveend', (ev) => {
+	let	mapPos = {bbox: L.gmxUtil.getBboxes(map), zoom: map.getZoom()};
+	L.gmx.vw._sendCmd('moveend', {mapPos});
 }).on('mousemove', (ev) => {
 	const oEv = ev.originalEvent;
 	const pars = {

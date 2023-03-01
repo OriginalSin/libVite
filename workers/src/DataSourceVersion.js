@@ -7,7 +7,8 @@ import Observer from './Observer';
 let hosts = {},
     zoom = 3,
 	dateInterval = {},
-    bbox = null;
+    bbox = null,
+    bboxBounds = null;
 	// dataManagersLinks = {},
     // hostBusy = {},
     // needReq = {}
@@ -16,10 +17,19 @@ const setBbox = (mapPos) => {
 	if (zoom !== mapPos.zoom) {
 		zoom = mapPos.zoom;
 		bbox = mapPos.bbox;
+		bboxBounds = Requests.bounds();
+		bbox.forEach(arr => {
+			bboxBounds.extend(arr[0], arr[1]);
+			bboxBounds.extend(arr[2], arr[3]);
+		});
 		utils.now();
 	} else {
 	}
 };
+const getBound = () => {
+	return bboxBounds;
+};
+const getZoom = () => zoom;
 
 let delay = 10000,
     // delay = 60000,
@@ -65,6 +75,7 @@ const chkHost = (hostName) => {
 		}
 		arr.push(pars);
 	}
+	if (!arr.length) return;
 	let url = '//' + hostName + Utils.SCRIPT;
 	postMessage({
 		cmd: 'request',
@@ -99,7 +110,9 @@ const chkVersion = () => {
 		let hostLayers = hosts[host],
 			ids = hostLayers.ids;
 		if (ids) {
-			chkHost(host).then(json => {
+			let prom = chkHost(host);
+			if (!prom) continue;
+			prom.then(json => {
 				if (json.error) {
 					console.warn('chkVersion:', json.error);
 				} else {
@@ -879,6 +892,9 @@ export default {
 	hosts,
 	getMap,
 	getTile,
+	setBbox,
+	getBound,
+	getZoom,
 	// getTiles,
 	drawItem,
 	// getMapTree,

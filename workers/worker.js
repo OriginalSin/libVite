@@ -22,6 +22,9 @@ onmessage = function(e) {
 		case 'getMap':
 			DataVersion.getMap(pars).then(postMessage);
 			break;
+		case 'moveend':
+			DataVersion.setBbox(pars.attr.mapPos);
+			break;
 		case 'mousemove':
 			let prom = gmxEventsManager.mousemove(pars);
 			if (prom) prom.then(postMessage);
