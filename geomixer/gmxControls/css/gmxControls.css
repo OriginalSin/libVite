@@ -2,7 +2,7 @@
     margin-left: 50px;
 }
 .leaflet-gmx-icon-sprite {
-    background-image: url("img/gmxSprite.png");
+    background-image: url("/img/gmxSprite.png");
 }
 
 .leaflet-left .leaflet-gmx-icon.leaflet-control {
@@ -191,7 +191,7 @@
 .leaflet-gmx-icon-hide {
     background-position: -592px 1px;
     margin-right: 10px;
-    background-image: url("img/gmxSprite.png");
+    background-image: url("/img/gmxSprite.png");
 }
 .leaflet-left .leaflet-gmx-icon-hide.leaflet-control {
     margin-left: 12px;
@@ -222,7 +222,7 @@
 	width: 210px;
 }
 .leaflet-gmx-coordFormatChange {
-    background-image: url("img/coords.png");
+    background-image: url("/img/coords.png");
     cursor: pointer;
     width: 10px;
     height: 9px;
@@ -381,6 +381,9 @@
 .leaflet-control-zoom.leaflet-bar.gmxzoom-container.leaflet-control {
     background-color: #fff;
     position: absolute;
+    left: 12px;
+    top: 56px;
+    margin: 0;
 }
 .leaflet-control-zoom.leaflet-bar.gmxzoom-container.leaflet-control  a {
     color: #606060;
@@ -396,7 +399,10 @@
     text-align: center;
 	padding-top: 2px;
     height: 23px;
+    width: 23px;
     font-size: 14px;
+	border: none;
+    outline: none;
 }
 .gmxZoomRed {
 	color: #ec5252;
@@ -463,10 +469,10 @@
 }
 
 .leaflet-gmx-logo {
-    background-image: url("img/logo_footer.png");
+    background-image: url("/img/logo_footer.png");
 }
 .leaflet-gmx-logo-color {
-    background-image: url("img/logo_footer_color.png");
+    background-image: url("/img/logo_footer_color.png");
 }
 .leaflet-control.leaflet-gmx-logo,
 .leaflet-control.leaflet-gmx-logo-color {
@@ -523,12 +529,18 @@
 .leaflet-gmx-visibility-hidden {
   visibility: hidden;
 }
-.icon-refresh-gif {
-    background-image: url("img/progress.gif");
-    width: 16px;
-    height: 16px;
+.leaflet-left .leaflet-gmx-icon.leaflet-gmx-icon-refresh-gif.active {
+	display: block;
 }
-
+.leaflet-left .leaflet-gmx-icon.leaflet-gmx-icon-refresh-gif {
+    position: absolute;
+    top: 148px;
+    left: 13px;
+    border-radius: 4px;
+    margin: 0;
+    background: url(/img/progress.gif) no-repeat center #f4f4f452;
+	display: none;
+}
 /*
    Animation example, for spinners
 */

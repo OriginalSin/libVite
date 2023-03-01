@@ -6,6 +6,7 @@ import Observer from './Observer';
 
 let hosts = {},
     zoom = 3,
+	dateInterval = {},
     bbox = null;
 	// dataManagersLinks = {},
     // hostBusy = {},
@@ -49,22 +50,28 @@ const chkHost = (hostName) => {
 	// console.log('chkVersion:', hostName, hosts);
 	let hostLayers = hosts[hostName],
 		ids = hostLayers.ids,
+		layersByID = hostLayers.parseLayers.layersByID,
 		arr = [];
 
 	for (let name in ids) {
 		let pt = ids[name],
+			props = layersByID[name]?.properties || {},
 			pars = { Name: name, Version: 'v' in pt ? pt.v : -1 };
-		if (pt.dateBegin) {
-			pars.dateBegin = pt.dateBegin;
-		}
-		if (pt.dateEnd) {
-			pars.dateEnd = pt.dateEnd;
+		if (props.Temporal) {
+			// props.DateBeginUTC
+			pars.dateBegin = pt.dateBegin || dateInterval.begin;
+			pars.dateEnd = pt.dateEnd || dateInterval.end;
+			if (!pars.dateBegin || !pars.dateEnd) continue;
 		}
 		arr.push(pars);
 	}
-
+	let url = '//' + hostName + Utils.SCRIPT;
+	postMessage({
+		cmd: 'request',
+		url: url
+	});
 	return Requests.getJson({
-		url: '//' + hostName + Utils.SCRIPT,
+		url,
 		options: hostLayers.signals ? Requests.chkSignal('chkVersion', hostLayers.signals) : {},
 		paramsArr: [Requests.COMPARS, {
 			layers: JSON.stringify(arr),
@@ -74,6 +81,11 @@ const chkHost = (hostName) => {
 		}]
 	}).then(json => {
 		delete hostLayers.signals.chkVersion;
+		postMessage({
+			cmd: 'request',
+			remove: true,
+			url: url
+		});
 		return json;
 	})
 	.catch(err => {
@@ -96,6 +108,11 @@ const chkVersion = () => {
 						res.Result.forEach(it => {
 							let id = it.name;
 							if (ids[id]) {
+	postMessage({
+		cmd: 'request',
+		url: id
+	});
+
 								let pt = ids[id],
 									props = it.properties;
 								if (props) {
@@ -112,7 +129,15 @@ const chkVersion = () => {
 								pt.tilesOrder = it.tilesOrder;
 								pt.isGeneralized = pt.isGeneralized || {};
 								TilesLoader.load(pt);
-								Promise.all(Object.values(pt.tilesPromise)).then(Observer.waitCheckObservers);
+								// Promise.all(Object.values(pt.tilesPromise)).then(Observer.waitCheckObservers);
+								Promise.all(Object.values(pt.tilesPromise)).then(() => {
+									Observer.waitCheckObservers();
+	postMessage({
+		cmd: 'request',
+			remove: true,
+		url: id
+	});
+								});
 							} else {
 // console.log('chkVersion layer skiped', id, it);
 							}
@@ -201,7 +226,37 @@ const removeSource = (pars) => {
 	//Requests.removeDataSource({id: message.layerID, hostName: message.hostName}).then((json) => {
 	return;
 };
+
+const setDateIntervals = (pars) => {
+	pars = pars || {};
+	let data = pars.attr || {};
+	dateInterval = data.dt;
+	// let hostName = data.hostName || Utils.HOST;
+	// let host = hosts[hostName];
+	// let host = hosts[pars.hostName];
+	// if (host && host.ids[pars.id]) {
+		// host.ids[pars.id].dateBegin = pars.dateBegin;
+		// host.ids[pars.id].dateEnd = pars.dateEnd;
+	// }
+	// utils.now();
+
+console.log('setDateIntervals:', pars);
+};
+
 /*
+
+const setDateInterval = (pars) => {
+	pars = pars || {};
+	let host = hosts[pars.hostName];
+	if (host && host.ids[pars.id]) {
+		host.ids[pars.id].dateBegin = pars.dateBegin;
+		host.ids[pars.id].dateEnd = pars.dateEnd;
+	}
+	utils.now();
+
+// console.log('setDateInterval:', pars, hosts);
+};
+
 const moveend = (pars) => {
 	pars = pars || {};
 // console.log('moveend:', pars);
@@ -450,18 +505,6 @@ const drawTest = (pars) => {
 	return {
 		bitmap: canvas.transferToImageBitmap()
 	};
-};
-
-const setDateInterval = (pars) => {
-	pars = pars || {};
-	let host = hosts[pars.hostName];
-	if (host && host.ids[pars.id]) {
-		host.ids[pars.id].dateBegin = pars.dateBegin;
-		host.ids[pars.id].dateEnd = pars.dateEnd;
-	}
-	utils.now();
-
-// console.log('setDateInterval:', pars, hosts);
 };
 
 const _iterateNodeChilds = (node, level, out) => {
@@ -757,6 +800,8 @@ const drawItem = (pars) => {
 		ctx = observer.ctx,
 		style = pars.style || {},
 		itemData = pars.itemData,
+		renderStyle = style.renderStyle || {},
+		indexes = pars.indexes,
 		item = itemData.item,
 		geo = item[item.length - 1],
 		type = geo.type,
@@ -769,9 +814,11 @@ const drawItem = (pars) => {
 		_ctx: ctx,
 		tpx: 256 * (coords.x % tz - tz/2),
 		tpy: 256 * (tz/2 - coords.y % tz),
-		itemData: itemData,
-		options: style.renderStyle || {}
+		indexes,
+		itemData,
+		options: renderStyle
 	};
+	setValsByStyle(pt);
 	// if (coords.z === 13 && coords.x === 4835 && coords.y === 2552) {
 // console.log('vvvvvvvvvv ___coords____ ', coords, pt);
 	// }
@@ -785,6 +832,14 @@ const drawItem = (pars) => {
 	// pt._ctx.fillText(coords.x + ':' + coords.y + ':' + coords.z, 128, 128);
 	// Renderer2d.updatePoly(pt);
 	Renderer2d.updatePolyMerc(pt);
+}
+
+const setValsByStyle = (pt) => {
+	// labelField
+	const fn = pt.options.styleHooks[0];
+	// const res = fn.call(this, pt.options, pt.itemData.item, pt.indexes, Utils);
+	const res = fn.call(this, pt, Utils);
+// console.log('setValsByStyle ',res, pt);
 }
 
 const getTile = (pars) => {
@@ -829,6 +884,7 @@ export default {
 	// getMapTree,
 	// moveend,
 	// setDateInterval,
+	setDateIntervals,
 	addObserver: Observer.addObserver,
 	removeObserver: Observer.removeObserver,
 	removeSource,

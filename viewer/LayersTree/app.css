@@ -152,8 +152,8 @@ button:focus-visible {
 }
 /* .layers li.layer.closed .swap:hover, */
 /* .layers.gmx_drag_cont li.layer.closed div.line:hover .swap { */
-.layers div.swapEnd:hover,
-.layers > div.swapBegin:hover,
+.layers.gmx_drag_cont div.swapEnd:hover,
+.layers.gmx_drag_cont > div.swapBegin:hover,
 .layers.gmx_drag_cont li.layer.closed div.line:hover .swap {
     background: url(/img/swap.gif) no-repeat;
 	/* background-color: #b1afb65c; */
@@ -196,4 +196,10 @@ button:focus-visible {
     display: inline-block;
     /* margin-left: -16px; */
     /* position: absolute; */
+}
+
+.icon-refresh-gif {
+    background-image: url(/img/progress.gif);
+    width: 16px;
+    height: 16px;
 }

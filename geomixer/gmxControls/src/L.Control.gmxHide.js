@@ -2,6 +2,7 @@ L.Control.GmxHide = L.Control.GmxIcon.extend({
     options: {
         id: 'hide',
         isActive: true,
+		svgSprite: true,
         togglable: true,
         notHide: true,
         position: 'topleft'

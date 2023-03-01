@@ -96,7 +96,7 @@ L.Control.GmxLocation = L.Control.extend({
 			var closeButton = L.DomUtil.create('div', 'closeButton', this._window);
 			closeButton.innerHTML = '&#215;';
 			L.DomEvent.disableClickPropagation(this._window);
-			L.DomEvent.on(this._window, 'contextmenu', L.DomEvent.fakeStop || L.DomEvent._fakeStop);
+			// L.DomEvent.on(this._window, 'contextmenu', L.DomEvent.fakeStop || L.DomEvent._fakeStop);
 
 			L.DomEvent.on(closeButton, 'click', function () {
 				var style = my._window.style;

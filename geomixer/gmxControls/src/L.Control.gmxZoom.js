@@ -16,12 +16,16 @@ L.Control.GmxZoom = L.Control.Zoom.extend({
 		var classPrefix = 'gmxzoom',
 			needInfo = !this._zoomInfo;
 		if (this.options.info && needInfo) {
-			this._zoomInfo = L.DomUtil.create('div', classPrefix + '-info');
+			this._zoomInfo = L.DomUtil.create('input', classPrefix + '-info');
 			this._zoomInfo.title = this.options.zoomInfoTitle;
+			L.DomEvent.disableClickPropagation(this._zoomInfo);
+			L.DomEvent.on(this._zoomInfo, 'change', ev => {
+				map.setZoom(this._zoomInfo.value);
+			}, this);
 		}
 		var container = L.Control.Zoom.prototype.onAdd.call(this, map);
-		L.DomEvent.on(container, this.options.disableEvents, L.DomEvent.stop);
-		L.DomEvent.on(container, this.options.disableEvents, L.DomEvent.preventDefault);
+		// L.DomEvent.on(container, this.options.disableEvents, L.DomEvent.stop);
+		// L.DomEvent.on(container, this.options.disableEvents, L.DomEvent.preventDefault);
 		L.DomUtil.addClass(container, classPrefix + '-container');
 		if (this.options.info && needInfo) {
 			container.insertBefore(this._zoomInfo, this._zoomOutButton);
@@ -39,7 +43,8 @@ L.Control.GmxZoom = L.Control.Zoom.extend({
 			} else {
 				L.DomUtil.removeClass(this._zoomInfo, 'gmxZoomRed');
 			}
-			this._zoomInfo.innerHTML = z;
+			// this._zoomInfo.value = this._zoomInfo.innerHTML = z;
+			this._zoomInfo.value = z;
 		}
     },
 

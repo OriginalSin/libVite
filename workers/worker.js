@@ -38,6 +38,7 @@ onmessage = function(e) {
 			// });
 			// break;
 		default:
+			DataVersion[message.cmd].call(DataVersion, pars);
 			break;
 	}
 }

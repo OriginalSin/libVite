@@ -19,20 +19,44 @@ const MapInit = () => {
 			distanceUnit: 'km',
 			center: new L.LatLng(55.965056, 32.460908),
 			attributionControl: false,
-			zoomControl: true,
+			zoomControl: false,
 			// minZoom: 1,
 			zoom: 33
 		}
 	);
 	L.gmx.map = map;
+	map.addControl(L.control.gmxZoom({}));
+	map.addControl(L.control.gmxIcon({
+			id: 'refresh-gif',
+			title: 'Статус загрузки'
+		})
+		.on('statechange', function (ev) {
+			console.log("active", ev);
+		})
+	);
+	map.addControl(L.control.gmxHide());
+/*
+	map.addControl(L.control.gmxIcon({
+			id: 'hide',
+			svgSprite: true,
+			activeIcon: true,
+			// activeIcon: '-ttt',
+			togglable: true,
+			title: 'Печать'
+		})
+		.on('statechange', function (ev) {
+			console.log("active", ev);
+		})
+	);
+*/
 	map.addControl(new L.Control.gmxDrawing({ id: 'drawing', svgSprite: true }));
 	map.addControl(L.control.gmxIcon({
 			id: 'gmxprint',
 			svgSprite: true,
-			togglable: true,
-			title: 'User Button'
+			// togglable: true,
+			title: 'Печать'
 		})
-		.on('statechange', function (ev) {
+		.on('click', function (ev) {
 			// const target = ev.target;
 			// const flag = target.options.isActive;
 			const flag = true;
@@ -43,6 +67,8 @@ const MapInit = () => {
 			console.log("active", flag);
 		})
 	);
+	map.addControl(L.control.gmxCenter({}));
+	map.addControl(L.control.gmxLocation());
 
 /*
 	const vwworker = L.gmx.vw;
@@ -193,6 +219,22 @@ map.on('layeradd', (ev) => {
 		}
 	});
 });
+
+let cont = map.gmxControlIconManager.get('refresh-gif')._container;
+L.gmx._requests = {};
+L.gmx.Requests = (pars) => {
+	// console.log('Requests', pars);
+	if (pars.remove) {
+		delete L.gmx._requests[pars.url];
+	} else {
+		L.gmx._requests[pars.url] = pars;
+	}
+	if (Object.keys(L.gmx._requests).length) {
+		cont.classList.add('active');
+	} else {
+		cont.classList.remove('active');
+	}
+};
 
 
 }

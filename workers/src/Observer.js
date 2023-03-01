@@ -17,8 +17,8 @@ const waitCheckObservers = () => {
 // };
 
 const checkObservers = () => {
-	// console.log('checkObservers _______________:', hosts);
 	const hosts = DataVersion.hosts;
+	// console.log('checkObservers _______________:', hosts);
 	Object.keys(hosts).forEach(host => {
 		let	hostItem = hosts[host];
 						let out = [];
@@ -153,6 +153,7 @@ const _checkVectorTiles = ({arrTiles, observers, styles, indexes, sort}) => {
 								tbbox: tile.bbox,
 								st,
 								style: styles[st],
+								indexes,
 								itemData: {
 									bounds: itemsbounds[nm],
 									paths: paths[nm],

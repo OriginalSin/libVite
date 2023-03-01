@@ -38,6 +38,9 @@ worker.onmessage = function(e) {
 		case 'getTile':
 			worker._cmdResolver[num](res);
 			break;
+		case 'request':
+			L.gmx.Requests(res);
+			break;
 		default:
 			worker._cmdResolver[num](res);
 	}

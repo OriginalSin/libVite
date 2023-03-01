@@ -6,9 +6,13 @@
 
 	// export let map;
 
-	let begin = new Date();
-	let end = begin;
-	let dateInterval = {begin, end};
+	const day = 24*3600*1000;
+
+	let now = new Date();
+	// var begin = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+	var begin = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+	let end = begin.valueOf() + day - 1;
+	let dateInterval = { begin, end };
 	let gmxMap = L.gmx.gmxMap;
 	let layersCont;
 	let props = gmxMap.properties || {};

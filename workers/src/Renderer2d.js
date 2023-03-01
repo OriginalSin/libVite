@@ -35,6 +35,7 @@ const utils = {
 
 		let mInPixel = ph.mInPixel,
 			itemData = ph.itemData,
+			labelValue = itemData.labelValue,
 			item = itemData.item,
 			geo = item[item.length - 1],
 			type = geo.type,
@@ -98,7 +99,17 @@ const utils = {
 		ctx.fill(fPath);
 		utils._fillStroke(ph, true);
 		ctx.stroke(sPath);
+console.log('setValsByStyle ',ph);
+	 	if (labelValue) {
+			const coord = ph.itemData.bounds.bounds.getCenter();
+			const point = new DOMPoint(coord[0], coord[0]);
+			let tPoint = point.matrixTransform(matrix);
+			tPoint = {x: coord[0] * mInPixel - ph.tpx, y: ph.tpy - coord[1] * mInPixel},
+
+			utils.setLabel(ctx, labelValue, tPoint, ph.options);
+		}
 		ctx.globalAlpha = 0;
+
 	},
 
 	_fillStroke: function (ph, stroke, fill) {
@@ -135,6 +146,47 @@ const utils = {
 			// ctx.stroke();
 		}
 	},
+    setLabel: function(ctx, txt, point, style) {
+        var x = point.x,
+            y = point.y;
+
+        if (ctx.shadowColor !== style.strokeStyle) { ctx.shadowColor = style.strokeStyle; }
+        if (ctx.shadowBlur !== style.shadowBlur) { ctx.shadowBlur = style.shadowBlur; }
+        if (ctx.font !== style.font) { ctx.font = style.font; }
+		// if (L.Browser.gecko) {	// Bug with perfomance in FireFox
+			// if (ctx.strokeStyle !== style.fillStyle) { ctx.strokeStyle = style.fillStyle; }
+		// } else {
+			if (ctx.strokeStyle !== style.labelColor) { ctx.strokeStyle = style.labelColor; }
+			if (ctx.fillStyle !== style.fillStyle) { ctx.fillStyle = style.fillStyle; }
+		// }
+        ctx.strokeText(txt, x, y);
+		// if (!L.Browser.gecko) {
+			// ctx.fillText(txt, x, y);
+		// }
+    },
+    getLabelWidth: function(txt, style) {   // Get label size Label
+/*
+	if (style) {
+            if (!gmxAPIutils.labelCanvasContext) {
+                var canvas = document.createElement('canvas');
+                canvas.width = canvas.height = 512;
+                gmxAPIutils.labelCanvasContext = canvas.getContext('2d');
+            }
+            var ptx = gmxAPIutils.labelCanvasContext;
+            ptx.clearRect(0, 0, 512, 512);
+
+            if (ptx.font !== style.font) { ptx.font = style.font; }
+            //if (ptx.strokeStyle !== style.strokeStyle) { ptx.strokeStyle = style.strokeStyle; }
+            if (ptx.fillStyle !== style.fillStyle) { ptx.fillStyle = style.fillStyle; }
+			var arr = txt.split('\n');
+            return arr.map(function(it) {
+				ptx.fillText(it, 0, 0);
+				return [it, ptx.measureText(it).width];
+			});
+        }
+*/
+        return 0;
+    },
 
 	_clear: function (ph) {
 		ph = _reqParse(ph);

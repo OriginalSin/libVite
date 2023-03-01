@@ -36,16 +36,19 @@ L.Control.GmxIcon = L.Control.extend({
                 }
                 if (options.style) { this.setStyle(options.style); }
             }
-            if (!skipEvent && prev !== active) { this.fire('statechange'); }
-        }
-		if (L.gmxUtil && L.gmxUtil.isIEOrEdge) {
-			var uses = container.getElementsByTagName('use');
-			if (uses.length) {
-				var use = uses[0],
-					href = use.getAttribute('href') || use.getAttribute('xlink:href');
-				use.setAttribute('href', href);
-				//use.setAttribute('xlink:href', href);
+			if (options.activeIcon) {
+				var use = this._container.getElementsByTagName('use');
+				if (use && use.length) {
+					var postfix = typeof(options.activeIcon) === 'boolean' ? '-off' : options.activeIcon;
+					var re = new RegExp(`${postfix}$`);
+					var zn = (use[0].getAttribute('xlink:href') || '').replace(re, '');
+					// var zn = (use[0].getAttribute('xlink:href') || '').replace(/-off$/, '');
+					if (options.isActive) { zn += postfix; }
+					use[0].setAttribute('href', zn);
+				}
 			}
+
+            if (!skipEvent && prev !== active) { this.fire('statechange'); }
 		}
     },
 

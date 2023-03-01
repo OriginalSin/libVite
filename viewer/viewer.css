@@ -2,7 +2,9 @@ body > .all > .header {
     white-space: nowrap;
     overflow: hidden;
 }
-
+input.warn {
+	color: red;
+}
 .header > .headerWidget {
     display: table;
     height: 35px;

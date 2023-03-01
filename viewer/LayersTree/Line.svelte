@@ -10,18 +10,13 @@ export let prp = {};
 // export let props;
 const dispatch = createEventDispatcher();
 
-let gmxMap;
 let nodeItem;
 
+let gmxMap;
 let item = {}, gmxStyle = {},
-	iconStyle =	'',
-	iconImage =	'',
-	beforeIcon =	'',
-	name =	'',
-	closed = 'closed',
-	showCheckbox = false,
-	meta = false,
-	visible = false,
+	iconStyle =	'',	iconImage =	'',	beforeIcon = '',
+	name =	'', closed = 'closed',
+	showCheckbox = false, meta = false,	visible = false,
 	_gmx = {};
 
 const recalcItem = (id) => {
@@ -44,9 +39,6 @@ const recalcItem = (id) => {
 			let arr = gmxStyle.iconUrl.split('.'); 
 			iconImage =	'<img class="icon ' + arr[arr.length - 1] + '" src="' + gmxStyle.iconUrl + '" />';
 			iconStyle += 'margin-right: 4px;';
-			// iconImage =	'<img class="icon" src="' + gmxStyle.iconUrl + '" style="width: 7px; height: 14px;" />';
-	// <img class="icon" styletype="icon" src="img/camera18.png" title="Редактировать стили" style="width: 14px; height: 12px;">
-	// console.log('iconUrl', layerID, gmxStyle);
 		}
 	}
 	meta = Object.keys(props.MetaProperties || {}).length ? true : false;
@@ -56,7 +48,7 @@ const recalcItem = (id) => {
 	visible = props.visible ? true : false;
 	showCheckbox = prp.LayerID || prp.ShowCheckbox ? true : false;
 };
-$: layerID = recalcItem(layerID);
+$: layerID && recalcItem(layerID);
 
 beforeUpdate(() => {
 	// if (!rawTree) getGmxMap();
@@ -175,14 +167,12 @@ const showPos = ev => {
 <div bind:this={nodeItem} class="line">
 	<span class="beforeIcon" on:click={clickMe}>{@html beforeIcon}</span>
 	{#if showCheckbox}<input type="checkbox" name="root" class="box" checked={visible} on:click={toggleLayer} />{/if}
-{#if gmxStyle}
-	<span class="colorIcon" title="Редактировать стили" style={iconStyle}>{@html iconImage}</span>
-{/if}
+	{#if gmxStyle}<span class="colorIcon" title="Редактировать стили" style={iconStyle}>{@html iconImage}</span>{/if}
 	<span class="layer" on:click={showPos}>{name}</span>
 	<span class="layerDescription"></span>
 	{#if meta}<span class="layerInfoButton">i</span>{/if}
 	<div multistyle="true" style="display: none;"></div>
-<div class="swap end"></div>
+	<div class="swap end"></div>
 </div>
 
 <style>

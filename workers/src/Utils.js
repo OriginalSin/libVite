@@ -315,7 +315,9 @@ const utils = {
 
 	decodeOldStyle: function(style) {   // Style Scanex->leaflet
 		let st, i, len, key, key1,
-			styleOut = {};
+			styleOut = {
+				styleHooks: []
+			};
 			// attrKeys = {},
 			// type = '';
 
@@ -379,6 +381,22 @@ const utils = {
 				styleOut.iconAnchor = [-dx, -dy];    // For leaflet type iconAnchor
 			}
 		}
+		const styleHooks = [];
+		if (styleOut.labelField) {
+			const body = `{
+				let itemData = pt.itemData;
+				let ind = pt.options.labelField;
+				let val = itemData.item[pt.indexes[ind]];
+				let out = Utils.getDateTime(val);
+				itemData.labelValue = out;
+				return out;
+			}`;
+			const hook = new Function('pt', 'Utils', body);
+			// const hook = new Function('style', 'props', 'indexes', 'Utils', body);
+			styleHooks.push(hook);
+		}
+		styleOut.styleHooks = styleHooks;
+
 // console.log('styleOut ', styleOut);
 		for (key in style) {
 			if (!STYLEKEYS[key]) {
@@ -394,6 +412,26 @@ const utils = {
 		};
 */
 	},
+    getDateTime: function(utime) {
+        var dt = new Date(utime * 1000);
+
+        var out = [
+            utils.pad2(dt.getUTCDate()),
+            utils.pad2(dt.getUTCMonth() + 1),
+            dt.getUTCFullYear()
+		].join('.') + ' ' + [
+            //gmxAPIutils.pad2(h - new Date().getTimezoneOffset() / 60),
+            utils.pad2(dt.getUTCHours()),
+            utils.pad2(dt.getUTCMinutes()),
+            utils.pad2(dt.getUTCSeconds())
+        ].join(':');
+        return out;
+
+    },
+	pad2: function(t) {
+		return (t >= 0 && t < 10) ? ('0' + t) : ('' + t);
+	},
+
     getPatternIcon: function(item, style, indexes) { // получить bitmap стиля pattern
         if (!style.fillPattern) { return null; }
 // console.log('getPatternIcon', style);
@@ -579,6 +617,8 @@ const utils = {
 		let out = styles.map(it => {
 			let renderStyle = it.RenderStyle || {};
 			let renderStyleNew = utils.decodeOldStyle(renderStyle);
+			let styleHooks = renderStyleNew.styleHooks;
+			delete renderStyleNew.styleHooks;
 			// if (renderStyle) {
 				// renderStyleNew = utils.decodeOldStyle(renderStyle);
 			// }
@@ -594,11 +634,13 @@ const utils = {
 				// }
 				// if (renderStyle) {
 					data.renderStyle = renderStyleNew;
+					data.renderStyle.styleHooks = styleHooks;
 				// }
 
 				// let iconUrl = renderStyleNew.iconUrl || renderStyle.iconUrl || (renderStyle.marker && renderStyle.marker.image);
 				let iconUrl = renderStyleNew.iconUrl || renderStyle.iconUrl;
 				if (iconUrl) {
+					iconUrl = iconUrl.replace('//kosmosnimki.ru', '//www.kosmosnimki.ru');
 					Requests.getBitMap(iconUrl).then(blob => {
 	// .then(function(blob) {
 		// return createImageBitmap(blob, {
