@@ -613,6 +613,7 @@ const utils = {
 			// attr = prop.tileAttributeIndexes,
 		// prop._maxStyleSize = 128;
 		prop._maxStyleSize = 0;
+		prop._styleHooksFlag = false;
 		let gmxStyles = [];
 		let out = styles.map(it => {
 			let renderStyle = it.RenderStyle || {};
@@ -635,6 +636,8 @@ const utils = {
 				// if (renderStyle) {
 					data.renderStyle = renderStyleNew;
 					data.renderStyle.styleHooks = styleHooks;
+					if (styleHooks.length) prop._styleHooksFlag = true;
+
 				// }
 
 				// let iconUrl = renderStyleNew.iconUrl || renderStyle.iconUrl || (renderStyle.marker && renderStyle.marker.image);

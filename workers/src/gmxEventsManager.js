@@ -9,7 +9,7 @@ const mousemove = (pars) => {
 	// const ids = host.ids;
 		// const arr = Object.values(ids).filter(it => it.tilesPromise);
 
-	return Observer.addObserver({ type: 'mousemove', ...pars}).then(res => {
+	return Observer.add({ type: 'mousemove', ...pars}).then(res => {
 		// console.log('eventCheck', res, pars, arr);
 		const out = {from: pars};
 		if (Object.keys(res).length) out.items = res;

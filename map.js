@@ -212,8 +212,9 @@ map.on('layeradd', (ev) => {
 	
 	L.gmx.vw._sendCmd('mousemove', pars).then(res => {
 		// console.log('mousemove res', res);
+		let items = res.items.items;
 		let cursor = '';
-		if (res.items) {
+		if (items.length) {
 			cursor = 'pointer';
 			// foundLayer = layer;
 		}

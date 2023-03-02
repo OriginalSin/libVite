@@ -110,6 +110,9 @@ const load = (pars) => {
 					}
 					parseValues(json);
 					if (json.isGeneralized) pars.isGeneralized[tkey] = json.isGeneralized;
+					json.pProps = pars.pProps;
+					json.styleNums = [];
+					json.itemsbounds = [];
 					// console.log('json', json);
 					return json;
 				})

@@ -107,8 +107,8 @@ const chkHost = (hostName) => {
 const chkVersion = () => {
 // console.log('chkVersion', hosts);
 	for (let host in hosts) {
-		let hostLayers = hosts[host],
-			ids = hostLayers.ids;
+		let	hostItem = hosts[host];
+		let ids = hostItem.ids;
 		if (ids) {
 			let prom = chkHost(host);
 			if (!prom) continue;
@@ -137,6 +137,7 @@ const chkVersion = () => {
 									}
 								}
 								pt.id = id;
+								pt.pProps = hostItem.parseLayers.layersByID[id];
 								pt.hostName = host;
 								pt.tiles = it.tiles;
 								pt.tilesOrder = it.tilesOrder;
@@ -194,6 +195,8 @@ const addSource = (pars) => {
 		// }
 		if (hostItem.ids[id] && hostItem.ids[id].observers) {
 			// pars.observers = hostItem.ids[id].observers;
+			Observer.add(pars);
+
 			hostItem.ids[id] = {...hostItem.ids[id], ...pars};
 		} else hostItem.ids[id] = pars;
 		let parseLayers = hostItem.parseLayers;
@@ -217,9 +220,10 @@ const addSource = (pars) => {
 const removeSource = (pars) => {
 	pars = pars || {};
 
-	let id = pars.id || pars.attr.id;
+	let attr = pars.attr || {};
+	let id = attr.id;
 	if (id) {
-		let hostName = pars.hostName || Utils.HOST;
+		let hostName = attr.hostName || Utils.HOST;
 		if (hosts[hostName]) {
 			let pt = hosts[hostName].ids[id];
 // console.log('signals:', pt.signals, pt);
@@ -228,6 +232,7 @@ const removeSource = (pars) => {
 					it.abort();
 				});
 			}
+			Observer.removeLayer(id);
 			delete hosts[hostName].ids[id];
 			// if (Object.keys(hosts[hostName].ids).length === 0) { delete hosts[hostName]; }
 			if (Object.keys(hosts).length === 0) { utils.stop(); }
@@ -831,7 +836,7 @@ const drawItem = (pars) => {
 		itemData,
 		options: renderStyle
 	};
-	setValsByStyle(pt);
+	if (pt.options.styleHooks.length) setValsByStyle(pt);
 	// if (coords.z === 13 && coords.x === 4835 && coords.y === 2552) {
 // console.log('vvvvvvvvvv ___coords____ ', coords, pt);
 	// }
@@ -884,7 +889,7 @@ const getTile = (pars) => {
 	// }
 // console.log('vvvvvvvvvv ___res____ ', message);
 	return Promise.all(queue.map(coords => 
-		Observer.addObserver({ type: 'screen', coords, zKey: coords.x + ':' + coords.y + ':' + coords.z + '_' + cmdNum , ...message})
+		Observer.add({ type: 'screen', coords, zKey: coords.x + ':' + coords.y + ':' + coords.z + '_' + cmdNum , ...message})
 	));
 };
 
