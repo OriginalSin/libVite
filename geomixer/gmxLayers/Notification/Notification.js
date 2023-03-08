@@ -41,7 +41,7 @@ export default class Notification {
                 </tr>
             </table>
 			<i class='scanex-component-icon scanex-notify-icon notify-close'>${notifyClose}</i>
-			`;        
+			`;
         node.querySelector('.notify-close')?.addEventListener('click', e => {
             e.stopPropagation();
             this._remove(node);

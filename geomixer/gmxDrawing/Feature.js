@@ -3,13 +3,45 @@
 import Utils from './Utils.js';
 import Ring from './Ring.js';
 
+const _options = {
+	endTooltip: '',
+	smoothFactor: 0,
+	mode: '' // add, edit
+};
+
 const Feature = L.LayerGroup.extend({
-    options: {
-        endTooltip: '',
-        smoothFactor: 0,
-        mode: '' // add, edit
-    },
     includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
+
+    initialize: function (parent, obj, options) {
+        options = options || {};
+
+        this.contextmenu = new L.GmxDrawingContextMenu();
+        options.mode = '';
+        this._drawOptions = L.extend({}, options);
+        var type = options.type;
+        if (type === 'Point') {
+            delete options.pointStyle;
+            delete options.lineStyle;
+        } else {
+            delete options.iconUrl;
+            delete options.iconAnchor;
+            delete options.iconSize;
+            delete options.popupAnchor;
+            delete options.shadowSize;
+            delete options.markerStyle;
+        }
+        delete options.holeStyle;
+
+        this.options = {..._options, ...options};
+
+        this._layers = {};
+        this._obj = obj;
+        this._parent = parent;
+        this._dx = 0;
+        this._dy = 0;
+
+        this._initialize(parent, obj);
+    },
 
     simplify: function () {
         var i, j, len, len1, hole;
@@ -171,7 +203,7 @@ const Feature = L.LayerGroup.extend({
             if (options.editable) { this.enableEdit(); }
             else { this.disableEdit(); }
         }
-        L.setOptions(this, options);
+        this.options = {...this.options, ...options};
 
         this._fireEvent('optionschange');
         return this;
@@ -223,8 +255,8 @@ const Feature = L.LayerGroup.extend({
         return res;
     },
 
-    _latLngsToCoords: function (latlngs, closed) {
-        var coords = L.GeoJSON.latLngsToCoords(Utils.isOldVersion ? latlngs : latlngs[0]);
+    _latLngsToCoords: function (latlngs, closed, shiftPixel, precision) {
+        var coords = L.GeoJSON.latLngsToCoords(Utils.isOldVersion ? latlngs : latlngs[0], undefined, undefined, precision);
         if (closed) {
             var lastCoord = coords[coords.length - 1];
             if (lastCoord[0] !== coords[0][0] || lastCoord[1] !== coords[0][1]) {
@@ -289,19 +321,21 @@ const Feature = L.LayerGroup.extend({
         }
     },
 
-    _getCoords: function (withoutShift) {
+    _getCoords: function (withoutShift, precision) {
         var type = this.options.type,
             closed = (type === 'Polygon' || type === 'Rectangle' || type === 'MultiPolygon'),
             shiftPixel = withoutShift ? null : this.shiftPixel,
             coords = [];
         for (var i = 0, len = this.rings.length; i < len; i++) {
             var it = this.rings[i],
-                arr = this._latLngsToCoords(it.ring.points.getLatLngs(), closed, shiftPixel);
+                arr = this._latLngsToCoords(it.ring.points.getLatLngs(), closed, shiftPixel, precision);
 
             if (closed) { arr = [arr]; }
             if (it.holes && it.holes.length) {
                 for (var j = 0, len1 = it.holes.length; j < len1; j++) {
-                    arr.push(this._latLngsToCoords(it.holes[j].points.getLatLngs(), closed, shiftPixel));
+                    var latlngs = it.holes[j].points.getLatLngs();
+                    var hole = this._latLngsToCoords(latlngs, closed, shiftPixel, precision);
+                    arr = arr.concat([hole]);
                 }
             }
             coords.push(arr);
@@ -319,8 +353,8 @@ const Feature = L.LayerGroup.extend({
         return this;
     },
 
-    toGeoJSON: function () {
-        return this._toGeoJSON(true);
+    toGeoJSON: function (precision) {
+        return this._toGeoJSON(true, precision);
     },
 
     _chkPolygon: function (arr) {
@@ -335,7 +369,7 @@ const Feature = L.LayerGroup.extend({
 		return arr;
     },
 
-    _toGeoJSON: function (withoutShift) {
+    _toGeoJSON: function (withoutShift, precision) {
         var type = this.options.type,
             properties = this.getOptions(),
             coords;
@@ -351,7 +385,7 @@ const Feature = L.LayerGroup.extend({
             geojson.properties = properties;
             return geojson;
         } else if (this.rings) {
-            coords = this._getCoords(withoutShift);
+            coords = this._getCoords(withoutShift, precision);
             if (type === 'Rectangle') { type = 'Polygon'; }
             else if (type === 'Polyline') { type = 'LineString'; }
             else if (type === 'MultiPolyline') { type = 'MultiLineString'; }
@@ -444,37 +478,6 @@ const Feature = L.LayerGroup.extend({
         }
         bounds.extend(latLng);
         return bounds;
-    },
-
-    initialize: function (parent, obj, options) {
-        options = options || {};
-
-        this.contextmenu = new L.GmxDrawingContextMenu();
-        options.mode = '';
-        this._drawOptions = L.extend({}, options);
-        var type = options.type;
-        if (type === 'Point') {
-            delete options.pointStyle;
-            delete options.lineStyle;
-        } else {
-            delete options.iconUrl;
-            delete options.iconAnchor;
-            delete options.iconSize;
-            delete options.popupAnchor;
-            delete options.shadowSize;
-            delete options.markerStyle;
-        }
-        delete options.holeStyle;
-
-        L.setOptions(this, options);
-
-        this._layers = {};
-        this._obj = obj;
-        this._parent = parent;
-        this._dx = 0;
-        this._dy = 0;
-
-        this._initialize(parent, obj);
     },
 
     enableEdit: function() {

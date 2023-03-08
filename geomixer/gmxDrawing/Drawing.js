@@ -6,17 +6,16 @@ import Feature from './Feature.js';
 
 const rectDelta = 0.0000001;
 const stateVersion = '1.0.0';
+const _options = {
+	showPointsNum: false,
+	type: ''
+};
 
 const GmxDrawing = L.Class.extend({
-    options: {
-		showPointsNum: false,
-        type: ''
-    },
     includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
 
     initialize: function (map, options) {
-console.log('initialize', options)
-        options = L.setOptions(this, options);
+        this.options = {..._options, ...options};
         this._map = map;
         this.items = [];
         this.current = null;
@@ -28,41 +27,9 @@ console.log('initialize', options)
 			fill: [{text: 'Rotate'}, {text: 'Move'}]
 		});
         if (!L.gmxLocale) {
-			const keys = {
-				rus: {
-					Coordinates : 'Координаты',
-					Length : 'Длина',
-					angleLength : 'Азимут, растояние',
-					nodeLength : 'Длина от начала',
-					edgeLength : 'Длина сегмента',
-					'Rotate around Point' : 'Поворот вокруг вершины',
-					'Remove point': 'Удалить точку',
-					'Delete feature': 'Удалить объект',
-					'Add hole': 'Добавить дырку',
-					'Add polygon': 'Добавить контур',
-					'Add line': 'Добавить линию',
-					Rotate : 'Поворот',
-					Move : 'Сдвиг',
-					Save : 'Применить',
-					Cancel : 'Отменить',
-					Angle : 'Угол',
-					Area : 'Площадь',
-					Perimeter : 'Периметр',
-					units: {
-						m: 'м',
-						nm: 'м.мили',
-						km: 'км',
-						m2: 'кв. м',
-						km2: 'кв. км',
-						ha: 'га',
-						m2html: 'м<sup>2',
-						km2html: 'км<sup>2'
-					}
-				}
-			};
 			L.gmxLocale = {
 				getText: function(key) {
-					let rus = keys[window.language] || {};
+					let rus = Utils.locales[window.language] || {};
 					let out = rus[key];
 					if (!out) {
 						let arr = key.split('.');
@@ -320,11 +287,10 @@ console.log('initialize', options)
                     var opt = {};
 					if (drawOptions.hole && options.forRing) {
 						opt.forRing = options.forRing;
-			let points = options.forRing.points._rings[0];
-			if (points && !Utils.isPointInRing(ev.layerPoint, points)) {
-				return false;
-			}
-						console.log('drawOptions', options, drawOptions, my);
+						let points = options.forRing.points._rings[0];
+						if (points && !Utils.isPointInRing(ev.layerPoint, points)) {
+							return false;
+						}
 					}
 					var originalEvent = ev && ev.originalEvent,
                         ctrlKey = false, shiftKey = false, altKey = false;
@@ -586,7 +552,6 @@ L.gmx = L.gmx || {};
 L.Map.addInitHook(function () {
 	L.gmx.gmxDrawing = new GmxDrawing(this);
     this.gmxDrawing = L.gmx.gmxDrawing;
-	console.log('addInitHook', this.gmxDrawing);
 });
 
 export default GmxDrawing;

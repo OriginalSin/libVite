@@ -1,10 +1,15 @@
+const _options = {
+	position: 'topleft',
+	id: 'defaultIcon',
+	// svgSprite: true,
+	isActive: false
+};
 L.Control.GmxIcon = L.Control.extend({
     includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
-    options: {
-        position: 'topleft',
-        id: 'defaultIcon',
-        isActive: false
-    },
+	// initialize(options) {
+        // this.options = {position: 'topleft', id: 'defaultIcon', isActive: false, ...options};
+	// },
+    options: _options,
 
     setActive: function (active, skipEvent) {
         var options = this.options,
@@ -27,14 +32,14 @@ L.Control.GmxIcon = L.Control.extend({
                 if (container.children.length) {
                     L.DomUtil.addClass(container, prefix + '-externalImage-active');
                 }
-                if (options.styleActive) { this.setStyle(options.styleActive); }
+                if (options.styleActive) this.setStyle(options.styleActive);
             } else {
                 L.DomUtil.removeClass(container, prefix + '-active');
                 L.DomUtil.removeClass(container, className + '-active');
                 if (container.children.length) {
                     L.DomUtil.removeClass(container, prefix + '-externalImage-active');
                 }
-                if (options.style) { this.setStyle(options.style); }
+                if (options.style) this.setStyle(options.style);
             }
 			if (options.activeIcon) {
 				var use = this._container.getElementsByTagName('use');
@@ -53,67 +58,48 @@ L.Control.GmxIcon = L.Control.extend({
     },
 
     onAdd: function (map) {
-        var img = null,
-            span = null,
-            options = this.options,
-			svgSprite = options.svgSprite || map.options.svgSprite,
-			prefix = 'leaflet-gmx-icon' + (svgSprite && !options.regularImageUrl && !options.text ? 'Svg' : ''),
+        var options = this.options,
+			svgSprite = typeof(options.regularImageUrl) === 'string' || options.text ? false : true,
+			prefix = 'leaflet-gmx-icon' + (svgSprite ? 'Svg' : ''),
             className = prefix + '-' + options.id;
 
+// console.log("onAdd", svgSprite, typeof(options.regularImageUrl));
 		this._prefix = prefix;
         var container = L.DomUtil.create('div', prefix + ' ' + className);
         container._id = options.id;
 
         this._container = container;
-        if (options.title) { container.title = options.title; }
+        if (options.title) container.title = options.title;
         this.setStyle = function (style) {
-            for (var key in style) {
-                container.style[key] = style[key];
-            }
+            for (var key in style) container.style[key] = style[key];
         };
         if (options.className) {
             L.DomUtil.addClass(container, options.className);
         }
         if (options.regularImageUrl) {
-            img = L.DomUtil.create('img', '', container);
+            let img = L.DomUtil.create('img', '', container);
             img.src = options.regularImageUrl;
             this._img = img;
             L.DomUtil.addClass(container, prefix + '-img');
             L.DomUtil.addClass(container, prefix + '-externalImage');
         } else if (options.text) {
             L.DomUtil.addClass(container, prefix + '-text');
-            span = L.DomUtil.create('span', '', container);
+            let span = L.DomUtil.create('span', '', container);
             span.innerHTML = options.text;
         } else if (svgSprite) {
           L.DomUtil.addClass(container, 'svgIcon');
           var useHref = '#' + options.id.toLowerCase();
-          container.innerHTML = '<svg role="img" class="svgIcon">\
-              <use xlink:href="' + useHref + '" href="' + useHref + '"></use>\
-            </svg>';
+          container.innerHTML = '<svg role="img" class="svgIcon"><use xlink:href="' + useHref + '" href="' + useHref + '"></use></svg>';
         } else {
             L.DomUtil.addClass(container, prefix + '-img ' +  prefix + '-sprite');
         }
         // if (container.children.length) {
             // L.DomUtil.addClass(container, prefix + '-externalImage');
         // }
-        if (options.style) {
-            this.setStyle(options.style);
-        }
+        if (options.style) this.setStyle(options.style);
 
-        this._iconClick = function () {
-            if (container.parentNode) {
-                this.setActive(!this.options.isActive);
-                this.fire('click');
-                if (this.options.stateChange) { this.options.stateChange(this); }
-            }
-        };
-        var stop = L.DomEvent.stopPropagation;
         L.DomEvent
-            .on(container, 'mousemove', stop)
-            .on(container, 'touchstart', stop)
-            .on(container, 'mousedown', stop)
-            .on(container, 'dblclick', stop)
-            .on(container, 'click', stop)
+            .on(container, 'mousemove touchstart mousedown dblclick click', L.DomEvent.stopPropagation)
             .on(container, 'click', this._iconClick, this);
         if (options.onAdd) {
             options.onAdd(this);
@@ -129,6 +115,13 @@ L.Control.GmxIcon = L.Control.extend({
         }
         return container;
     },
+    _iconClick: function () {
+		if (this._container.parentNode) {
+			this.setActive(!this.options.isActive);
+			this.fire('click');
+			if (this.options.stateChange) { this.options.stateChange(this); }
+		}
+	},
 
     onRemove: function (map) {
         if (map.gmxControlsManager) {
@@ -137,15 +130,9 @@ L.Control.GmxIcon = L.Control.extend({
         this.fire('controlremove');
         map.fire('controlremove', this);
 
-        var container = this._container,
-            stop = L.DomEvent.stopPropagation;
-
+        var container = this._container;
         L.DomEvent
-            .off(container, 'mousemove', stop)
-            .off(container, 'touchstart', stop)
-            .off(container, 'mousedown', stop)
-            .off(container, 'dblclick', stop)
-            .off(container, 'click', stop)
+            .off(container, 'mousemove touchstart mousedown dblclick click', L.DomEvent.stopPropagation)
             .off(container, 'click', this._iconClick, this);
     },
 

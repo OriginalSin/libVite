@@ -72,6 +72,38 @@ const Utils = {
             }
         }
     },
+	locales: {
+		rus: {
+			Coordinates : 'Координаты',
+			Length : 'Длина',
+			angleLength : 'Азимут, растояние',
+			nodeLength : 'Длина от начала',
+			edgeLength : 'Длина сегмента',
+			'Rotate around Point' : 'Поворот вокруг вершины',
+			'Remove point': 'Удалить точку',
+			'Delete feature': 'Удалить объект',
+			'Add hole': 'Добавить дырку',
+			'Add polygon': 'Добавить контур',
+			'Add line': 'Добавить линию',
+			Rotate : 'Поворот',
+			Move : 'Сдвиг',
+			Save : 'Применить',
+			Cancel : 'Отменить',
+			Angle : 'Угол',
+			Area : 'Площадь',
+			Perimeter : 'Периметр',
+			units: {
+				m: 'м',
+				nm: 'м.мили',
+				km: 'км',
+				m2: 'кв. м',
+				km2: 'кв. км',
+				ha: 'га',
+				m2html: 'м<sup>2',
+				km2html: 'км<sup>2'
+			}
+		}
+	},
 
     getClosestOnGeometry: function(latlng, gmxGeoJson, map) {
 		if (L.GeometryUtil && map) {
@@ -87,14 +119,44 @@ const Utils = {
     },
 
     snapPoint: function (latlng, obj, map) {
-		var res = latlng;
+		var res = false;
 		if (L.GeometryUtil) {
-			var drawingObjects = map.gmxDrawing.getFeatures()
-					.filter(function(it) { return it !== obj._parent && it._obj !== obj; })
-					.map(function(it) { return it.options.type === 'Point' ? it._obj : it; }),
-					snaping = Number(map.options.snaping || Utils.snaping),
-					closest = L.GeometryUtil.closestLayerSnap(map, drawingObjects, latlng, snaping, true);
-
+			let item = [];
+			if (obj.options.hole) {	// дырки
+				obj._parent.rings.forEach(it => {
+					it.holes.forEach(it1 => {
+						if (it1 === obj) {
+							item.push(it.ring);
+						}
+					});
+				});
+			} else {
+				var drawingObjects = map.gmxDrawing.getFeatures()
+					// .filter(function(it) { return it !== obj._parent && it._obj !== obj; })
+					.filter(function(it) { return it._obj !== obj; })
+					.map(function(it) { return it.options.type === 'Point' ? it._obj : it; });
+				item = drawingObjects[0];	// другие фичи
+				if (item === obj._parent) {	// соседние полигоны
+					item = [];
+					drawingObjects.forEach(it => {
+						it.rings.forEach(it1 => {
+							if (it1.ring !== obj) {
+								item.push(it1.ring);
+							}
+						});
+					});
+					if (!item.length) {	// соседние сегменты
+						let arr = obj.lines.getLatLngs().slice();
+						arr.pop();
+						let num = obj.down.num;
+						arr = arr.slice(num + 1).concat(arr.slice(0, num).reverse());
+						item = [arr];
+					}
+				}
+			}
+			const snaping = Number(map.options.snaping || Utils.snaping);
+			const closest = L.GeometryUtil.closestLayerSnap(map, item, latlng, snaping, true);
+			// const closest = L.GeometryUtil.closestLayerSnap(map, drawingObjects, latlng, snaping, true);
 			if (closest) {
 				res = closest.latlng;
 			}

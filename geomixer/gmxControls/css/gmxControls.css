@@ -116,12 +116,22 @@
     pointer-events: none;
     background-position: -12px 116px;
 }
+
 .leaflet-gmx-icon-group-vertical .triangle-active {
     background-position: -12px 84px;
 }
 .leaflet-gmx-icon-groupSvg {
 	border-radius: 4px;
 	box-shadow: 3px 3px 4.7px 0.3px rgba(0, 0, 0, 0.24);
+	overflow: hidden;
+	height: 32px;
+	border: none;
+}
+.leaflet-gmx-icon-groupSvg:hover {
+	/* background-color: red; */
+    box-shadow: none;
+	overflow: visible;
+	height: auto;
 }
 .triangleSvg {
     z-index: 10;
@@ -134,6 +144,7 @@
 	width: 24px;
     height: 24px;
 }
+.leaflet-gmx-icon-group-vertical.isActiveItems .triangleSvg,
 .triangleSvg.triangle-active {
 	fill: #f57c00;
 }

@@ -15,6 +15,7 @@ const MapInit = () => {
 				showPointsNum: {skipLast: false, prefix: 'вал ', postfix: ' м<tspan class="sup">3</tspan>'},
 				// showPointsNum: false,<tspan style="font-weight: bold;">Жирный кот</tspan>
 			},
+			contextmenu: true,
 			squareUnit: 'km2',
 			distanceUnit: 'km',
 			center: new L.LatLng(55.965056, 32.460908),
@@ -28,6 +29,7 @@ const MapInit = () => {
 	map.addControl(L.control.gmxZoom({}));
 	map.addControl(L.control.gmxIcon({
 			id: 'refresh-gif',
+			regularImageUrl: '',
 			title: 'Статус загрузки'
 		})
 		.on('statechange', function (ev) {
@@ -49,7 +51,7 @@ const MapInit = () => {
 		})
 	);
 */
-	map.addControl(new L.Control.gmxDrawing({ id: 'drawing', svgSprite: true }));
+	map.addControl(new L.Control.gmxDrawing({ id: 'drawing' }));
 	map.addControl(L.control.gmxIcon({
 			id: 'gmxprint',
 			svgSprite: true,
@@ -195,7 +197,7 @@ map.on('layeradd', (ev) => {
 	if (id) L.gmx.vw._sendCmd('layerremove', {id});
 // }).on('click', (ev) => {
 }).on('moveend', (ev) => {
-	let	mapPos = {bbox: L.gmxUtil.getBboxes(map), zoom: map.getZoom()};
+	let	mapPos = {bbox: L.gmxUtil.getBboxes(map), pBounds: map.getPixelBounds(), pOrigin: map.getPixelOrigin(), zoom: map.getZoom()};
 	L.gmx.vw._sendCmd('moveend', {mapPos});
 }).on('mousemove', (ev) => {
 	const oEv = ev.originalEvent;

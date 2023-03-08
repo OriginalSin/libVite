@@ -1,25 +1,25 @@
-// import L from 'leaflet';
 import Utils from './Utils.js';
 import GmxDrawingContextMenu from './ContextMenu.js';
 import PointMarkers from './PointMarkers.js';
-// import Utils from './Utils.js';
+
+const _options = {
+	className: 'leaflet-drawing-ring',
+	maxPoints: 0,
+	minPoints: 0,
+	// skipEqual: false,
+	smoothFactor: 0,
+	showPointsNum: false,
+	noClip: true,
+	opacity: 1,
+	shape: 'circle',
+	fill: true,
+	fillColor: '#ffffff',
+	fillOpacity: 1,
+	size: L.Browser.mobile ? 40 : 8,
+	weight: 2
+};
 
 const Ring = L.LayerGroup.extend({
-    options: {
-        className: 'leaflet-drawing-ring',
-        //noClip: true,
-        maxPoints: 0,
-        smoothFactor: 0,
-		showPointsNum: false,
-		noClip: true,
-        opacity: 1,
-        shape: 'circle',
-        fill: true,
-        fillColor: '#ffffff',
-        fillOpacity: 1,
-        size: L.Browser.mobile ? 40 : 8,
-        weight: 2
-    },
     includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
 
     initialize: function (parent, coords, options) {
@@ -29,7 +29,7 @@ const Ring = L.LayerGroup.extend({
         options.mode = '';
         this._activeZIndex = options.activeZIndex || 7;
         this._notActiveZIndex = options.notActiveZIndex || 6;
-        this.options = L.extend({}, this.options, parent.getStyle(), options);
+        this.options = {..._options, ...parent.getStyle(), ...options};
 
         this._layers = {};
         this._coords = coords;
@@ -80,14 +80,18 @@ const Ring = L.LayerGroup.extend({
             _this = this,
             mode = this.options.mode || (latlngs.length ? 'edit' : 'add');
 
-        this.fill = new L.Polyline(latlngs, {
-            className: 'leaflet-drawing-lines-fill',
-            opacity: 0,
-			smoothFactor: 0,
-			noClip: true,
-            fill: false,
-            size: 10,
-            weight: 10
+        var fillStyle = {opacity:0, weight:10, size: 10, noClip: true, smoothFactor: 0, fill: false, className: 'lleaflet-drawing-lines-fill'};
+        if (this.options.fillStyle) {
+            fillStyle = L.extend({}, fillStyle, this.options.fillStyle);
+		}
+		if (this.options.className) {
+            fillStyle.className += ' ' + this.options.className;
+            lineStyle.className += ' ' + this.options.className;
+            pointStyle.className += ' ' + this.options.className;
+        }
+		this.fill = new L.Polyline(latlngs, fillStyle);
+        this.fill.on('click', e => {
+            this._parent.fire('click', e);
         });
         this.addLayer(this.fill);
 
@@ -151,6 +155,7 @@ const Ring = L.LayerGroup.extend({
 		var svgNS = 'http://www.w3.org/2000/svg';
 		var userSelectProperty = L.DomUtil.testProp(['userSelect', 'WebkitUserSelect', 'OUserSelect', 'MozUserSelect', 'msUserSelect']);
 
+		const opt = this.options.showPointsNum || {};
 		const dx = 0, dy = -8;
 		const _createItem = (it, nm, cont) => {
 			let b = document.createElementNS(svgNS, 'rect');
@@ -165,7 +170,9 @@ const Ring = L.LayerGroup.extend({
 			t.style[userSelectProperty] = 'none';
 			t.setAttributeNS(null, 'x', it.x + dx);
 			t.setAttributeNS(null, 'y', it.y + dy);
-			t.textContent = nm;
+			if (opt.prefix) nm = opt.prefix + nm;
+			if (opt.postfix) nm += opt.postfix;
+			t.innerHTML = nm;
 			cont.appendChild(t);
 			var length = t.getComputedTextLength();
 			b.setAttributeNS(null, 'width', length + 8);
@@ -180,11 +187,20 @@ const Ring = L.LayerGroup.extend({
 				}
 				Object.values(this.tPoints.childNodes).forEach(it => { it.remove(); });
 				textArr.forEach((it, i) => {
-					_createItem(it, i + 1, this.tPoints);
+					let nm = i + 1;
+					if (!opt.skipLast || nm < textArr.length) {
+						_createItem(it, nm, this.tPoints);
+					}
 				});
 			}
 		};
  	},
+    checkMoveend: function () {
+		if (this.tPoints && this.points) {
+			var d = this.points._path.getAttribute('d');
+			this.tPoints.setAttribute('visibility', d ? '' : 'hidden');
+		}
+    },
 
     bringToFront: function () {
 		if (this.lines) { this.lines.bringToFront(); }
@@ -342,11 +358,12 @@ const Ring = L.LayerGroup.extend({
 				contextmenuItems: contextmenuItems
 			});
 		}
+        map.on('moveend', this.checkMoveend, this);
 
     },
 
     onRemove: function (map) {
-console.log('onRemove', this.options)
+        map.off('moveend', this.checkMoveend, this);
 		if (this.tPoints) {
 			const svgCont = map._pathRoot || map._renderer._container;
 			svgCont.removeChild(this.tPoints);
@@ -451,6 +468,7 @@ console.log('onRemove', this.options)
         if (this.points) {
             var points = this._getLatLngsArr(),
                 maxPoints = this.options.maxPoints,
+                // skipEqual = this.options.skipEqual,
                 len = points.length,
                 lastPoint = points[len - 2],
 				flag = !lastPoint || !lastPoint.equals(point);
@@ -478,7 +496,7 @@ console.log('onRemove', this.options)
 
     _removeToolTipPoints: function () {
 		(this.points._toolTipPoints || []).map(tooltip => {
-			this._map.removeLayer(tooltip);
+			if (this._map) this._map.removeLayer(tooltip);
 		});
     },
 
@@ -609,7 +627,7 @@ console.log('onRemove', this.options)
 			let prnt = this.options.forRing;
 			// if (this.mode === 'add') prnt = prnt._parent;
 			let points = prnt.points._parts[0];
-// console.log('_chkHolePoint', points, this.mode, this.options.forRing)
+
 			if (points && !Utils.isPointInRing(point, points)) {
 				return false;
 			}
@@ -625,12 +643,21 @@ console.log('onRemove', this.options)
    },
 
     _mouseupPoint: function (ev) {
+		const ctrlKey = ev.originalEvent.ctrlKey;
 		if (!this._chkHolePoint(ev.layerPoint)) {
 			this._pointUp(ev);
 			return;
 		}
-        if (this.down && !ev.originalEvent.ctrlKey) {
-			this._setPoint(ev.latlng, this.down.num, this.down.type);
+		let latlng = ev.latlng;
+		let _setPoint = this.down && !ctrlKey;
+
+        if (ctrlKey && Utils.chkGeoJson(this.points.toGeoJSON()).length) {
+			latlng = this._lastSnapLatlng;
+			_setPoint = true;
+		}
+ // console.log('_mouseupPoint', _setPoint, ev)
+       if (_setPoint) {
+			this._setPoint(latlng, this.down.num, this.down.type);
 		}
 		this._pointUp(ev);
         if (this.__mouseupPointTimer) { cancelIdleCallback(this.__mouseupPointTimer); }
@@ -640,6 +667,10 @@ console.log('onRemove', this.options)
     },
 
     _pointMove: function (ev) {
+		const ctrlKey = ev.originalEvent.ctrlKey;
+		// if (!this._chkHolePoint(ev.layerPoint)) {
+			// return;
+		// }
 
         if (this.down && this._lastDownTime < Date.now()) {
             if (!this.lineType) {
@@ -652,7 +683,12 @@ console.log('onRemove', this.options)
 			return;
 		}
 
-			var latlng = ev.originalEvent.ctrlKey ? Utils.snapPoint(ev.latlng, this, this._map) : ev.latlng;
+			let latlng = ev.latlng;
+			if (ctrlKey) {
+				// this._lastSnapLatlng = Utils.snapPoint(ev.latlng, this, this._map);
+				let rp = Utils.snapPoint(ev.latlng, this, this._map);
+				if (rp) latlng = this._lastSnapLatlng = rp;
+			}
             this._setPoint(latlng, this.down.num, this.down.type);
 			if (!this.options.toolTipPoints && '_showTooltip' in this._parent) {
 				ev.ring = this;
@@ -678,7 +714,7 @@ console.log('onRemove', this.options)
             this._map._skipClick = true;    // for EventsManager
         }
         if (this._drawstop) {
-            this._fireEvent('drawstop', ev);
+           this._fireEvent('drawstop', ev);
         }
         this._drawstop = false;
         this.down = null;
@@ -702,7 +738,7 @@ console.log('onRemove', this.options)
             } else {
                 this._setPoint(points[0], 0);
             }
-            this._fireEvent('drawstop');
+            this._fireEvent('drawstop', {op: 'pointRemove', mode: this.mode});
         }
 	},
 
@@ -730,6 +766,10 @@ console.log('onRemove', this.options)
         var downAttr = Utils.getDownType.call(this, ev, this._map, this._parent),
             mode = this.mode;
         if (downAttr.type === 'node') {
+			var points = this._getLatLngsArr();
+			var pCount = points.length;
+			if (downAttr.end && this.options.minPoints && pCount <= this.options.minPoints) downAttr.end = false;
+			
             var num = downAttr.num;
             if (downAttr.end) {  // this is click on first or last Point
                 if (mode === 'add') {
@@ -738,15 +778,17 @@ console.log('onRemove', this.options)
                     if (this.lineType && num === 0) {
                         this._parent.options.type = this.options.type = 'Polygon';
                         this.lineType = false;
-                        this._removePoint(this._getLatLngsArr().length - 1);
-                    }                    
-                    this._fireEvent('drawstop', downAttr);
-                    this._fireEvent('editstop', downAttr);
-                    this._removePoint(num);
+                        this._removePoint(pCount - 1);
+                    }
+					downAttr.op = 'add';
+                    this._fireEvent('drawstop', downAttr); // 1 drawstop
+                    this._fireEvent('editstop', downAttr); // переход к edit
+                    this._removePoint(num); // 2 drawstop
+                    this._fireEvent('add', downAttr); // закончили добавление
                 } else if (this.lineType) {
 					this._clearLineAddPoint();
                     this._lineAddPointID = setTimeout(function () {
-						if (num === 0) { this._getLatLngsArr().reverse(); }
+						if (num === 0) { points.reverse(); }
 						this.points.addLatLng(downAttr.latlng);
 						this.setAddMode();
 						this._fireEvent('drawstop', downAttr);
@@ -1102,7 +1144,10 @@ console.log('onRemove', this.options)
 			}
            var points = this._getLatLngsArr(),
 				latlng = ev.latlng;
-            if (ev.originalEvent.ctrlKey) { latlng = Utils.snapPoint(latlng, this, this._map); }
+            if (ev.originalEvent.ctrlKey) {
+				let p = Utils.snapPoint(latlng, this, this._map);
+				if (p) latlng = p;
+			}
             if (points.length === 1) { this._setPoint(latlng, 1); }
 
             this._setPoint(latlng, points.length - 1);
