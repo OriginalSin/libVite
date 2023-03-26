@@ -8,13 +8,21 @@ let hosts = {},
     zoom = 3,
 	dateInterval = {},
     bbox = null,
+	_ctxLabels,
+	mapSize,
     bboxBounds = null;
 	// dataManagersLinks = {},
     // hostBusy = {},
     // needReq = {}
 
 const setBbox = (mapPos) => {
-	if (zoom !== mapPos.zoom) {
+	// let flag = false;
+	if (!mapSize || mapSize.x !== mapPos.mapSize.x || mapSize.y !== mapPos.mapSize.y) {  
+		mapSize = mapPos.mapSize;
+		_ctxLabels = null;
+		
+	}
+	if (zoom !== mapPos.zoom || !_ctxLabels) {
 		zoom = mapPos.zoom;
 		bbox = mapPos.bbox;
 		bboxBounds = Requests.bounds();
@@ -812,6 +820,43 @@ const _parseNode = (treeInfo, callback, onceFlag) => {
 	treeInfo && iterate(treeInfo);
 };
 
+const drawLabels = (pars) => {
+	// let observer = pars.observer,
+		// ctx = observer.ctx,
+	if (mapSize && !_ctxLabels) {
+		const w = mapSize.x, h = mapSize.y;
+		const canvas = new OffscreenCanvas(w, h);
+		canvas.width = w; canvas.height = h;
+		_ctxLabels = canvas.getContext('2d');
+console.log('drawLabels _______________:', w, h);
+	}
+	if (pars.length) {
+		let data = {};
+		pars.reduce((a, c) => {
+			let indexes = c.indexes;
+			let t = c.tile;
+			let nm = c.nm;
+			
+			let pProps = t.pProps;
+			let itemLabel = t.itemslabels[nm];
+			let bArr = t.itemsbounds[nm];
+			let item = t.values[nm];
+			let id = item[indexes[pProps.properties.identityField]];
+			let layerID = t.LayerName;
+			a[layerID] = a[layerID] || {};
+			a[layerID][id] = a[layerID][id] || {bArr: []};
+			a[layerID][id].bArr.push(bArr);
+			a[layerID][id].itemLabel = itemLabel;
+			// a[layerID][id].push({
+				// itemLabel
+			// });
+
+			// let LayerName = LayerName;
+			return a;
+		}, data);
+console.log('drawLabels _______________:', mapSize, data, pars);
+	}
+}
 
 const drawItem = (pars) => {
 	let observer = pars.observer,
@@ -820,6 +865,7 @@ const drawItem = (pars) => {
 		itemData = pars.itemData,
 		renderStyle = style.renderStyle || {},
 		indexes = pars.indexes,
+		types = pars.types,
 		item = itemData.item,
 		geo = item[item.length - 1],
 		type = geo.type,
@@ -833,7 +879,10 @@ const drawItem = (pars) => {
 		tpx: 256 * (coords.x % tz - tz/2),
 		tpy: 256 * (tz/2 - coords.y % tz),
 		indexes,
+		types,
 		itemData,
+		tile: pars.tile,
+		nm: pars.nm,
 		options: renderStyle
 	};
 	if (pt.options.styleHooks.length) setValsByStyle(pt);
@@ -902,7 +951,7 @@ export default {
 	getZoom,
 	// getTiles,
 	drawItem,
-	// getMapTree,
+	drawLabels,
 	// moveend,
 	// setDateInterval,
 	setDateIntervals,

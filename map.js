@@ -70,9 +70,14 @@ const MapInit = () => {
 		})
 	);
 	map.addControl(L.control.gmxCenter({}));
-	map.addControl(L.control.gmxLocation());
+let c = L.control.gmxLocation({coordinatesFormat: 2});
+c.setScaleFormat('text');
+	console.log('gmxControlsManager', c);
+	map.addControl(c);
 
 /*
+let c = map.gmxControlsManager.get('location');
+c.setScaleFormat('text');
 	const vwworker = L.gmx.vw;
 	// const vwworker = L.gmx.vw;
 	L.gmx.vw.onmessage = function(e) {
@@ -196,8 +201,9 @@ map.on('layeradd', (ev) => {
 	const id = layer.options.layerID;
 	if (id) L.gmx.vw._sendCmd('layerremove', {id});
 // }).on('click', (ev) => {
-}).on('moveend', (ev) => {
-	let	mapPos = {bbox: L.gmxUtil.getBboxes(map), pBounds: map.getPixelBounds(), pOrigin: map.getPixelOrigin(), zoom: map.getZoom()};
+}).on('moveend resize', (ev) => {
+	console.log('ggg', ev, map.getSize());
+	let	mapPos = {bbox: L.gmxUtil.getBboxes(map), mapSize: map.getSize(), pBounds: map.getPixelBounds(), pOrigin: map.getPixelOrigin(), zoom: map.getZoom()};
 	L.gmx.vw._sendCmd('moveend', {mapPos});
 }).on('mousemove', (ev) => {
 	const oEv = ev.originalEvent;

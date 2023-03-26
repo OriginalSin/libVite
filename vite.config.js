@@ -44,6 +44,7 @@ export default defineConfig({
     },
   },
   server: {
+	port: 5172,
     proxy: {
       // string shorthand
       '/TileSender.ashx': proxyPrefix + '/TileSender.ashx',

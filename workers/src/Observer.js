@@ -88,7 +88,6 @@ const checkObservers = () => {
 				if (observers.labels.layers[observer.layerID]) {
 					observers.labels.items = [...observers.labels.items, ...observer.items];
 					// observers.labels.items = observers.labels.items.concat(observer.items);
-		// console.log('tiles _______________:', observers.labels.items);
 				}
 			}
 
@@ -102,6 +101,8 @@ const checkObservers = () => {
 			remove(observer);
 			// delete observers[zKey];
 		});
+		DataVersion.drawLabels(observers.labels.items); // вызов отрисовки labels
+// console.log('observers.labels.items _______________:', observers.labels.items);
 
 		
 	});
@@ -123,6 +124,7 @@ const getItemValue = ({nm, observer, tile}) => {
 		ids = observer.layerData.allIds[layerID];
 	}
 	const indexes = ids.tileAttributeIndexes;
+	const types = ids.tileAttributeTypes;
 	const styles = ids.pProps.styles;
 
 	const type = observer.type;
@@ -146,10 +148,13 @@ const getItemValue = ({nm, observer, tile}) => {
 		if (type === 'screen' || type === 'labels') {
 			let st = tile.styleNums[nm];
 			let pt = {
+					tile,
+					nm,
 				tbbox: tile.bbox,
 				st,
 				style: styles[st],
 				indexes,
+				types,
 				itemData: {
 					bounds: tile.itemsbounds[nm],
 					paths: tile.paths[nm],

@@ -384,11 +384,30 @@ const utils = {
 		const styleHooks = [];
 		if (styleOut.labelField) {
 			const body = `{
-				let itemData = pt.itemData;
-				let ind = pt.options.labelField;
-				let val = itemData.item[pt.indexes[ind]];
-				let out = Utils.getDateTime(val);
-				itemData.labelValue = out;
+				let tile = pt.tile;
+				let itemslabels = tile.itemslabels || [];
+				let nm = pt.nm;
+				let itemLabel = itemslabels[nm];
+				if (itemLabel) {
+					pt.itemData.labelValue = itemLabel.value;
+					return itemLabel;
+				}
+
+				let item = tile.values[nm];
+				// let itemData = pt.itemData;
+				let name = pt.options.labelField;
+				let val = item[pt.indexes[name]];
+				let type = pt.types[name] || '';
+				// let out = Utils.getDateTime(val);
+				let out = type.indexOf('date') === 0 ? Utils.getDateTime(val) : val;
+					// itemData.labelValue = out;
+				itemLabel = {
+					value: out,
+					width: Utils.getLabelWidth(out, pt.options)
+				};
+// console.log('Hooks', nm, pt, out);
+				itemslabels[nm] = itemLabel;
+				tile.itemslabels = itemslabels;
 				return out;
 			}`;
 			const hook = new Function('pt', 'Utils', body);
@@ -804,6 +823,47 @@ const utils = {
         }
         return true;
     },
+	labelCanvasContext: null,
+    getLabelWidth: function(txt, style) {   // Get label size Label
+        if (style) {
+			let ptx = utils.labelCanvasContext;
+            if (!ptx) {
+				const canvas = new OffscreenCanvas(512, 512);
+                canvas.width = canvas.height = 512;
+                ptx = utils.labelCanvasContext = canvas.getContext('2d');
+            }
+            ptx.clearRect(0, 0, 512, 512);
 
+            if (ptx.font !== style.font) ptx.font = style.font;
+            //if (ptx.strokeStyle !== style.strokeStyle) { ptx.strokeStyle = style.strokeStyle; }
+            if (ptx.fillStyle !== style.fillStyle) ptx.fillStyle = style.fillStyle;
+            return txt.split('\n').map(it => {
+				ptx.fillText(it, 0, 0);
+				return [it, ptx.measureText(it)];
+				// return [it, ptx.measureText(it).width];
+			});
+        }
+        return 0;
+    },
+/*
+    setLabel: function(ctx, txt, coord, style) {
+        var x = coord[0],
+            y = coord[1];
+
+        if (ctx.shadowColor !== style.strokeStyle) { ctx.shadowColor = style.strokeStyle; }
+        if (ctx.shadowBlur !== style.shadowBlur) { ctx.shadowBlur = style.shadowBlur; }
+        if (ctx.font !== style.font) { ctx.font = style.font; }
+		if (L.Browser.gecko) {	// Bug with perfomance in FireFox
+			if (ctx.strokeStyle !== style.fillStyle) { ctx.strokeStyle = style.fillStyle; }
+		} else {
+			if (ctx.strokeStyle !== style.strokeStyle) { ctx.strokeStyle = style.strokeStyle; }
+			if (ctx.fillStyle !== style.fillStyle) { ctx.fillStyle = style.fillStyle; }
+		}
+        ctx.strokeText(txt, x, y);
+		if (!L.Browser.gecko) {
+			ctx.fillText(txt, x, y);
+		}
+    },
+*/
 };
 export default utils;

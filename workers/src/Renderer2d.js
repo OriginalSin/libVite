@@ -33,9 +33,11 @@ const utils = {
 		ph = _reqParse(ph);
 		if (!ph._drawing) { return; }
 
+// console.log('_updatePolyMerc', ph);
 		let mInPixel = ph.mInPixel,
 			itemData = ph.itemData,
-			labelValue = itemData.labelValue,
+			itemLabel = ph.tile.itemslabels[ph.nm],
+			labelValue = itemLabel?.value || '',
 			item = itemData.item,
 			geo = item[item.length - 1],
 			type = geo.type,

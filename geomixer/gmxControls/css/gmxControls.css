@@ -1,8 +1,19 @@
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+input {
+	-moz-appearance:textfield;
+}
+
+
+
 .leaflet-gmx-icons {
     margin-left: 50px;
 }
 .leaflet-gmx-icon-sprite {
-    background-image: url("/img/gmxSprite.png");
+    /* background-image: url("/img/gmxSprite.png"); */
 }
 
 .leaflet-left .leaflet-gmx-icon.leaflet-control {
@@ -202,7 +213,7 @@
 .leaflet-gmx-icon-hide {
     background-position: -592px 1px;
     margin-right: 10px;
-    background-image: url("/img/gmxSprite.png");
+    /* background-image: url("/img/gmxSprite.png"); */
 }
 .leaflet-left .leaflet-gmx-icon-hide.leaflet-control {
     margin-left: 12px;
@@ -410,10 +421,11 @@
     text-align: center;
 	padding-top: 2px;
     height: 23px;
-    width: 23px;
+    width: 26px;
     font-size: 14px;
 	border: none;
     outline: none;
+	color: red;
 }
 .gmxZoomRed {
 	color: #ec5252;

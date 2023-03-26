@@ -100,6 +100,7 @@ L.Control.GmxIconGroup = L.Control.GmxIcon.extend({
         if (options.isVertical) container.style.marginLeft = 0;
         if (options.notHide) container._notHide = true;
         if (map.gmxControlsManager) map.gmxControlsManager.add(this);
+		L.DomEvent.disableClickPropagation(container);
         return container;
     },
 

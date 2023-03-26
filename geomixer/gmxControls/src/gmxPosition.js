@@ -4,14 +4,14 @@ L.Map.addInitHook(function () {
         tb = 'leaflet-top leaflet-bottom',
         lr = 'leaflet-left leaflet-right',
         classNames = {
-            bottom: 'leaflet-bottom ' + lr,
-            gmxbottomleft: 'leaflet-bottom leaflet-left',
-            gmxbottomcenter: 'leaflet-bottom ' + lr,
-            gmxbottomright: 'leaflet-bottom leaflet-right',
-            center: tb + ' ' + lr,
-            right:  'leaflet-right ' + tb,
-            left:   'leaflet-left ' + tb,
-            top:    'leaflet-top ' + lr
+            bottom: 'bottom leaflet-bottom ' + lr,
+            gmxbottomleft: 'gmxbottomleft leaflet-bottom gmx leaflet-left',
+            gmxbottomcenter: 'gmxbottomcenter leaflet-bottom gmx ' + lr,
+            gmxbottomright: 'gmxbottomright leaflet-bottom gmx leaflet-right',
+            center: 'center ' + tb + ' ' + lr,
+            right:  'right leaflet-right ' + tb,
+            left:   'left leaflet-left ' + tb,
+            top:    'top leaflet-top ' + lr
         };
 
     for (var key in classNames) {

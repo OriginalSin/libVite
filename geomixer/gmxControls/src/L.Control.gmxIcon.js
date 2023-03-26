@@ -5,12 +5,10 @@ const _options = {
 	isActive: false
 };
 L.Control.GmxIcon = L.Control.extend({
-    includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
-	// initialize(options) {
-        // this.options = {position: 'topleft', id: 'defaultIcon', isActive: false, ...options};
-	// },
-    options: _options,
-
+    includes: L.Evented.prototype,
+	initialize(options) {
+        this.options = {..._options, ...options};
+	},
     setActive: function (active, skipEvent) {
         var options = this.options,
 			container = this._container,
@@ -98,21 +96,14 @@ L.Control.GmxIcon = L.Control.extend({
         // }
         if (options.style) this.setStyle(options.style);
 
-        L.DomEvent
-            .on(container, 'mousemove touchstart mousedown dblclick click', L.DomEvent.stopPropagation)
-            .on(container, 'click', this._iconClick, this);
-        if (options.onAdd) {
-            options.onAdd(this);
-        }
+        L.DomEvent.on(container, 'click', this._iconClick, this);
+        if (options.onAdd) options.onAdd(this);
         this.fire('controladd');
         map.fire('controladd', this);
 
-        if (options.notHide) {
-            container._notHide = true;
-        }
-        if (map.gmxControlsManager) {
-            map.gmxControlsManager.add(this);
-        }
+        if (options.notHide) container._notHide = true;
+        if (map.gmxControlsManager) map.gmxControlsManager.add(this);
+		L.DomEvent.disableClickPropagation(container);
         return container;
     },
     _iconClick: function () {
@@ -131,9 +122,7 @@ L.Control.GmxIcon = L.Control.extend({
         map.fire('controlremove', this);
 
         var container = this._container;
-        L.DomEvent
-            .off(container, 'mousemove touchstart mousedown dblclick click', L.DomEvent.stopPropagation)
-            .off(container, 'click', this._iconClick, this);
+        L.DomEvent.off(container, 'click', this._iconClick, this);
     },
 
     addTo: function (map) {
