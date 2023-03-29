@@ -5,17 +5,28 @@ const mousemove = (pars) => {
 	const {hostName = 'maps.kosmosnimki.ru'} = pars;
 	const host = DataVersion.hosts[hostName];
 	if (!host || !host.ids) return new Promise((resolve => resolve));
-	
-	// const ids = host.ids;
-		// const arr = Object.values(ids).filter(it => it.tilesPromise);
 
-	return Observer.add({ type: 'mousemove', ...pars}).then(res => {
-		// console.log('eventCheck', res, pars, arr);
+	const prom = Observer.add({ type: 'mousemove', ...pars}).then(res => {
 		const out = {from: pars};
-		if (Object.keys(res).length) out.items = res;
+		DataVersion.setHover({});
+		if (Object.keys(res).length) {
+			out.items = res;
+			if (res.items && res.items.length) {
+				const item = res.items[0];
+				const ids = host.ids[item.layerID];
+				const pArr = item.items;
+				DataVersion.setHover({
+					layerID: item.layerID,
+					hoverId: pArr[ids.tileAttributeIndexes.gmx_id]
+				});
+// console.log('eventCheck', res, host);
+			}
+		}
 		return out;
 	});
-		// return {from: pars, ...{hh: 5}};
+	Observer.waitCheckObservers();
+	// DataVersion.now();
+	return prom;
 };
 
 export default {

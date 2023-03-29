@@ -202,35 +202,55 @@ map.on('layeradd', (ev) => {
 	if (id) L.gmx.vw._sendCmd('layerremove', {id});
 // }).on('click', (ev) => {
 }).on('moveend resize', (ev) => {
-	console.log('ggg', ev, map.getSize());
+	// console.log('ggg', ev, map.getSize());
 	let	mapPos = {bbox: L.gmxUtil.getBboxes(map), mapSize: map.getSize(), pBounds: map.getPixelBounds(), pOrigin: map.getPixelOrigin(), zoom: map.getZoom()};
 	L.gmx.vw._sendCmd('moveend', {mapPos});
-}).on('mousemove', (ev) => {
+}).on('mousemove mouseover', (ev) => {
 	const oEv = ev.originalEvent;
 	const pars = {
 		ctrlKey: oEv.ctrlKey,
 		altKey: oEv.altKey,
 		shiftKey: oEv.shiftKey,
 		latlng: ev.latlng,
-		merc: L.Projection.SphericalMercator.project(ev.latlng),
+		merc: L.Projection.SphericalMercator.project(ev.latlng.wrap()),
 		layerPoint: ev.layerPoint
 	};
 	// pars.bbox = 
-	// console.log('mousemove', pars);
+	if (ev.type === 'mouseover') map._lastCursor = '+';
 	
 	L.gmx.vw._sendCmd('mousemove', pars).then(res => {
 		// console.log('mousemove res', res);
 		let items = res.items.items;
-		let cursor = '';
+		let cursor = '_';
+		let hoverLayer = '';
+		let gmx_id = '';
 		if (items.length) {
+			let item = items[0];
 			cursor = 'pointer';
+			hoverLayer = L.gmx.gmxMap.layersByID[item.layerID];
+			if (gmx_id !== item.items[0] || lastHoverLayer !== hoverLayer) map._lastCursor = '*';
+			gmx_id = item.items[0];
+	console.log('gmx_id', gmx_id, map._lastCursor);
+			// lastHoverLayer = L.gmx.gmxMap.layersByID[items[0].layerID];
+
 			// foundLayer = layer;
 		}
 		if (map._lastCursor !== cursor) {
 			map._container.style.cursor = map._lastCursor = cursor;
+			if (hoverLayer && lastHoverLayer !== hoverLayer) hoverLayer.repaint();
+			if (lastHoverLayer && lastHoverLayer !== hoverLayer) lastHoverLayer.repaint();
+			// if (lastHoverLayer) lastHoverLayer.repaint();
+			// else if (lastHoverLayer !== hoverLayer) {
+			// else if (lastHoverLayer !== hoverLayer) {
+				// if (hoverLayer) hoverLayer.repaint();
+			// } 
+			lastHoverLayer = hoverLayer;
+	// console.log('lastHoverLayer', lastHoverLayer);
 		}
+			// if (lastHoverLayer) { lastHoverLayer.repaint(); lastHoverLayer = null; }
 	});
 });
+let lastHoverLayer;
 
 let cont = map.gmxControlIconManager.get('refresh-gif')._container;
 L.gmx._requests = {};

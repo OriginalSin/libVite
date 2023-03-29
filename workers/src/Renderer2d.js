@@ -36,7 +36,8 @@ const utils = {
 // console.log('_updatePolyMerc', ph);
 		let mInPixel = ph.mInPixel,
 			itemData = ph.itemData,
-			itemLabel = ph.tile.itemslabels[ph.nm],
+			itemslabels = ph.tile?.itemslabels || [],
+			itemLabel = itemslabels[ph.nm],
 			labelValue = itemLabel?.value || '',
 			item = itemData.item,
 			geo = item[item.length - 1],
@@ -104,7 +105,7 @@ const utils = {
 // console.log('setValsByStyle ',ph);
 	 	if (labelValue) {
 			const coord = ph.itemData.bounds.bounds.getCenter();
-			const point = new DOMPoint(coord[0], coord[0]);
+			const point = new DOMPoint(coord[0], coord[1]);
 			let tPoint = point.matrixTransform(matrix);
 			tPoint = {x: coord[0] * mInPixel - ph.tpx, y: ph.tpy - coord[1] * mInPixel},
 
@@ -115,12 +116,11 @@ const utils = {
 	},
 
 	_fillStroke: function (ph, stroke, fill) {
-		ph = _reqParse(ph);
+		// ph = _reqParse(ph);
 		let options = ph.options,
 			ctx = ph._ctx;
                 // out.canvasPattern = (pt.canvasPattern ? pt.canvasPattern : gmxAPIutils.getPatternIcon(item, pt, indexes));
 
-// console.log('_fillStroke', options);
 		// if (fill && options.fillColor) {
 			// ctx.globalAlpha = options.fillOpacity !== undefined ? options.fillOpacity : 1;
 			// ctx.fillStyle = options.fillColor;
@@ -133,15 +133,20 @@ const utils = {
 			} else if (options.fillColor) {
 				ctx.fillStyle = options.fillColor;
 			}
-			ctx.globalAlpha = options.fillOpacity !== undefined ? options.fillOpacity : 1;
+			let fillOpacity = options.fillOpacity !== undefined ? options.fillOpacity : 1;
+			if (ph._hover && fillOpacity < 1) fillOpacity *= 2;
+			ctx.globalAlpha = fillOpacity;
 		}
 
+// console.log('_fillStroke', ctx.globalAlpha, ph._hover);
 		if (stroke && options.weight !== 0) {
 			if (ctx.setLineDash) {
 				ctx.setLineDash(options && options.dashArray || []);
 			}
 			ctx.globalAlpha = options.opacity !== undefined ? options.opacity : 1;
-			ctx.lineWidth = options.weight;
+			let weight = options.weight !== undefined ? options.weight : 1;
+			if (ph._hover) weight *= 2;
+			ctx.lineWidth = weight;
 			ctx.strokeStyle = options.color;
 			ctx.lineCap = options.lineCap || 'round';
 			ctx.lineJoin = options.lineJoin || 'round';

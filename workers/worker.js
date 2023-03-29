@@ -7,41 +7,33 @@ onmessage = function(e) {
 	const pars = {...message};
 	// console.log('onmessage ', pars);
 	switch(message.cmd) {
+		case 'getTiles':
+			DataVersion.getTiles(pars).then(queues => {
+	// console.log('getTiles ', message, pars, queues);
+				let arr = queues.reduce((a, c) => {
+					let bitmap = c.bitmap;
+					if (bitmap) a.push(bitmap);
+					return a;
+				}, []);
+				postMessage({queues, cmdNum: message.attr.cmdNum}, arr);
+			});
+			break;
 		case 'getTile':
 			DataVersion.getTile(pars).then(function(res) {
-	// console.log('getTile ', res);
 				postMessage(res[0]);
 			});
 			break;
-		case 'layeradd':
-			DataVersion.addSource(pars);
-			break;
-		case 'layerremove':
-			DataVersion.removeSource(pars);
-			break;
-		case 'getMap':
-			DataVersion.getMap(pars).then(postMessage);
-			break;
-		case 'moveend':
-			DataVersion.setBbox(pars.attr.mapPos);
-			break;
+		case 'layeradd': 	DataVersion.addSource(pars);				break;
+		case 'layerremove': DataVersion.removeSource(pars);				break;
+		case 'getMap':		DataVersion.getMap(pars).then(postMessage); break;
+		case 'moveend': 	DataVersion.setBbox(pars.attr.mapPos);		break;
 		case 'mousemove':
 			let prom = gmxEventsManager.mousemove(pars);
 			if (prom) prom.then(postMessage);
 			break;
-		// case 'getMap':
-			// DataVersion.getMapTree({mapID: message.mapId, apiKey: message.apiKey, hostName: message.hostName, search: message.search}).then((json) => {
-				// message.out = json;
-				// postMessage(message);
-			// });
-			// break;
-		// case 'getTiles':
-			// DataVersion.getTiles(pars).then(function(res) {
-				// postMessage(res);
-			// });
-			// break;
 		default:
-			DataVersion[message.cmd].call(DataVersion, pars);
+			if (DataVersion[message.cmd]) DataVersion[message.cmd].call(DataVersion, pars);
+			else console.warn('skip ', message); 
 			break;
 	}
 }

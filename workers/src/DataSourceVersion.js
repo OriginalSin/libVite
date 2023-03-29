@@ -5,6 +5,7 @@ import Renderer2d from './Renderer2d';
 import Observer from './Observer';
 
 let hosts = {},
+	hover = {},
     zoom = 3,
 	dateInterval = {},
     bbox = null,
@@ -85,10 +86,7 @@ const chkHost = (hostName) => {
 	}
 	if (!arr.length) return;
 	let url = '//' + hostName + Utils.SCRIPT;
-	postMessage({
-		cmd: 'request',
-		url: url
-	});
+	postMessage({ cmd: 'request', url: url });
 	return Requests.getJson({
 		url,
 		options: hostLayers.signals ? Requests.chkSignal('chkVersion', hostLayers.signals) : {},
@@ -100,20 +98,16 @@ const chkHost = (hostName) => {
 		}]
 	}).then(json => {
 		delete hostLayers.signals.chkVersion;
-		postMessage({
-			cmd: 'request',
-			remove: true,
-			url: url
-		});
+		postMessage({ cmd: 'request', remove: true, url: url });
 		return json;
 	})
 	.catch(err => {
+		postMessage({ cmd: 'request', remove: true, url: url });
 		console.error(err);
 		// resolve('');
 	});
 };
 const chkVersion = () => {
-// console.log('chkVersion', hosts);
 	for (let host in hosts) {
 		let	hostItem = hosts[host];
 		let ids = hostItem.ids;
@@ -122,17 +116,14 @@ const chkVersion = () => {
 			if (!prom) continue;
 			prom.then(json => {
 				if (json.error) {
-					console.warn('chkVersion:', json.error);
+					// console.warn('chkVersion:', json.error);
 				} else {
 					let res = json.res;
 					if (res.Status === 'ok' && res.Result) {
 						res.Result.forEach(it => {
 							let id = it.name;
 							if (ids[id]) {
-	postMessage({
-		cmd: 'request',
-		url: id
-	});
+								postMessage({ cmd: 'request', url: id });
 
 								let pt = ids[id],
 									props = it.properties;
@@ -153,12 +144,11 @@ const chkVersion = () => {
 								TilesLoader.load(pt);
 								// Promise.all(Object.values(pt.tilesPromise)).then(Observer.waitCheckObservers);
 								Promise.all(Object.values(pt.tilesPromise)).then(() => {
+	// console.log('chkVersion1:', pt.tilesPromise);
 									Observer.waitCheckObservers();
-	postMessage({
-		cmd: 'request',
-			remove: true,
-		url: id
-	});
+									// utils.now();
+
+									postMessage({ cmd: 'request', remove: true, url: id });
 								});
 							} else {
 // console.log('chkVersion layer skiped', id, it);
@@ -213,10 +203,11 @@ const addSource = (pars) => {
 		linkAttr.stylesPromise.then((res) => {
 			linkAttr.styles = res;
 			// delete linkAttr.stylesPromise;
-		});
+		// });
 
         if (!intervalID) { utils.start(); }
 		utils.now();
+		});
 	} else {
 		console.warn('Warning: Specify layer `id` and `hostName`', pars);
 	}
@@ -266,7 +257,7 @@ const setDateIntervals = (pars) => {
 	// }
 	// utils.now();
 
-console.log('setDateIntervals:', pars);
+// console.log('setDateIntervals:', pars);
 };
 
 /*
@@ -376,31 +367,6 @@ const iterateLayers = (treeInfo, callback) => {
 	};
 
 	treeInfo && iterate(treeInfo.children);
-};
-
-const getTiles = (message) => {
-	let hostName = message.hostName,
-		layerID = message.layerID,
-		queue = message.queue,
-		z = message.z,
-		hostLayers = hosts[hostName];
-
-	if (hostLayers && hostLayers.ids && hostLayers.ids[layerID]) {
-		let observers = hostLayers.ids[layerID].observers;
-		for (let key in observers) {
-			if (observers[key].pars.z !== z) {
-				observers[key].resolver(null);
-				delete observers[key];
-			}
-		}
-	}
-// console.log('vvvvvvvvvv ___res____ ', message);
-	return Promise.all(queue.map(coords => 
-		addObserver(Requests.extend({
-			coords: coords,
-			zKey: coords.x + ':' + coords.y + ':' + coords.z
-		}, message))
-	));
 };
 
 const getMapTree = (pars) => {
@@ -828,7 +794,7 @@ const drawLabels = (pars) => {
 		const canvas = new OffscreenCanvas(w, h);
 		canvas.width = w; canvas.height = h;
 		_ctxLabels = canvas.getContext('2d');
-console.log('drawLabels _______________:', w, h);
+// console.log('drawLabels _______________:', w, h);
 	}
 	if (pars.length) {
 		let data = {};
@@ -854,10 +820,13 @@ console.log('drawLabels _______________:', w, h);
 			// let LayerName = LayerName;
 			return a;
 		}, data);
-console.log('drawLabels _______________:', mapSize, data, pars);
+// console.log('drawLabels _______________:', mapSize, data, pars);
 	}
 }
 
+const setHover = (obj) => {
+	hover = obj;
+}
 const drawItem = (pars) => {
 	let observer = pars.observer,
 		ctx = observer.ctx,
@@ -876,6 +845,7 @@ const drawItem = (pars) => {
 		mInPixel: 256 * tz / Utils.WORLDWIDTHFULL,
 		_drawing: true,
 		_ctx: ctx,
+		_hover: hover.layerID === itemData.layerID && hover.hoverId === item[0],
 		tpx: 256 * (coords.x % tz - tz/2),
 		tpy: 256 * (tz/2 - coords.y % tz),
 		indexes,
@@ -887,15 +857,17 @@ const drawItem = (pars) => {
 	};
 	if (pt.options.styleHooks.length) setValsByStyle(pt);
 	// if (coords.z === 13 && coords.x === 4835 && coords.y === 2552) {
-// console.log('vvvvvvvvvv ___coords____ ', coords, pt);
 	// }
 	if (!ctx) {
 		const canvas = new OffscreenCanvas(256, 256);
 		canvas.width = canvas.height = 256;
+		canvas._zKey = observer.zKey;
 		observer.canvas = canvas;
 		pt._ctx = observer.ctx = canvas.getContext('2d');
 	}
+// console.log('vvvvvvvvvv ___coords____ ', pt.options.styleHooks);
 
+	pt._ctx.fillText(observer.zKey, 128, 128);
 	// pt._ctx.fillText(coords.x + ':' + coords.y + ':' + coords.z, 128, 128);
 	// Renderer2d.updatePoly(pt);
 	Renderer2d.updatePolyMerc(pt);
@@ -942,21 +914,67 @@ const getTile = (pars) => {
 	));
 };
 
+const getTiles = (pars) => {
+	let message = pars.attr;
+	let hostName = message.hostName,
+		layerID = message.layerID,
+		// queue = message.queue,
+		queues = message.queues,
+		cmdNum = message.cmdNum,
+		z = message.z,
+		hostLayers = hosts[hostName];
+
+	if (hostLayers && hostLayers.ids && hostLayers.ids[layerID]) {
+		let observers = hostLayers.ids[layerID].observers;
+		for (let key in observers) {
+			if (observers[key].pars.z !== z) {
+				observers[key].resolver(null);
+				delete observers[key];
+			}
+		}
+	}
+	// return Observer.addArray(pars);
+// console.log('getTiles ___res____ ', pars);
+	delete message.queues;
+
+	let lnm = queues.length - 1;
+	let arrPromise = queues.map((it, i) => {
+		let wait = i < lnm;
+		let coords = it.coords;
+		let key = coords.x + ':' + coords.y + ':' + coords.z;
+		let zKey = key + '_' + it.nm;
+		// let zKey = key + '_' + cmdNum;
+		
+		return Observer.add({ wait, type: 'screen', coords, zKey, key, ...message, queue: it})
+	});
+	utils.now();
+	return Promise.all(arrPromise);
+	// return Promise.all(queues.map(it =>
+		// Observer.add({ wait: true, type: 'screen', coords: it.coords, zKey: it.coords.x + ':' + it.coords.y + ':' + it.coords.z + '_' + cmdNum , ...message})
+		// addObserver(Requests.extend({
+			// coords: it.coords,
+			// zKey: it.coords.x + ':' + it.coords.y + ':' + it.coords.z
+		// }, message))
+	// ));
+};
+
 export default {
+	now: utils.now,
+	setHover,
 	hosts,
 	getMap,
 	getTile,
+	getTiles,
 	setBbox,
 	getBound,
 	getZoom,
-	// getTiles,
 	drawItem,
 	drawLabels,
 	// moveend,
 	// setDateInterval,
 	setDateIntervals,
-	addObserver: Observer.addObserver,
-	removeObserver: Observer.removeObserver,
+	// addObserver: Observer.addObserver,
+	// removeObserver: Observer.removeObserver,
 	removeSource,
 	addSource
 };

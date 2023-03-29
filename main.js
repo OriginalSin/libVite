@@ -42,7 +42,9 @@ worker.onmessage = function(e) {
 			L.gmx.Requests(res);
 			break;
 		default:
-			worker._cmdResolver[num](res);
+			if (worker._cmdResolver[num]) worker._cmdResolver[num](res);
+			else console.warn('skip num', res); 
+			
 	}
 	delete worker._cmdResolver[num];
 	// console.log('vwworker received from worker', e.data);

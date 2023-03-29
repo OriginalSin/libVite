@@ -92,10 +92,12 @@ const load = (pars) => {
 				tilesPromise[tkey] = pars.tilesPromise[tkey];
 			} else {
 				// pars.tilesPromise[tkey] = Requests.getTileJson({
+				postMessage({ cmd: 'request', url: tkey });
 				tilesPromise[tkey] = Requests.getTileJson({
 					url: '//' + pars.hostName + '/TileSender.ashx',
 					options: Requests.chkSignal(tkey, pars.signals),
 					paramsArr: [tHash, {
+						sw: 1,
 						r: 'j',
 						ModeKey: 'tile',
 						LayerName: pars.id,
@@ -114,9 +116,11 @@ const load = (pars) => {
 					json.styleNums = [];
 					json.itemsbounds = [];
 					// console.log('json', json);
+					postMessage({ cmd: 'request', remove: true, url: tkey });
 					return json;
 				})
 				.catch(err => {
+					postMessage({ cmd: 'request', remove: true, url: tkey });
 					console.error(err);
 				})
 			}

@@ -2,8 +2,11 @@ import Utils from './Utils';
 import Requests from './Requests';
 import DataVersion from './DataSourceVersion';
 
+let _timerCheck;
 let _checkObserversTimer = null;
 const waitCheckObservers = () => {
+	if (_timerCheck) cancelAnimationFrame(_timerCheck);
+	_timerCheck = requestAnimationFrame(checkObservers, {timeout: 0});
 	// if (_checkObserversTimer) { clearTimeout(_checkObserversTimer); }
 	// _checkObserversTimer = setTimeout(checkObservers, 25);
 };
@@ -66,9 +69,11 @@ const getTileItems = (t, o) => {
 const checkObservers = () => {
 	const {obs, tp} = getObservers('screen');
 	observers.labels.items = [];
+		// console.log('tp _______________:', obs, tp);
 	Promise.all(tp).then(tiles => {
 		// console.log('tiles _______________:', obs, tiles);
 		tiles.forEach(t => {
+			if (!t) return;
 			let oArr = obs.filter(o => o && (o.type === 'mousemove' || (o.layerID && o.layerID === t.LayerName)));
 			t.values.forEach((it, nm) => {
 				oArr.forEach(observer => {
@@ -76,6 +81,7 @@ const checkObservers = () => {
 				});
 			});
 		});
+	// DataVersion.setHover({});
 		obs.forEach(observer => {
 			if (!observer) return;
 			// тут сортировки
@@ -92,12 +98,26 @@ const checkObservers = () => {
 			}
 
 			let pars = observer.pars;
+			let out = observer.queue || {};
+
+				// cmdNum: pars.cmdNum,
+				// items: pars.items,
+			// };
 			if (observer.canvas) {
-				pars.bitmap = observer.canvas.transferToImageBitmap();
+				let bitmap = observer.canvas.transferToImageBitmap();
+				// observer.bitmap = bitmap;
+				out.bitmap = bitmap;
+				// pars.queue.bitmap = bitmap;
+				// if (pars.queues) {
+					// pars.queues.find((it, i) => {
+						// if (it.zKey === observer.zKey) { it.bitmap = bitmap; return true; }
+						// return false;
+					// });
+				// } else pars.bitmap = bitmap;
 			} else {
-				pars.items = observer.items;
+				out.items = observer.items;
 			}
-			observer.resolve(pars); // ответ в браузер
+			observer.resolve(out); // ответ в браузер
 			remove(observer);
 			// delete observers[zKey];
 		});
@@ -271,6 +291,25 @@ const _chkHoverItem = (geo, boundsArr, merc, bounds) => {
 	return flag;
 };
 
+const addArray = (pars) => {
+	let message = pars.attr;
+	let hostName = message.hostName,
+		layerID = message.layerID,
+		queue = message.queue,
+		queues = message.queues,
+		cmdNum = message.cmdNum,
+		z = message.z,
+		hostLayers = hosts[hostName];
+ console.log('addArray :',  pars);
+	return Promise.all(queues.map(it => 
+		Observer.add({ type: 'screen', coords: it.coords, zKey: it.coords.x + ':' + it.coords.y + ':' + it.coords.z + '_' + cmdNum , ...message})
+		// addObserver(Requests.extend({
+			// coords: it.coords,
+			// zKey: it.coords.x + ':' + it.coords.y + ':' + it.coords.z
+		// }, message))
+	));
+
+};
 const add = (pars) => {
 	let layerID = pars.layerID,
 		type = pars.type || 'screen',
@@ -280,8 +319,12 @@ const add = (pars) => {
 	let id = pars.zKey || pars.type || pars.layerID;
 	let prom = new Promise(resolve => {
 		let data = {resolve, ...pars, items: [], layerData: getLayerData(pars)};
-		if (!data.bounds && data.coords) data.bounds = Utils.getTileBounds(data.coords);
+		if (data.coords) {
+			data.key = data.coords.x + ':' + data.coords.y + ':' + data.coords.z;
+			if (!data.bounds) data.bounds = Utils.getTileBounds(data.coords);
+		}
 		data.pars = pars;
+		// data.key = pars;
 		observers[type] = observers[type] || {};
 		if (type === 'screen') {
 			observers[type][layerID] = observers[type][layerID] || {};
@@ -298,18 +341,20 @@ const add = (pars) => {
  // console.log('res :',  res);
 		// return res.items;
 	});
-	if (_timerCheck) cancelAnimationFrame(_timerCheck);
-	_timerCheck = requestAnimationFrame(checkObservers, {timeout: 50});
+	if (!pars.wait) {
+		// if (_timerCheck) cancelAnimationFrame(_timerCheck);
+		// _timerCheck = requestAnimationFrame(checkObservers, {timeout: 50});
+	}
 	return prom;
 
 };
-let _timerCheck;
 
 const remove = (id) => {
 	if (typeof(id) === 'object') {
 		let type = id.type;
-		if (type === 'screen') {
-			delete observers[id.type][id.layerID][id.zKey];
+		let obs = observers[id.type];
+		if (type === 'screen' && obs && obs[id.layerID]) {
+			delete obs[id.layerID][id.zKey];
 		} else if (type !== 'labels') {
 			delete observers[id.type];
 		}
@@ -338,6 +383,7 @@ const getLayerData = ({layerID, hostName = Utils.HOST} = pars) => {
 export default {
 	waitCheckObservers,
 	removeLayer,
+	addArray,
 	add,
 	remove
 };

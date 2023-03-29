@@ -12,6 +12,8 @@ gmx.reqName = gmx.properties.LayerID;
 		this._needSend = [];
 		// this.options.zIndexOffset = 100000;
 		// this.options.zIndex = 1;
+		this.on('tileloadstart', this.__tileloadstart, this);
+
         return this;
 	},
 	getGmxProperties: function() {
@@ -97,8 +99,96 @@ gmx.reqName = gmx.properties.LayerID;
             endDate: this._gmx.endDate
         };
     },
+    repaint: function() {
+		this._needSend = Object.values(this._tiles).reduce((a, c) => {
+			if (c.current) {
+				let coords = c.coords;
+				a.push({
+					key: this._tileCoordsToKey(coords),
+					coords: this._wrapCoords(coords),
+					nwcoords: coords,
+					tile: c.el,
+				});
+			}
+			return a;
+		}, []);
+		if (this._timerSend) cancelIdleCallback(this._timerSend);
+		this._timerSend = requestIdleCallback(this.__sendQueues.bind(this), {timeout: 250});
+    },
 
-	_sendQueue: function() {
+	__tileloadstart: function(ev) {
+		let coords = ev.coords;
+		this._needSend.push({
+			key: this._tileCoordsToKey(coords),
+			coords: this._wrapCoords(coords),
+			nwcoords: coords,
+			tile: ev.tile,
+			// done
+		});
+		if (this._timerSend) cancelIdleCallback(this._timerSend);
+		this._timerSend = requestIdleCallback(this.__sendQueues.bind(this, true), {timeout: 250});
+				// key = this._tileCoordsToKey(coords);
+// console.log('tileloadstart', this._needSend);
+	},
+	__sendQueues: function(flag) {
+		if (this._map) {
+			L.gmx.Requests({url: this._gmx.reqName});
+			let	mapPos = {bbox: L.gmxUtil.getBboxes(this._map), zoom: this._map.getZoom()};
+			let opt = {
+				cmd: 'getTiles',
+				queues: [],
+				hostName: this.options.hostName,
+				layerID: this.options.layerID,
+				mapPos: mapPos
+			};
+			let cnt = this._needSend.length;
+			this._needSend.forEach((it, nm) => {
+				let coords = it.coords;
+				let tile = it.tile;
+				// let done = it.done;
+				// opt.queue = [it.coords];
+				opt.z = it.coords.z;
+				const key = this._tileCoordsToKey(coords);
+				const zKey = key + '_' + nm;
+				opt.queues.push({key, nm, zKey, coords});
+				tile.key = key;
+				tile.classList.add(zKey);
+				tile.classList.add('createTile');
+			});
+// console.log('_sendQueue', cnt, opt);
+			let _this = this;
+			let _needSendLast = this._needSend;
+			let _cont = {};
+			L.gmx.vw._sendCmd('getTiles', opt).then(res => {
+console.log('_sendQueue', res);
+				res.queues.forEach((it, i) => {
+					let _ns = _needSendLast[i];
+					if (_ns) {
+						let tile = _ns.tile;
+						if (it.bitmap) tile.getContext('bitmaprenderer').transferFromImageBitmap(it.bitmap);
+						tile.classList.remove('createTile');
+						// _needSendLast[i].done('',tile);
+						// _ns.done('', tile);
+						if (flag === true) _this._tileReady(_ns.nwcoords, '', tile);
+						// L.DomUtil.addClass(tile, 'leaflet-tile-loaded');
+
+					} else {
+						console.log('t skip', it, tiles);
+					}
+					
+				});
+// console.log('getTile1', res);
+				L.gmx.Requests({url: this._gmx.reqName, remove: true});
+			});
+			this._needSendLast = this._needSend;
+// console.log('_sendQueue', this._needSend, this._tileZoom);
+		}
+
+		// let	mapPos = {};
+		this._needSend = [];
+	},
+/*
+	_sendQueue_: function() {
 		if (this._map) {
 			let	mapPos = {bbox: L.gmxUtil.getBboxes(this._map), zoom: this._map.getZoom()};
 			let opt = {
@@ -118,11 +208,13 @@ gmx.reqName = gmx.properties.LayerID;
 				tile.key = key;
 				tile.classList.add(key);
 				tile.classList.add('createTile');
+// console.log('getTile', opt);
 				L.gmx.vw._sendCmd('getTile', opt).then(res => {
 					if (res.bitmap) tile.getContext('bitmaprenderer').transferFromImageBitmap(res.bitmap);
 					tile.classList.remove('createTile');
 					done('', tile);
 					cnt--;
+// console.log('getTile1', res);
 if(!cnt) L.gmx.Requests({url: this._gmx.reqName, remove: true});
 				});
 			});
@@ -133,6 +225,7 @@ if(!cnt) L.gmx.Requests({url: this._gmx.reqName, remove: true});
 		// let	mapPos = {};
 		this._needSend = [];
 	},
+*/
 	/* переопределенные методы GridLayer */
     _updateZIndex: function () {
         if (this._container) {
@@ -144,15 +237,18 @@ if(!cnt) L.gmx.Requests({url: this._gmx.reqName, remove: true});
         }
 	   this.fire('zindexupdated')
 	},
+	// _addTile(coords, container) {
+		// L,GridLayer.prototype.call(this, coords, container);
+		// let key = this._tileCoordsToKey(coords);
+	// },
 	createTile: function(coords, done) {
 		var tile = L.DomUtil.create('canvas', 'leaflet-tile');
 		var size = this.getTileSize();
-		tile.width = size.x;
-		tile.height = size.y;
-		this._needSend.push({tile, coords, done});
-		if (this._timerSend) cancelIdleCallback(this._timerSend);
-L.gmx.Requests({url: this._gmx.reqName});
-		this._timerSend = requestIdleCallback(this._sendQueue.bind(this), {timeout: 250});
+		tile.width = size.x; tile.height = size.y;
+		// this._needSend.push({tile, coords, done});
+		// if (this._timerSend) cancelIdleCallback(this._timerSend);
+		// this._timerSend = requestIdleCallback(this._sendQueue.bind(this), {timeout: 250});
+// console.log('createTile', coords, tile);
 		return tile;
 	},
 });
