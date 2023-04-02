@@ -593,3 +593,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
 		print-color-adjust: exact;
 	}
 }
+/*
+.leaflet-pane.leaflet-map-pane,
+.leaflet-proxy.leaflet-zoom-animated,
+.leaflet-tile-container {
+	will-change: transform;
+}
+.leaflet-container .leaflet-tile {
+	will-change: transform, opacity, contents;
+}
+*/ 

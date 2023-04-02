@@ -46,6 +46,7 @@ const utils = {
 			hiddenLines = itemData.hiddenLines,
 			paths = itemData.paths,
 			ctx = ph._ctx;
+// console.log('itemData ', itemData);
 
 		if (!coordinates.length) return;
 	 	if (type.substr(0, 5) !== 'MULTI') {
@@ -98,20 +99,26 @@ const utils = {
 			});
 		});
 */
+// ctx.save();
+		ctx.globalAlpha = 0;
 		utils._fillStroke(ph, false, true);
 		ctx.fill(fPath);
+// ctx.restore();
+// ctx.save();
+		// ctx.globalAlpha = 1;
 		utils._fillStroke(ph, true);
 		ctx.stroke(sPath);
 // console.log('setValsByStyle ',ph);
-	 	if (labelValue) {
-			const coord = ph.itemData.bounds.bounds.getCenter();
-			const point = new DOMPoint(coord[0], coord[1]);
-			let tPoint = point.matrixTransform(matrix);
-			tPoint = {x: coord[0] * mInPixel - ph.tpx, y: ph.tpy - coord[1] * mInPixel},
+	 	// if (labelValue) {
+			// const coord = ph.itemData.bounds.bounds.getCenter();
+			// const point = new DOMPoint(coord[0], coord[1]);
+			// let tPoint = point.matrixTransform(matrix);
+			// tPoint = {x: coord[0] * mInPixel - ph.tpx, y: ph.tpy - coord[1] * mInPixel},
 
-			utils.setLabel(ctx, labelValue, tPoint, ph.options);
-		}
-		ctx.globalAlpha = 0;
+			// utils.setLabel(ctx, labelValue, tPoint, ph.options);
+		// }
+// ctx.restore();
+		// ctx.globalAlpha = 0;
 
 	},
 
@@ -121,24 +128,27 @@ const utils = {
 			ctx = ph._ctx;
                 // out.canvasPattern = (pt.canvasPattern ? pt.canvasPattern : gmxAPIutils.getPatternIcon(item, pt, indexes));
 
+		// ctx.globalAlpha = 1;
 		// if (fill && options.fillColor) {
 			// ctx.globalAlpha = options.fillOpacity !== undefined ? options.fillOpacity : 1;
-			// ctx.fillStyle = options.fillColor;
 		if (fill) {
 			// if (options.fillColor) ctx.fillStyle = options.fillColor;
 			
 			// ctx.fill(options.fillRule || 'evenodd');
-			if (options.imageBitmap) {
-				ctx.fillStyle = ctx.createPattern(options.imageBitmap, 'repeat');
+			if (options.fillPatternRes) {
+				ctx.fillStyle = options.fillPatternRes;
+			} else if (options.imageBitmap) {
+				options.fillPatternRes = ctx.createPattern(options.imageBitmap, 'repeat');
+				ctx.fillStyle = options.fillPatternRes;
 			} else if (options.fillColor) {
 				ctx.fillStyle = options.fillColor;
 			}
 			let fillOpacity = options.fillOpacity !== undefined ? options.fillOpacity : 1;
+// console.log('_fillStroke', ctx.globalAlpha, ph._hover, fillOpacity, options.fillColor);
 			if (ph._hover && fillOpacity < 1) fillOpacity *= 2;
 			ctx.globalAlpha = fillOpacity;
 		}
 
-// console.log('_fillStroke', ctx.globalAlpha, ph._hover);
 		if (stroke && options.weight !== 0) {
 			if (ctx.setLineDash) {
 				ctx.setLineDash(options && options.dashArray || []);

@@ -115,7 +115,7 @@ const getTreeLink = (node, flag) => {
 		if (i === arr.length - 1) {
 			out = ch;
 			if (grp) {
-				out = res.content.children;
+				out = res?.content.children || [];
 				arr[i] = 0; }
 		}
 		return res;

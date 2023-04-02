@@ -4,16 +4,16 @@ import DataVersion from './DataSourceVersion';
 
 let _timerCheck;
 let _checkObserversTimer = null;
-const waitCheckObservers = () => {
+const waitCheckObservers = (delay) => {
 	if (_timerCheck) cancelAnimationFrame(_timerCheck);
-	_timerCheck = requestAnimationFrame(checkObservers, {timeout: 0});
+	_timerCheck = requestAnimationFrame(checkObservers, {timeout: delay || 150});
 	// if (_checkObserversTimer) { clearTimeout(_checkObserversTimer); }
 	// _checkObserversTimer = setTimeout(checkObservers, 25);
 };
 
 // const labelObserver = { type: 'labels', zKey: 'labels', layers: {} };
 const observers = {
-	labels: { type: 'labels', zKey: 'labels', layers: {}, items: [] }
+	labels: { type: 'labels', key: 'labels', layers: {}, items: [] }
 };
 
 // const mousemove = (pars) => {
@@ -31,7 +31,7 @@ const getObservers = (type) => {
 	if (screen) {
 		// if (Object.keys(observers.labels.layers).length) out.push(observers.labels);
 		Object.values(observers.screen || []).forEach(it => {
-			out = out.concat(Object.values(it).map(pt => {
+			out = out.concat(Object.values(it).sort((a, b) => b.zIndex - a.zIndex).map(pt => {
 				let key = pt.layerID;
 				let tilesPromise = pt.layerData.ids.tilesPromise;
 				Object.keys(tilesPromise || {}).map(k => {
@@ -54,23 +54,32 @@ const getObservers = (type) => {
 		// console.log('mousemove _______________:', tp);
 		out.push(observers.mousemove);
 	}
+// console.log('getObservers _______________:', out);
 	return { obs: out, tp: Object.values(tp)};
 };
-/*
-const getTileItems = (t, o) => {
-	// let oArr = obs.filter(o => o.layerID === t.LayerName);
-	let layerID = t.LayerName;
-			// let styleNums = tile.styleNums,
-				// pProps = tile.pProps,
-				// itemsbounds = tile.itemsbounds,
-				// paths = tile.paths || [],
-};
-*/
+
 const checkObservers = () => {
 	const {obs, tp} = getObservers('screen');
 	observers.labels.items = [];
-		// console.log('tp _______________:', obs, tp);
+
+// console.log('tp _______________:', obs, tp);
 	Promise.all(tp).then(tiles => {
+		obs.forEach(o => {
+			let isScreen = o.type === 'screen';
+			let layerID = o.layerID;
+			let tArr = tiles.filter(t => {
+				if (isScreen && layerID !== t.LayerName) return false;
+				return t.bounds.intersects(o.bounds);
+			});
+// console.log('tArr _______________:', o.type, o, tArr);
+			tArr.forEach(t => {
+				t.values.forEach((it, nm) => {
+					getItemValue({observer: o, tile: t, nm});
+				});
+			});
+
+		});
+		/*
 		// console.log('tiles _______________:', obs, tiles);
 		tiles.forEach(t => {
 			if (!t) return;
@@ -81,6 +90,7 @@ const checkObservers = () => {
 				});
 			});
 		});
+		*/
 	// DataVersion.setHover({});
 		obs.forEach(observer => {
 			if (!observer) return;
@@ -105,15 +115,8 @@ const checkObservers = () => {
 			// };
 			if (observer.canvas) {
 				let bitmap = observer.canvas.transferToImageBitmap();
-				// observer.bitmap = bitmap;
 				out.bitmap = bitmap;
-				// pars.queue.bitmap = bitmap;
-				// if (pars.queues) {
-					// pars.queues.find((it, i) => {
-						// if (it.zKey === observer.zKey) { it.bitmap = bitmap; return true; }
-						// return false;
-					// });
-				// } else pars.bitmap = bitmap;
+				out.itemsCount = observer.items.length;
 			} else {
 				out.items = observer.items;
 			}
@@ -121,7 +124,7 @@ const checkObservers = () => {
 			remove(observer);
 			// delete observers[zKey];
 		});
-		DataVersion.drawLabels(observers.labels.items); // вызов отрисовки labels
+		// DataVersion.drawLabels(observers.labels.items); // вызов отрисовки labels
 // console.log('observers.labels.items _______________:', observers.labels.items);
 
 		
@@ -158,11 +161,13 @@ const getItemValue = ({nm, observer, tile}) => {
 			tile.styleNums[nm] = st;
 		}
 	} else {
+		// return false;
 // console.log('_chkSkipItem _____1__________:', bounds.bounds, item, observer.bounds);
 	}
 
 	if (flag && observer.type === 'mousemove') {
 		flag = _chkHoverItem(geo, bounds.boundsArr, observer.pars.attr.merc, observer.bounds);
+
 	}
 	if (flag) {
 		if (type === 'screen' || type === 'labels') {
@@ -196,7 +201,7 @@ const getItemValue = ({nm, observer, tile}) => {
 			// observer.items.push({layerID: observer.layerID, items: it});
 			// out.push(it);
 			// out.push({layerID, items: it});
-			observer.items.push({layerID, items: item});
+			observer.items.push({layerID, items: item, zIndex: observer.zIndex});
 		}
 	}
 
@@ -290,45 +295,22 @@ const _chkHoverItem = (geo, boundsArr, merc, bounds) => {
 		}
 	return flag;
 };
-
-const addArray = (pars) => {
-	let message = pars.attr;
-	let hostName = message.hostName,
-		layerID = message.layerID,
-		queue = message.queue,
-		queues = message.queues,
-		cmdNum = message.cmdNum,
-		z = message.z,
-		hostLayers = hosts[hostName];
- console.log('addArray :',  pars);
-	return Promise.all(queues.map(it => 
-		Observer.add({ type: 'screen', coords: it.coords, zKey: it.coords.x + ':' + it.coords.y + ':' + it.coords.z + '_' + cmdNum , ...message})
-		// addObserver(Requests.extend({
-			// coords: it.coords,
-			// zKey: it.coords.x + ':' + it.coords.y + ':' + it.coords.z
-		// }, message))
-	));
-
-};
 const add = (pars) => {
 	let layerID = pars.layerID,
 		type = pars.type || 'screen',
-		zKey = pars.zKey || type,
-		// host = hosts[pars.hostName || Utils.HOST],
+		key = pars.key || type,
 		out = {...pars};
-	let id = pars.zKey || pars.type || pars.layerID;
+	let id = pars.key || pars.type || pars.layerID;
 	let prom = new Promise(resolve => {
 		let data = {resolve, ...pars, items: [], layerData: getLayerData(pars)};
 		if (data.coords) {
-			data.key = data.coords.x + ':' + data.coords.y + ':' + data.coords.z;
 			if (!data.bounds) data.bounds = Utils.getTileBounds(data.coords);
 		}
 		data.pars = pars;
-		// data.key = pars;
 		observers[type] = observers[type] || {};
 		if (type === 'screen') {
 			observers[type][layerID] = observers[type][layerID] || {};
-			observers[type][layerID][zKey] = data;
+			observers[type][layerID][key] = data;
 			if (data.layerData?.props._styleHooksFlag) observers.labels.layers[layerID] = true;
 		} else if (type === 'mousemove') {
 			const merc = pars.attr.merc;
@@ -341,10 +323,10 @@ const add = (pars) => {
  // console.log('res :',  res);
 		// return res.items;
 	});
-	if (!pars.wait) {
+	// if (!pars.wait) {
 		// if (_timerCheck) cancelAnimationFrame(_timerCheck);
 		// _timerCheck = requestAnimationFrame(checkObservers, {timeout: 50});
-	}
+	// }
 	return prom;
 
 };
@@ -354,7 +336,7 @@ const remove = (id) => {
 		let type = id.type;
 		let obs = observers[id.type];
 		if (type === 'screen' && obs && obs[id.layerID]) {
-			delete obs[id.layerID][id.zKey];
+			delete obs[id.layerID][id.key];
 		} else if (type !== 'labels') {
 			delete observers[id.type];
 		}
@@ -383,7 +365,7 @@ const getLayerData = ({layerID, hostName = Utils.HOST} = pars) => {
 export default {
 	waitCheckObservers,
 	removeLayer,
-	addArray,
+	// addArray,
 	add,
 	remove
 };

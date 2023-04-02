@@ -6,7 +6,7 @@ import Observer from './Observer';
 
 let hosts = {},
 	hover = {},
-    zoom = 3,
+    zoom = -1,
 	dateInterval = {},
     bbox = null,
 	_ctxLabels,
@@ -40,9 +40,9 @@ const getBound = () => {
 };
 const getZoom = () => zoom;
 
-let delay = 10000,
-    // delay = 60000,
-	intervalID = null,
+let intervalID = null,
+	// delay = 10000,
+    delay = 60000,
     timeoutID = null;
 
 const utils = {
@@ -825,10 +825,14 @@ const drawLabels = (pars) => {
 }
 
 const setHover = (obj) => {
+// console.log('setHover _______________:', hover, obj);
 	hover = obj;
 }
 const drawItem = (pars) => {
 	let observer = pars.observer,
+		key = observer.key,
+		layerID = observer.layerID,
+		z = observer.z,
 		ctx = observer.ctx,
 		style = pars.style || {},
 		itemData = pars.itemData,
@@ -845,7 +849,8 @@ const drawItem = (pars) => {
 		mInPixel: 256 * tz / Utils.WORLDWIDTHFULL,
 		_drawing: true,
 		_ctx: ctx,
-		_hover: hover.layerID === itemData.layerID && hover.hoverId === item[0],
+		_hover: hover.layerID === layerID && hover.hoverId === item[0],
+		// _hover: hover.layerID === itemData.layerID && hover.hoverId === item[0],
 		tpx: 256 * (coords.x % tz - tz/2),
 		tpy: 256 * (tz/2 - coords.y % tz),
 		indexes,
@@ -858,16 +863,26 @@ const drawItem = (pars) => {
 	if (pt.options.styleHooks.length) setValsByStyle(pt);
 	// if (coords.z === 13 && coords.x === 4835 && coords.y === 2552) {
 	// }
+	// clearCache(layerID, z);
+	// offScreenCache[layerID] = offScreenCache[layerID] || {};
+	// offScreenCache[layerID][z] = offScreenCache[layerID][z] || {};
 	if (!ctx) {
-		const canvas = new OffscreenCanvas(256, 256);
-		canvas.width = canvas.height = 256;
-		canvas._zKey = observer.zKey;
-		observer.canvas = canvas;
-		pt._ctx = observer.ctx = canvas.getContext('2d');
+		if (offScreenCache[layerID][z][key]) {
+			pt._ctx = observer.ctx = offScreenCache[layerID][z][key];
+			observer.ctx.clearRect(0, 0, 256, 256);
+		} else if (!observer.tile) {
+			const canvas = new OffscreenCanvas(256, 256);
+			canvas.width = canvas.height = 256;
+			canvas._key = key;
+			observer.canvas = canvas;
+			pt._ctx = observer.ctx = canvas.getContext('2d');
+		} else {
+			offScreenCache[layerID][z][key] = pt._ctx = observer.ctx = observer.tile.getContext('2d');
+		}
 	}
-// console.log('vvvvvvvvvv ___coords____ ', pt.options.styleHooks);
+// console.log('vvvvvvvvvv ___coords____ ', observer, hover);
 
-	pt._ctx.fillText(observer.zKey, 128, 128);
+	// pt._ctx.fillText(observer.key, 128, 128);
 	// pt._ctx.fillText(coords.x + ':' + coords.y + ':' + coords.z, 128, 128);
 	// Renderer2d.updatePoly(pt);
 	Renderer2d.updatePolyMerc(pt);
@@ -913,14 +928,24 @@ const getTile = (pars) => {
 		Observer.add({ type: 'screen', coords, zKey: coords.x + ':' + coords.y + ':' + coords.z + '_' + cmdNum , ...message})
 	));
 };
+const offScreenCache = {};
+const clearCache = (layerID, z) => {
+// console.log('setHover _______________:', hover, obj);
+	if (z === undefined) delete offScreenCache[layerID];
+	else if (offScreenCache[layerID]) {
+		Object.keys(offScreenCache[layerID]).forEach(kz => {
+			if (z != kz) delete offScreenCache[layerID][z];
+		});
+	}
+}
 
 const getTiles = (pars) => {
 	let message = pars.attr;
-	let hostName = message.hostName,
+	let hostName = message.hostName || Utils.HOST,
 		layerID = message.layerID,
 		// queue = message.queue,
 		queues = message.queues,
-		cmdNum = message.cmdNum,
+		// cmdNum = message.cmdNum,
 		z = message.z,
 		hostLayers = hosts[hostName];
 
@@ -933,34 +958,35 @@ const getTiles = (pars) => {
 			}
 		}
 	}
-	// return Observer.addArray(pars);
-// console.log('getTiles ___res____ ', pars);
+	hostLayers.parseLayers.layersByID[layerID].zIndex = message.zIndex;
 	delete message.queues;
+	clearCache(layerID, z);
+	offScreenCache[layerID] = offScreenCache[layerID] || {};
+	offScreenCache[layerID][z] = offScreenCache[layerID][z] || {};
 
-	let lnm = queues.length - 1;
-	let arrPromise = queues.map((it, i) => {
-		let wait = i < lnm;
-		let coords = it.coords;
-		let key = coords.x + ':' + coords.y + ':' + coords.z;
-		let zKey = key + '_' + it.nm;
-		// let zKey = key + '_' + cmdNum;
-		
-		return Observer.add({ wait, type: 'screen', coords, zKey, key, ...message, queue: it})
-	});
-	utils.now();
+	const arrPromise = queues.map(it => Observer.add({ ...message, ...it, type: 'screen',  queue: it}));
+	if (message.flagLoad) utils.now();
+	else Observer.waitCheckObservers(5);
 	return Promise.all(arrPromise);
-	// return Promise.all(queues.map(it =>
-		// Observer.add({ wait: true, type: 'screen', coords: it.coords, zKey: it.coords.x + ':' + it.coords.y + ':' + it.coords.z + '_' + cmdNum , ...message})
-		// addObserver(Requests.extend({
-			// coords: it.coords,
-			// zKey: it.coords.x + ':' + it.coords.y + ':' + it.coords.z
-		// }, message))
-	// ));
+};
+
+const sortLayersData = (data) => {
+	let hostName = Utils.HOST,
+		hostLayers = hosts[hostName],
+		layersByID = hostLayers.parseLayers.layersByID;
+	return data.items.sort((a, b) => {
+		let aid = a.layerID, bid = b.layerID;
+// console.log('sortLayersData', a, b);
+		let zl = layersByID[bid].zIndex - layersByID[aid].zIndex;
+		return zl ? zl : a.items[0] - b.items[0];
+	});
 };
 
 export default {
 	now: utils.now,
+	sortLayersData,
 	setHover,
+	zoom,
 	hosts,
 	getMap,
 	getTile,

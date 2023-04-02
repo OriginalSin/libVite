@@ -85,6 +85,9 @@ worker._sendCmd = (cmd, pars) => {
 					// console.log('getMap res', res);
 				// });
 				break;
+			case 'getTiles':
+				worker.postMessage({cmd: 'getTiles', attr}, pars.transfer || []);
+				break;
 			case 'getTile':
 				worker.postMessage({cmd: 'getTile', attr});
 				break;

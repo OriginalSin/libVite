@@ -8,14 +8,22 @@ onmessage = function(e) {
 	// console.log('onmessage ', pars);
 	switch(message.cmd) {
 		case 'getTiles':
+// if (DataVersion.zoom !== -1 && DataVersion.zoom !== message.attr.z) {
+	// console.log('onmessage ', pars);
+	// postMessage({queues: [], cmdNum: message.attr.cmdNum});
+	// break;
+// }
+			const attr = message.attr;
+
 			DataVersion.getTiles(pars).then(queues => {
-	// console.log('getTiles ', message, pars, queues);
+	console.log('getTiles ', message, pars, queues);
 				let arr = queues.reduce((a, c) => {
+					delete c.tile;
 					let bitmap = c.bitmap;
 					if (bitmap) a.push(bitmap);
 					return a;
 				}, []);
-				postMessage({queues, cmdNum: message.attr.cmdNum}, arr);
+				postMessage({queues, z: attr.z, cmdNum: attr.cmdNum}, arr);
 			});
 			break;
 		case 'getTile':

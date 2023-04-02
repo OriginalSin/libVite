@@ -561,7 +561,10 @@ input {
     left: 13px;
     border-radius: 4px;
     margin: 0;
-    background: url(/img/progress.gif) no-repeat center #f4f4f452;
+
+    background-color: red;
+
+    /* background: url(/img/progress.gif) no-repeat center #f4f4f452; */
 	display: none;
 }
 /*

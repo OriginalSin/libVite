@@ -188,6 +188,67 @@ L.gmx.gmxMapManager.getMap(opt).then(res => {
 		// map.addLayer(tLayer);
 
 });
+let _timerMouseMove;
+let lastHoverLayer;
+let gmx_id = '';
+let _needSend = true;
+
+const onMouseMove = (ev) => {
+	if (_timerMouseMove) cancelAnimationFrame(_timerMouseMove);
+	_timerMouseMove = requestAnimationFrame(hoverCheck.bind(this, ev), {timeout: 100});
+	// hoverCheck(ev);
+};
+const hoverCheck = (ev) => {
+		if (!_needSend || (lastHoverLayer && !lastHoverLayer._needSend)) {
+			if (_timerMouseMove) cancelAnimationFrame(_timerMouseMove);
+			_timerMouseMove = requestAnimationFrame(hoverCheck.bind(this, ev), {timeout: 300});
+_needSend = true;
+			return;
+		}
+_needSend = false;
+	const oEv = ev.originalEvent;
+	const pars = {
+		ctrlKey: oEv.ctrlKey,
+		altKey: oEv.altKey,
+		shiftKey: oEv.shiftKey,
+		latlng: ev.latlng,
+		merc: L.Projection.SphericalMercator.project(ev.latlng.wrap()),
+		layerPoint: ev.layerPoint
+	};
+	// pars.bbox = 
+	if (ev.type === 'mouseover') map._lastCursor = '';
+// performance.mark('start');
+	
+	L.gmx.vw._sendCmd('mousemove', pars).then(res => {
+		// console.log('mousemove res', res);
+_needSend = true;
+		let items = res.items;
+		let cursor = '_';
+		let hoverLayer = '';
+		let repaint = false;
+		let repaintLast = false;
+		if (items.length) {
+			let item = items[0];
+			cursor = 'pointer';
+			hoverLayer = L.gmx.gmxMap.layersByID[item.layerID];
+			if (gmx_id !== item.items[0] || lastHoverLayer !== hoverLayer) { map._lastCursor = '*'; repaint = true; }
+		// console.log('mousemove res', item.items[0] , gmx_id, map._lastCursor);
+			gmx_id = item.items[0];
+		} else {
+			if (gmx_id !== '') { map._lastCursor = '*'; repaintLast = true; }
+			gmx_id = '';
+		}
+
+		if (map._lastCursor !== cursor) {
+			map._container.style.cursor = map._lastCursor = cursor;
+			// if (hoverLayer && (repaint || lastHoverLayer !== hoverLayer)) hoverLayer.repaint();
+			if (hoverLayer && repaint) hoverLayer.repaint();
+			if (lastHoverLayer && (repaintLast || lastHoverLayer !== hoverLayer)) lastHoverLayer.repaint();
+			lastHoverLayer = hoverLayer;
+		}
+	});
+};
+
 map.on('layeradd', (ev) => {
 	// console.log('layeradd', ev);
 	const layer = ev.layer;
@@ -205,52 +266,7 @@ map.on('layeradd', (ev) => {
 	// console.log('ggg', ev, map.getSize());
 	let	mapPos = {bbox: L.gmxUtil.getBboxes(map), mapSize: map.getSize(), pBounds: map.getPixelBounds(), pOrigin: map.getPixelOrigin(), zoom: map.getZoom()};
 	L.gmx.vw._sendCmd('moveend', {mapPos});
-}).on('mousemove mouseover', (ev) => {
-	const oEv = ev.originalEvent;
-	const pars = {
-		ctrlKey: oEv.ctrlKey,
-		altKey: oEv.altKey,
-		shiftKey: oEv.shiftKey,
-		latlng: ev.latlng,
-		merc: L.Projection.SphericalMercator.project(ev.latlng.wrap()),
-		layerPoint: ev.layerPoint
-	};
-	// pars.bbox = 
-	if (ev.type === 'mouseover') map._lastCursor = '+';
-	
-	L.gmx.vw._sendCmd('mousemove', pars).then(res => {
-		// console.log('mousemove res', res);
-		let items = res.items.items;
-		let cursor = '_';
-		let hoverLayer = '';
-		let gmx_id = '';
-		if (items.length) {
-			let item = items[0];
-			cursor = 'pointer';
-			hoverLayer = L.gmx.gmxMap.layersByID[item.layerID];
-			if (gmx_id !== item.items[0] || lastHoverLayer !== hoverLayer) map._lastCursor = '*';
-			gmx_id = item.items[0];
-	console.log('gmx_id', gmx_id, map._lastCursor);
-			// lastHoverLayer = L.gmx.gmxMap.layersByID[items[0].layerID];
-
-			// foundLayer = layer;
-		}
-		if (map._lastCursor !== cursor) {
-			map._container.style.cursor = map._lastCursor = cursor;
-			if (hoverLayer && lastHoverLayer !== hoverLayer) hoverLayer.repaint();
-			if (lastHoverLayer && lastHoverLayer !== hoverLayer) lastHoverLayer.repaint();
-			// if (lastHoverLayer) lastHoverLayer.repaint();
-			// else if (lastHoverLayer !== hoverLayer) {
-			// else if (lastHoverLayer !== hoverLayer) {
-				// if (hoverLayer) hoverLayer.repaint();
-			// } 
-			lastHoverLayer = hoverLayer;
-	// console.log('lastHoverLayer', lastHoverLayer);
-		}
-			// if (lastHoverLayer) { lastHoverLayer.repaint(); lastHoverLayer = null; }
-	});
-});
-let lastHoverLayer;
+}).on('mousemove mouseover', onMouseMove, this);
 
 let cont = map.gmxControlIconManager.get('refresh-gif')._container;
 L.gmx._requests = {};

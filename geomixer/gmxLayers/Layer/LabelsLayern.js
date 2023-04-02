@@ -159,8 +159,8 @@ L.labelsLayer = function (map, options) {
 
 L.Map.addInitHook(function () {
 	// Check to see if Labels has already been initialized.
-    if (!this._labelsLayer) {
-        this._labelsLayer = new L.LabelsLayer(this, this.options);
-        this._labelsLayer.addTo(this);
-    }
+    // if (!this._labelsLayer) {
+        // this._labelsLayer = new L.LabelsLayer(this, this.options);
+        // this._labelsLayer.addTo(this);
+    // }
 });
