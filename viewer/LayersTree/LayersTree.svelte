@@ -11,7 +11,7 @@
 	let now = new Date();
 	// var begin = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 	var begin = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-	let end = begin.valueOf() + day - 1;
+	let end = begin.valueOf() + day - 1000;
 	let dateInterval = { begin, end };
 	let gmxMap = L.gmx.gmxMap;
 	let layersCont;

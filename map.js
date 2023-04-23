@@ -253,14 +253,26 @@ map.on('layeradd', (ev) => {
 	// console.log('layeradd', ev);
 	const layer = ev.layer;
 	const id = layer.options.layerID;
-	if (id) L.gmx.vw._sendCmd('layeradd', {id});
+	const _gmx = layer._gmx;
+	if (id) {
+		const data = {id};
+		if (_gmx.beginDate && _gmx.endDate) {
+			data.dateInterval = {
+				begin: layer._gmx.beginDate.valueOf() /1000,
+				end: layer._gmx.endDate.valueOf() /1000
+			};
+		}
+		L.gmx.vw._sendCmd('layeradd', data);
+	}
 	// layer._map.panBy({x:0,y:1});
 	// const bounds =L.gmxUtil.getGeometryBounds(layer._gmx.geometry).toLatLngBounds();
 	// map.fitBounds(bounds);
 }).on('layerremove', (ev) => {
 	const layer = ev.layer;
 	const id = layer.options.layerID;
-	if (id) L.gmx.vw._sendCmd('layerremove', {id});
+	if (id) {
+		L.gmx.vw._sendCmd('layerremove', {id});
+	}
 // }).on('click', (ev) => {
 }).on('moveend resize', (ev) => {
 	// console.log('ggg', ev, map.getSize());

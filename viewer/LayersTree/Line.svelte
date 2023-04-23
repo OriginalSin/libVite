@@ -15,7 +15,7 @@ let nodeItem;
 let gmxMap;
 let item = {}, gmxStyle = {},
 	iconStyle =	'',	iconImage =	'',	beforeIcon = '',
-	name =	'', closed = 'closed',
+	name =	'', titleLayer = 'Границы слоя', titleTimeLine = '', closed = 'closed',
 	showCheckbox = false, meta = false,	visible = false,
 	_gmx = {};
 
@@ -43,7 +43,10 @@ const recalcItem = (id) => {
 	}
 	meta = Object.keys(props.MetaProperties || {}).length ? true : false;
 	name = props.title || prp.title || '';
-	beforeIcon = props.IsRasterCatalog ? L.gmxUtil.setSVGIcon('timeline') : '';
+	if (props.IsRasterCatalog) {
+		titleLayer = 'Границы последнего снимка';
+		beforeIcon = L.gmxUtil.setSVGIcon('timeline');
+	}
 	closed = prp.expanded ? '' : 'closed';
 	visible = props.visible ? true : false;
 	showCheckbox = prp.LayerID || prp.ShowCheckbox ? true : false;
@@ -159,16 +162,56 @@ const showPos = ev => {
 	if (_gmx.geometry) {
 		const bounds = L.gmxUtil.getGeometryBounds(_gmx.geometry).toLatLngBounds();
 		gmxMap.leafletMap.fitBounds(bounds);
+		let props = _gmx.properties;
+		let bd = props.DateEndUTC * 1000;
+		if (bd) {
+			const layer = gmxMap.layersByID[layerID];
+			
+			let par = {
+				layer: layerID,
+				geometry: true,
+				out_cs: 3857,
+				pagesize: 1,
+				orderby: props.identityField,
+				orderdirection: 'DESC'
+			};
+			let body = Object.keys(par).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(par[key]); }).join('&');
+
+			fetch('//maps.kosmosnimki.ru/VectorLayer/Search.ashx', {
+				method: 'post',
+				mode: 'cors',
+				credentials: 'include',
+				headers: {'Content-type': 'application/x-www-form-urlencoded'},
+				body: body
+			})
+			.then(res => res.json())
+			.then(res => {
+				if (res.Status === 'ok') {
+					let it = res.Result.values[0];
+					let geo = it[it.length - 1];
+					let bounds1 = L.gmxUtil.getGeometryBounds(geo).toLatLngBounds(true);
+					gmxMap.leafletMap.fitBounds(bounds1);
+					bd = it[res.Result.fields.findIndex(el => el === props.TemporalColumnName)] * 1000;
+					let beg = new Date(bd), end = new Date(bd + 1000);
+					layer.setDateInterval(beg, end);
+					titleTimeLine = beg.toLocaleString() + ' по ' + end.toLocaleString();
+// console.log('showPos', bounds1);
+				}
+			})
+			.catch(err => console.warn(err));
+
+			layer.setDateInterval(new Date(bd), new Date(bd + 1000));
+		}
 	}
 }
 
 </script>
 
 <div bind:this={nodeItem} class="line">
-	<span class="beforeIcon" on:click={clickMe}>{@html beforeIcon}</span>
+	<span class="beforeIcon" on:click={clickMe} title={titleTimeLine}>{@html beforeIcon}</span>
 	{#if showCheckbox}<input type="checkbox" name="root" class="box" checked={visible} on:click={toggleLayer} />{/if}
 	{#if gmxStyle}<span class="colorIcon" title="Редактировать стили" style={iconStyle}>{@html iconImage}</span>{/if}
-	<span class="layer" on:click={showPos}>{name}</span>
+	<span class="layer" on:click={showPos} title={titleLayer}>{name}</span>
 	<span class="layerDescription"></span>
 	{#if meta}<span class="layerInfoButton">i</span>{/if}
 	<div multistyle="true" style="display: none;"></div>

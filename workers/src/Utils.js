@@ -76,7 +76,7 @@ const HOST = 'maps.kosmosnimki.ru',
     };
 
 const utils = {
-	HOST,
+	HOST: HOST,
     SCRIPT,
 	WORLDBBOX,
 	WORLDWIDTHFULL,

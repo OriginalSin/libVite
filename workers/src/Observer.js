@@ -1,7 +1,7 @@
 import Utils from './Utils';
 import Requests from './Requests';
 import Store from './Store';
-import DataVersion from './DataSourceVersion';
+import DataService from './DataService';
 
 let _timerCheck;
 let _checkObserversTimer = null;
@@ -16,14 +16,6 @@ const waitCheckObservers = (delay) => {
 const observers = {
 	labels: { type: 'labels', key: 'labels', layers: {}, items: [] }
 };
-
-// const mousemove = (pars) => {
-	// const {hostName = 'maps.kosmosnimki.ru'} = pars;
-	// const ids = DataVersion.hosts[hostName].ids;
-	// const arr = Object.values(ids).filter(it => it.tilesPromise);
-
-	// return {from: pars, ...{hh: 5}};
-// };
 
 const getObservers = (type) => {
 	let out = [];
@@ -80,19 +72,7 @@ const checkObservers = () => {
 			});
 
 		});
-		/*
-		// console.log('tiles _______________:', obs, tiles);
-		tiles.forEach(t => {
-			if (!t) return;
-			let oArr = obs.filter(o => o && (o.type === 'mousemove' || (o.layerID && o.layerID === t.LayerName)));
-			t.values.forEach((it, nm) => {
-				oArr.forEach(observer => {
-					getItemValue({observer, tile: t, nm});
-				});
-			});
-		});
-		*/
-	// DataVersion.setHover({});
+
 		obs.forEach(observer => {
 			if (!observer) return;
 			// тут сортировки
@@ -100,7 +80,7 @@ const checkObservers = () => {
 			if (observer.type === 'screen' && observer.items) {
 				observer.items.forEach(pt => {
 					pt.observer = observer;
-					DataVersion.drawItem(pt); // вызов отрисовки
+					DataService.drawItem(pt); // вызов отрисовки
 				});
 				if (observers.labels.layers[observer.layerID]) {
 					observers.labels.items = [...observers.labels.items, ...observer.items];
@@ -125,7 +105,7 @@ const checkObservers = () => {
 			remove(observer);
 			// delete observers[zKey];
 		});
-		// DataVersion.drawLabels(observers.labels.items); // вызов отрисовки labels
+		// DataService.drawLabels(observers.labels.items); // вызов отрисовки labels
 // console.log('observers.labels.items _______________:', observers.labels.items);
 
 		
@@ -194,7 +174,7 @@ const getItemValue = ({nm, observer, tile}) => {
 				observer.items.push(pt);
 			// } else {
 				// pt.observer = observer;
-				// DataVersion.drawItem(pt);
+				// DataService.drawItem(pt);
 			// }
 		// } else if (type === 'labels') {
 			// observer.items.push(pt);
@@ -354,7 +334,6 @@ const removeLayer = (id) => {
 
 const getLayerData = ({layerID, hostName = Utils.HOST} = pars) => {
 	const hostItem = Store.getHost(hostName) || {};
-	// const host = DataVersion.hosts[hostName] || {};
 	const ids = hostItem?.ids;
 	const parseLayers = hostItem?.parseLayers;
 	return {

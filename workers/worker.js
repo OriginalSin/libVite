@@ -1,10 +1,8 @@
-import DataVersion from './src/DataSourceVersion';
+import DataService from './src/DataService';
 import MapsManager from './src/MapsManager';
 import ChkVersion from './src/ChkVersion';
 import gmxEventsManager from './src/gmxEventsManager';
 // import Renderer2d from './src/Renderer2d';
-
-// DataVersion.hosts = MapsManager.hosts;
 
 onmessage = function(e) {
 	const message = e.data || e;
@@ -12,15 +10,9 @@ onmessage = function(e) {
 console.log('onmessage ', pars);
 	switch(message.cmd) {
 		case 'getTiles':
-// if (DataVersion.zoom !== -1 && DataVersion.zoom !== message.attr.z) {
-	// console.log('onmessage ', pars);
-	// postMessage({queues: [], cmdNum: message.attr.cmdNum});
-	// break;
-// }
 			const attr = message.attr;
-
-			DataVersion.getTiles(pars).then(queues => {
-	console.log('getTiles ', message, pars, queues);
+			DataService.getTiles(pars).then(queues => {
+	// console.log('getTiles ', message, pars, queues);
 				let arr = queues.reduce((a, c) => {
 					delete c.tile;
 					let bitmap = c.bitmap;
@@ -30,21 +22,22 @@ console.log('onmessage ', pars);
 				postMessage({queues, z: attr.z, cmdNum: attr.cmdNum}, arr);
 			});
 			break;
-		case 'getTile':
-			DataVersion.getTile(pars).then(function(res) {
-				postMessage(res[0]);
-			});
-			break;
+		// case 'getTile':
+			// DataService.getTile(pars).then(function(res) {
+				// postMessage(res[0]);
+			// });
+			// break;
 		case 'layeradd': 	MapsManager.addSource(pars);				break;
 		case 'layerremove': MapsManager.removeSource(pars);				break;
 		case 'getMap':		MapsManager.getMap(pars).then(postMessage); break;
 		case 'moveend': 	ChkVersion.setBbox(pars.attr.mapPos);		break;
+		case 'setDateIntervals': ChkVersion.setDateIntervals(pars);		break;
 		case 'mousemove':
 			let prom = gmxEventsManager.mousemove(pars);
 			if (prom) prom.then(postMessage);
 			break;
 		default:
-			if (DataVersion[message.cmd]) DataVersion[message.cmd].call(DataVersion, pars);
+			if (DataService[message.cmd]) DataService[message.cmd].call(DataService, pars);
 			else console.warn('skip ', message); 
 			break;
 	}

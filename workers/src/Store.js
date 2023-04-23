@@ -3,7 +3,8 @@ import Utils from './Utils';
 const hosts = {};
 
 const getHost = (hostName) => {
-	return hosts[hostName || Utils.HOST];
+// console.log('getHost ', hostName);
+	return hosts[hostName || Utils.HOST] || {};
 };
 
 const setHost = (data, hostName) => {

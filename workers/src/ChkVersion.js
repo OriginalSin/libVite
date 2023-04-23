@@ -72,7 +72,7 @@ const restartCheckVer = () => {
 };
 
 const chkHost = (hostName) => {
-	// console.log('chkVersion:', hostName, hosts);
+	console.log('chkVersion:', hostName);
 	let hostLayers = Store.getHost(hostName),
 	// let hostLayers = hosts[hostName],
 		ids = hostLayers.ids,
@@ -81,12 +81,14 @@ const chkHost = (hostName) => {
 
 	for (let name in ids) {
 		let pt = ids[name],
-			props = layersByID[name]?.properties || {},
+			layer = layersByID[name] || {},
+			props = layer.properties || {},
 			pars = { Name: name, Version: 'v' in pt ? pt.v : -1 };
 		if (props.Temporal) {
 			// props.DateBeginUTC
-			pars.dateBegin = pt.dateBegin || dateInterval.begin;
-			pars.dateEnd = pt.dateEnd || dateInterval.end;
+			const dint = layer.dateInterval || dateInterval;
+			pars.dateBegin = dint.begin;
+			pars.dateEnd = dint.end;
 			if (!pars.dateBegin || !pars.dateEnd) continue;
 		}
 		arr.push(pars);
@@ -183,7 +185,7 @@ const setDateIntervals = (pars) => {
 	// }
 	// utils.now();
 
-// console.log('setDateIntervals:', pars);
+console.log('setDateIntervals:', pars);
 };
 
 export default {

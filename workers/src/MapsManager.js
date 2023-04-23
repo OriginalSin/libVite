@@ -2,13 +2,7 @@ import Utils from './Utils';
 import Requests from './Requests';
 import Store from './Store';
 import ChkVersion from './ChkVersion';
-import DataVersion from './DataSourceVersion';
-
-// import TilesLoader from './TilesLoader';
-// import Renderer2d from './Renderer2d';
-// import Observer from './Observer';
-
-// let hosts;
+import Observer from './Observer';
 
 const optDef = {
 	...Requests.COMPARS,
@@ -35,7 +29,7 @@ const getMap = (pars) => {
 	.then(function(res) {
 		if (res.Status === 'ok' && res.Result) {
 			const parsed = parseMapTree(res.Result, hostName)
-			const host = Store.setHost(hostName);
+			const host = Store.getHost(hostName);
 			Store.setHost({ ids: {}, signals: {}, ...host, ...parsed }, hostName);
 			// hosts[hostName] = { ids: {}, signals: {}, ...hosts[hostName], ...parsed };
 			parsed.parseLayers.isVisible.forEach(it => {addSource(it)});
@@ -99,7 +93,8 @@ const _parseNode = (treeInfo, callback, onceFlag) => {
 const addSource = (pars) => {
 	pars = pars || {};
 
-	let id = pars.id || pars.attr.id;
+	let attr = pars.attr || {};
+	let id = pars.id || attr.id;
 	
 	if ('zoom' in pars) { zoom = pars.zoom; }
 	if ('bbox' in pars) { bbox = pars.bbox; }
@@ -129,17 +124,24 @@ const addSource = (pars) => {
 			// }
 
 		// }
+		let parseLayers = hostItem.parseLayers;
+		let linkAttr = parseLayers.layersByID[id];
+		let props = linkAttr.properties;
+		if (props.Temporal && attr.dateInterval) {
+			linkAttr.dateInterval = attr.dateInterval;
+		}
 		if (hostItem.ids[id] && hostItem.ids[id].observers) {
 			// pars.observers = hostItem.ids[id].observers;
 			Observer.add(pars);
 
 			hostItem.ids[id] = {...hostItem.ids[id], ...pars};
 		} else hostItem.ids[id] = pars;
-		let parseLayers = hostItem.parseLayers;
-		let linkAttr = parseLayers.layersByID[id];
-		Requests.extend(linkAttr, Utils.parseStyles(linkAttr.properties));
-		linkAttr.stylesPromise.then((res) => {
+		let { stylesPromise } = Utils.parseStyles(linkAttr.properties);
+		linkAttr.stylesPromise = stylesPromise;
+		// Requests.extend(linkAttr, Utils.parseStyles(linkAttr.properties));
+		stylesPromise.then((res) => {
 			linkAttr.styles = res;
+console.log('linkAttr ', linkAttr);
 			// delete linkAttr.stylesPromise;
 		// });
 ChkVersion.restartCheckVer();

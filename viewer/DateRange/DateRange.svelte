@@ -101,9 +101,9 @@
 		}
 		L.gmx.gmxMap.setDateIntervals({
 			begin: dateInterval.begin / 1000,
-			end: dateInterval.end / 1000
+			end: (dateInterval.end + day) / 1000
 		});
-        console.log('change', dateInterval)
+        console.log('change', target.onfocus, dateInterval)
     }
 
     // document.addEventListener('click', e => {
@@ -121,8 +121,8 @@
 
 <div class='date-range-container {className} {open ? 'active' : ''}'>
 	<span on:click={change} class="icon date left"></span>
-    <input value={begin} max={end} on:change={change} class="begin date {warns?.begin ? 'warn' : ''} {mouseMove ? 'active' : ''}" type='date' placeholder />
-    <input value={end} min={begin} on:change={change} class="end date {warns?.end ? 'warn' : ''} {mouseMove ? 'active' : ''}" type='date' placeholder />
+    <input value={begin} max={end} on:blur={change} class="begin date {warns?.begin ? 'warn' : ''} {mouseMove ? 'active' : ''}" type='date' placeholder />
+    <input value={end} min={begin} on:blur={change} class="end date {warns?.end ? 'warn' : ''} {mouseMove ? 'active' : ''}" type='date' placeholder />
 	<span on:click={change} class="icon date right"></span>
 	<span class="time">
 		{@html timeIcon}
