@@ -1,11 +1,15 @@
 import DataVersion from './src/DataSourceVersion';
+import MapsManager from './src/MapsManager';
+import ChkVersion from './src/ChkVersion';
 import gmxEventsManager from './src/gmxEventsManager';
 // import Renderer2d from './src/Renderer2d';
+
+// DataVersion.hosts = MapsManager.hosts;
 
 onmessage = function(e) {
 	const message = e.data || e;
 	const pars = {...message};
-	// console.log('onmessage ', pars);
+console.log('onmessage ', pars);
 	switch(message.cmd) {
 		case 'getTiles':
 // if (DataVersion.zoom !== -1 && DataVersion.zoom !== message.attr.z) {
@@ -31,10 +35,10 @@ onmessage = function(e) {
 				postMessage(res[0]);
 			});
 			break;
-		case 'layeradd': 	DataVersion.addSource(pars);				break;
-		case 'layerremove': DataVersion.removeSource(pars);				break;
-		case 'getMap':		DataVersion.getMap(pars).then(postMessage); break;
-		case 'moveend': 	DataVersion.setBbox(pars.attr.mapPos);		break;
+		case 'layeradd': 	MapsManager.addSource(pars);				break;
+		case 'layerremove': MapsManager.removeSource(pars);				break;
+		case 'getMap':		MapsManager.getMap(pars).then(postMessage); break;
+		case 'moveend': 	ChkVersion.setBbox(pars.attr.mapPos);		break;
 		case 'mousemove':
 			let prom = gmxEventsManager.mousemove(pars);
 			if (prom) prom.then(postMessage);

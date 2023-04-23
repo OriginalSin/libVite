@@ -636,6 +636,12 @@ var gmxAPIutils = {
         return key in indexes ? arr[indexes[key]] : '';
     },
 
+    dec2rgb: function(i, a)	{				// convert decimal to rgb
+        var r = (i >> 16) & 255,
+            g = (i >> 8) & 255,
+            b = i & 255;
+		return [r, g, b, a];
+	},
     dec2rgba: function(i, a)	{				// convert decimal to rgb
         var r = (i >> 16) & 255,
             g = (i >> 8) & 255,

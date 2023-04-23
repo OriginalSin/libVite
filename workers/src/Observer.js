@@ -1,5 +1,6 @@
 import Utils from './Utils';
 import Requests from './Requests';
+import Store from './Store';
 import DataVersion from './DataSourceVersion';
 
 let _timerCheck;
@@ -352,9 +353,10 @@ const removeLayer = (id) => {
 };
 
 const getLayerData = ({layerID, hostName = Utils.HOST} = pars) => {
-	const host = DataVersion.hosts[hostName] || {};
-	const ids = host?.ids;
-	const parseLayers = host?.parseLayers;
+	const hostItem = Store.getHost(hostName) || {};
+	// const host = DataVersion.hosts[hostName] || {};
+	const ids = hostItem?.ids;
+	const parseLayers = hostItem?.parseLayers;
 	return {
 		ids: ids[layerID],
 		props: parseLayers.layersByID[layerID]?.properties || {},

@@ -1,7 +1,8 @@
 import Requests from './Requests.js';
 import DataVersion from './DataSourceVersion';
+// import MapsManager from './MapsManager';
 import Renderer2d from './Renderer2d';
-
+/*
 var _self = self;
 (_self.on || _self.addEventListener).call(_self, 'message', e => {
     const message = e.data || e;
@@ -20,22 +21,7 @@ console.log('in message ', e);
 			
 		case 'getTiles':
 console.log('getTiles ', message);
-/*
-			Promise.all(message.queue.map(coords => 
-				DataVersion.addObserver(Requests.extend({
-					coords: coords,
-					zKey: coords.x + ':' + coords.y + ':' + coords.z
-				}, message))
-				// .then((json) => {
-					//message.out = json;
-			// console.log('vvvvvvvvvv ___res____ ', message);
-					//_self.postMessage(message);
-					// return json;
-				// })
-				//DataVersion.drawTile(Requests.extend({coords: coords}, message))
-				
-			))
-			*/
+
 			DataVersion.getTiles(message)
 			.then(arr => {
 console.log('getTiles111 ', arr);
@@ -133,3 +119,4 @@ console.log('getTiles111 ', arr);
 	}
 });
 
+*/

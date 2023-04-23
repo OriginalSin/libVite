@@ -692,6 +692,7 @@ StyleManager.prototype = {
 			color = pt.colorFunction ? pt.colorFunction(prop, indexes) : color;
 			opacity = pt.opacityFunction ? pt.opacityFunction(prop, indexes) : opacity;
             out.strokeStyle = gmxAPIutils.dec2color(color, opacity);
+			out.webgl_strokeStyle = gmxAPIutils.dec2rgb(color, opacity);
             out.lineWidth = 'weight' in pt ? pt.weight : 1;
         }
 
@@ -718,6 +719,7 @@ StyleManager.prototype = {
                 out.fillStyle = gmxAPIutils.dec2color(color, opacity);
             } else if ('fillOpacity' in pt && 'fillColor' in pt) {
                 out.fillStyle = gmxAPIutils.dec2color(fcDec, fop);
+                out.webgl_fillStyle = gmxAPIutils.dec2rgb(fcDec, fop);
             }
         }
 
