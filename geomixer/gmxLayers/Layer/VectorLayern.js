@@ -178,7 +178,7 @@ gmx.reqName = gmx.properties.LayerID;
 // console.log('_sendQueue', opt);
 			L.gmx.vw._sendCmd('getTiles', opt).then(res => {
 				_this._needSend = true;
-console.log('_sendQueue', _this._tileZoom, zoom);
+// console.log('_sendQueue', _this._tileZoom, zoom);
 				// if (_this._tileZoom !== zoom) return;
 
 // console.log('_sendQueue1', _this._map.getZoom(), opt, _this._tileZoom, res);

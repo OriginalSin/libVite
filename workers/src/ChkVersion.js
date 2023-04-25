@@ -72,7 +72,7 @@ const restartCheckVer = () => {
 };
 
 const chkHost = (hostName) => {
-	console.log('chkVersion:', hostName);
+	// console.log('chkVersion:', hostName);
 	let hostLayers = Store.getHost(hostName),
 	// let hostLayers = hosts[hostName],
 		ids = hostLayers.ids,
@@ -143,9 +143,14 @@ const chkVersion = () => {
 									pt.properties = props;
 									pt.geometry = it.geometry;
 									if (!pt.tileAttributeIndexes) {
-										Requests.extend(pt, Utils.getTileAttributes(props));
+										Utils.idsFill(pt);
+										// Requests.extend(pt, Utils.getTileAttributes(props));
+										// let tmp = Utils.getTileAttributes(props);
+										// pt.tileAttributeIndexes = tmp.tileAttributeIndexes;
+										// pt.tileAttributeTypes = tmp.tileAttributeTypes;
 									}
 								}
+	// console.log('chkVersion1:', pt);
 								pt.id = id;
 								pt.pProps = hostItem.parseLayers.layersByID[id];
 								pt.hostName = host;

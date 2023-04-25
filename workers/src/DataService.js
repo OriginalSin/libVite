@@ -71,11 +71,13 @@ const drawItem = (pars) => {
 		renderStyle = style.renderStyle || {},
 		indexes = pars.indexes,
 		types = pars.types,
+		image = pars.raster_,
 		item = itemData.item,
 		geo = item[item.length - 1],
 		type = geo.type,
 		coords = observer.pars.coords,
 		tz = Math.pow(2, coords.z);
+// console.log('drawItem _______________:', pars.raster_);
 
 	let	pt = {
 		mInPixel: 256 * tz / Utils.WORLDWIDTHFULL,
@@ -87,6 +89,7 @@ const drawItem = (pars) => {
 		tpy: 256 * (tz/2 - coords.y % tz),
 		indexes,
 		types,
+		image,
 		itemData,
 		tile: pars.tile,
 		nm: pars.nm,

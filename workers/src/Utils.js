@@ -605,6 +605,23 @@ const utils = {
         };
     },
 
+    isItemIntersectBounds: function(geo, bounds) {
+        var type = geo.type,
+            coords = geo.coordinates;
+        if (type === 'POLYGON' || type === 'Polygon') {
+			coords = [coords];
+		}
+
+		for (var j = 0, len1 = coords.length; j < len1; j++) {
+			for (var i = 0, len = coords[j].length; i < len; i++) {
+				if (bounds.clipPolygon(coords[j][i]).length) {
+					return true;
+				}
+			}
+		}
+		return false;
+    },
+
     _getMaxStyleSize: function(zoom, styles) {  // estimete style size for arbitrary object
         var maxSize = 0;
         for (var i = 0, len = styles.length; i < len; i++) {
@@ -749,6 +766,34 @@ const utils = {
 		}
 
         return ph;
+    },
+
+    idsFill: function(ids) {
+		const prop = ids.properties;
+		let tmp = utils.getTileAttributes(prop);
+		ids.tileAttributeIndexes = tmp.tileAttributeIndexes;
+		ids.tileAttributeTypes = tmp.tileAttributeTypes;
+        if (prop.IsRasterCatalog) {
+            // gmx.IsRasterCatalog = prop.IsRasterCatalog;
+            const layerLink = ids.tileAttributeIndexes.GMX_RasterCatalogID;
+           if (layerLink) {
+				ids.minZoomRasters =  prop.RCMinZoomForRasters || 0;
+				const endPoint = prop.gmxEndPoints ? prop.gmxEndPoints.tileProps : '/TileSender.ashx';
+				ids.rasterBGfunc = (x, y, z, item, srs) => {
+					srs = srs || ids.srs || '3857';
+                    let hostName = ids.hostName || '',
+						syncParams = ids.syncParams || '',
+						url = '//' + hostName + endPoint + '?ModeKey=tile&ftc=osm' + '&x=' + x + '&y=' + y + '&z=' + z;
+					if (srs) url += '&srs=' + srs;
+					url += '&LayerName=' + item[layerLink];
+					if (ids.sessionKey) url += '&key=' + encodeURIComponent(ids.sessionKey);
+					if (ids.syncParams) url += '&' + ids.syncParams;
+					if (item.v) url += '&v=' + item.v;
+					url += '&sw=1';
+					return url;
+                };
+            }
+        }
     },
 
     getTileAttributes: function(prop) {

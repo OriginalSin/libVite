@@ -2,6 +2,7 @@ import Utils from './Utils';
 import Requests from './Requests';
 import Store from './Store';
 import DataService from './DataService';
+import RasterItems from './RasterItems';
 
 let _timerCheck;
 let _checkObserversTimer = null;
@@ -78,6 +79,11 @@ const checkObservers = () => {
 			// тут сортировки
 				
 			if (observer.type === 'screen' && observer.items) {
+let items = RasterItems.getNeedRasterItems(observer);
+let arr = items.map(it => it.rasterPromises);
+Promise.all(arr).then(arr1 => {
+// console.log('items _______________:', arr1, items);
+
 				observer.items.forEach(pt => {
 					pt.observer = observer;
 					DataService.drawItem(pt); // вызов отрисовки
@@ -86,7 +92,16 @@ const checkObservers = () => {
 					observers.labels.items = [...observers.labels.items, ...observer.items];
 					// observers.labels.items = observers.labels.items.concat(observer.items);
 				}
+				let out = observer.queue || {};
+			if (observer.canvas) {
+				let bitmap = observer.canvas.transferToImageBitmap();
+				out.bitmap = bitmap;
+				out.itemsCount = observer.items.length;
 			}
+			observer.resolve(out); // ответ в браузер
+			remove(observer);
+});
+			} else {
 
 			let pars = observer.pars;
 			let out = observer.queue || {};
@@ -104,6 +119,7 @@ const checkObservers = () => {
 			observer.resolve(out); // ответ в браузер
 			remove(observer);
 			// delete observers[zKey];
+			}
 		});
 		// DataService.drawLabels(observers.labels.items); // вызов отрисовки labels
 // console.log('observers.labels.items _______________:', observers.labels.items);
@@ -121,7 +137,7 @@ const getItemValue = ({nm, observer, tile}) => {
 		bounds = Requests.geoItemBounds(geo);
 		tile.itemsbounds[nm] = bounds;
 	}
-
+// if (item[0] !== 302924) return false;
 
 	let ids = observer.layerData.ids;
 	if (!ids) {
@@ -291,7 +307,7 @@ const add = (pars) => {
 		observers[type] = observers[type] || {};
 		if (type === 'screen') {
 			observers[type][layerID] = observers[type][layerID] || {};
-			observers[type][layerID][key] = data;
+			observers[type][layerID][key] = prpScreenTileData(data);
 			if (data.layerData?.props._styleHooksFlag) observers.labels.layers[layerID] = true;
 		} else if (type === 'mousemove') {
 			const merc = pars.attr.merc;
@@ -310,6 +326,20 @@ const add = (pars) => {
 	// }
 	return prom;
 
+};
+
+const prpScreenTileData = (data) => {
+	let coords = data.coords,
+		tz = Math.pow(2, coords.z),
+		mInPixel = 256 * tz / Utils.WORLDWIDTHFULL,
+		tpx = 256 * (coords.x % tz - tz/2),
+		tpy = 256 * (tz/2 - coords.y % tz);
+	data.scrTile = {
+		matrix: new DOMMatrix([mInPixel, 0, 0, mInPixel, -tpx, tpy ])
+	};
+
+ // console.log('prpScreenTileData :',  data);
+	return data;
 };
 
 const remove = (id) => {
@@ -343,6 +373,7 @@ const getLayerData = ({layerID, hostName = Utils.HOST} = pars) => {
 		parseLayers
 	};
 };
+
 export default {
 	waitCheckObservers,
 	removeLayer,

@@ -33,8 +33,9 @@ const utils = {
 		ph = _reqParse(ph);
 		if (!ph._drawing) { return; }
 
-// console.log('_updatePolyMerc', ph);
+// console.log('_updatePolyMerc', ph.image);
 		let mInPixel = ph.mInPixel,
+			image = ph.image,
 			itemData = ph.itemData,
 			itemslabels = ph.tile?.itemslabels || [],
 			itemLabel = itemslabels[ph.nm],
@@ -133,9 +134,11 @@ const utils = {
 			// ctx.globalAlpha = options.fillOpacity !== undefined ? options.fillOpacity : 1;
 		if (fill) {
 			// if (options.fillColor) ctx.fillStyle = options.fillColor;
-			
+
 			// ctx.fill(options.fillRule || 'evenodd');
-			if (options.fillPatternRes) {
+			if (ph.image) {
+				ctx.fillStyle = ctx.createPattern(ph.image, 'no-repeat');
+			} else if (options.fillPatternRes) {
 				ctx.fillStyle = options.fillPatternRes;
 			} else if (options.imageBitmap) {
 				options.fillPatternRes = ctx.createPattern(options.imageBitmap, 'repeat');

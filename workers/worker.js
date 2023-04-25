@@ -7,19 +7,27 @@ import gmxEventsManager from './src/gmxEventsManager';
 onmessage = function(e) {
 	const message = e.data || e;
 	const pars = {...message};
-console.log('onmessage ', pars);
+// console.log('onmessage ', pars);
 	switch(message.cmd) {
 		case 'getTiles':
 			const attr = message.attr;
 			DataService.getTiles(pars).then(queues => {
 	// console.log('getTiles ', message, pars, queues);
+				// let out = [];
+				let out = queues;
 				let arr = queues.reduce((a, c) => {
-					delete c.tile;
-					let bitmap = c.bitmap;
-					if (bitmap) a.push(bitmap);
+					// delete c.tile;
+					// c.items.forEach(it => {
+						// delete it.observer;
+						// delete it.itemData;
+
+					// });
+					// let bitmap = c.bitmap;
+					// out.push({key: c.key, bitmap: c.bitmap});
+					if (c.bitmap) a.push(c.bitmap);
 					return a;
 				}, []);
-				postMessage({queues, z: attr.z, cmdNum: attr.cmdNum}, arr);
+				postMessage({queues: out, z: attr.z, cmdNum: attr.cmdNum}, arr);
 			});
 			break;
 		// case 'getTile':

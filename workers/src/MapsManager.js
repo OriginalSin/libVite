@@ -141,7 +141,7 @@ const addSource = (pars) => {
 		// Requests.extend(linkAttr, Utils.parseStyles(linkAttr.properties));
 		stylesPromise.then((res) => {
 			linkAttr.styles = res;
-console.log('linkAttr ', linkAttr);
+// console.log('linkAttr ', linkAttr);
 			// delete linkAttr.stylesPromise;
 		// });
 ChkVersion.restartCheckVer();
