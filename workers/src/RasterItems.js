@@ -155,21 +155,16 @@ geo.rasters = rasters;
 		itemImageProcessingHook = gmx.imageQuicklookProcessingHook;
 	}
 	if (isTiles) {
-		return new Promise(function(resolve1) {
-			var dataOption = geo.itemData || {},
+		return new Promise(resolve => {
+			const dataOption = geo.itemData || {},
 				tileToLoadPoints = _chkRastersByItemIntersect(isShift ? _getShiftTilesArray(dataOption.bounds, shiftX, shiftY) : [ntp], iBounds);
 
-			var cnt = tileToLoadPoints.length,
-				chkReadyRasters = function() {
-					if (cnt < 1) { resolve1(geo); }
-				},
-				skipRasterFunc = function() {
-					cnt--;
-					chkReadyRasters();
-				},
-				onLoadFunction = function(gtp, p, img) {
+			let cnt = tileToLoadPoints.length;
+			const chkReadyRasters = () => { if (cnt < 1) resolve(geo); },
+				skipRasterFunc = () => { cnt--; chkReadyRasters(); },
+				onLoadFunction = (gtp, p, img) => {
 					item.skipRasters = false;
-					var isImage = true;
+					let isImage = true;
 geo.raster_ = img;
 					if (itemImageProcessingHook) {
 						img = itemImageProcessingHook(img, {
@@ -193,10 +188,7 @@ geo.raster_ = img;
 
 					if (isShift) {
 						var pos = _getShiftPixels(p);
-						if (pos === null) {
-							skipRasterFunc();
-							return;
-						}
+						if (pos === null) { skipRasterFunc(); return; }
 						L.extend(info, pos);
 						isImage = false;
 					}
@@ -212,11 +204,11 @@ geo.raster_ = img;
 						info.sy = Math.floor(posInfo.y);
 						info.sw = info.sh = posInfo.size;
 						if (isShift) {
-							var sw = Math.floor(info.dw / posInfo.zDelta);
+							let sw = Math.floor(info.dw / posInfo.zDelta);
 							info.sx = (info.dx === 0 ? info.sw : ts) - sw;
 							info.sw = sw;
 
-							var sh = Math.floor(info.dh / posInfo.zDelta);
+							let sh = Math.floor(info.dh / posInfo.zDelta);
 							info.sy = (info.dy === 0 ? info.sh : ts) - sh;
 							info.sh = sh;
 						}
@@ -227,17 +219,9 @@ geo.raster_ = img;
 						rasters[idr] = resCanvas;
 						chkReadyRasters();
 					} else {
-						if (!resCanvas) {
-							resCanvas = img;
-							// resCanvas = new OffscreenCanvas(ts, ts);
-							// resCanvas.width = ts; resCanvas.height = ts;
-							// const _ctx = resCanvas.getContext('bitmaprenderer');
-	// _ctx.transferFromImageBitmap(img);
-							// resCanvas = document.createElement('canvas');
-							// resCanvas.width = resCanvas.height = ts;
-						}
+						if (!resCanvas) resCanvas = img;
 						info.res = resCanvas;
-chkReadyRasters();
+						chkReadyRasters();
 /*
 						var hookResult = _rasterHook(info),
 							then = function() {
@@ -265,18 +249,15 @@ chkReadyRasters();
 					}
 				};
 			if (cnt) {
-				tileToLoadPoints.map(function(it) {
-					var loader = _loadTileRecursive(it, item, ids);
-					loader.then(function(loadResult) {
-						onLoadFunction(loadResult.gtp, it, loadResult.image);
+				tileToLoadPoints.forEach(it => {
+					_loadTileRecursive(it, item, ids).then(res => {
+						onLoadFunction(res.gtp, it, res.image);
 					}, skipRasterFunc);
-					return loader;
 				});
 			} else {
 				item.skipRasters = true;
 				skipRasterFunc();
 			}
-		// }.bind(this));
 		});
 	}
 };
@@ -324,72 +305,38 @@ const _getShiftTilesArray = (bounds, shiftX, shiftY) => {
 };
 
 const _chkRastersByItemIntersect = (arr, iBounds) => {
-	// var geo = item[item.length - 1],
-	let out = [];
-	arr.forEach(function(it) {
-		var bounds = Utils.getTileBounds(it);
-		// if (Utils.isItemIntersectBounds(geo, bounds)) {
-		if (iBounds.intersects(bounds)) {
-			out.push(it);
-		}
-	});
-	return out;
+	return arr.filter(it => Utils.getTileBounds(it).intersects(iBounds));
 };
 
-const getTilePosZoomDelta = (tilePoint, zoomFrom, zoomTo) => {		// получить смещение тайла на меньшем zoom
-	var dz = Math.pow(2, zoomFrom - zoomTo),
-		size = 256 / dz,
-		dx = tilePoint.x % dz,
-		dy = tilePoint.y % dz;
-	return {
-		size: size,
-		zDelta: dz,
-		x: size * dx,
-		y: size * dy
-	};
+const _chkZoom = (zoom, ids) => {
+	return	(zoom >= ids.minZoomRasters && 'rasterBGfunc' in ids) ||
+			(zoom >= ids.minZoomQuicklooks && 'quicklookBGfunc' in ids);
 };
-const _loadTileRecursive = function (tilePoint, item, ids) {    //return promise, which resolves with object {gtp, image}
-	var gmx = ids,
-		gtp = tilePoint;
-		// gtp = {z: tilePoint.z, x: this.ntp.x, y: this.ntp.y},
-		// _this = this;
 
-	// for (var key in this.rasterRequests) {
-		// this.rasterRequests[key].reject();
-	// }
+const _loadTileRecursive = (tilePoint, item, ids) => {    //return promise, which resolves with object {gtp, image}
+	let gtp = tilePoint;
 	let rasterRequests = {};
 	ids.badTiles = ids.badTiles || {};
-	// ids.badTiles = {};
 
-	return new Promise(function(resolve) {
-		var tryLoad = function(gtp, crossOrigin) {
-console.log('tryLoad:', gtp);
-			var rUrl = _getUrlFunction(gtp, item, ids);
-			if (gmx.rastersCache && gmx.rastersCache[rUrl]) {
-				resolve({gtp: tilePoint, gtp1: gtp, image: gmx.rastersCache[rUrl]});
+	return new Promise((resolve) => {
+		const tryLoad = (gtp, crossOrigin) => {
+// console.log('tryLoad:', gtp);
+			const rUrl = _getUrlFunction(gtp, item, ids);
+			if (ids.rastersCache && ids.rastersCache[rUrl]) { // уже загружен
+				resolve({gtp: tilePoint, gtp1: gtp, image: ids.rastersCache[rUrl]});
 			} else {
-				var tryHigherLevelTile = function(url) {
-					if (url) {
-						ids.badTiles[url] = true;
-					}
+				const tryHigherLevelTile = (url) => {
+					if (url) ids.badTiles[url] = true;
 
-					var nextZoom = gtp.z - 1;
-					if (nextZoom && _chkZoom(nextZoom, gmx)) {
-						tryLoad({
-							x: Math.floor(gtp.x / 2),
-							y: Math.floor(gtp.y / 2),
-							z: nextZoom
-						}, ''); // 'anonymous' 'use-credentials'
+					const z = gtp.z - 1;
+					if (z && _chkZoom(z, ids)) {
+						tryLoad({ x: Math.floor(gtp.x / 2), y: Math.floor(gtp.y / 2), z }, ''); // 'anonymous' 'use-credentials'
 					} else {
 						resolve({gtp: tilePoint, gtp1: gtp});
 					}
-				},
-				skipUrl = function(res) {
-					// _this.layer.fire('bitmap', {id: item.id, loaded: false, url: rUrl, result: res});
-					tryHigherLevelTile(rUrl);
 				};
 
-				if (ids.badTiles[rUrl] || (gmx.maxNativeZoom && gmx.maxNativeZoom < gtp.z)) {
+				if (ids.badTiles[rUrl] || (ids.maxNativeZoom && ids.maxNativeZoom < gtp.z)) {
 					tryHigherLevelTile();
 					return;
 				}
@@ -397,8 +344,7 @@ console.log('tryLoad:', gtp);
 				fetch(rUrl)
 					.then(resp => {
 						if (resp.status < 200 || resp.status >= 300) {						// error
-							console.warn('skip:', gtp);
-								skipUrl();
+							tryHigherLevelTile(rUrl);
 							return Promise.reject(resp);
 						} else {
 							return resp.blob();
@@ -406,60 +352,70 @@ console.log('tryLoad:', gtp);
 					})
 					.then(createImageBitmap)
 					.then(imageBitmap => {
-						const w = imageBitmap.width, h = imageBitmap.height;
-						let canvas = new OffscreenCanvas(w, h);
-						canvas.width = w; canvas.height = h;
-						const _ctx = canvas.getContext('bitmaprenderer');
-_ctx.transferFromImageBitmap(imageBitmap);
-						// _ctx.drawImage(imageBitmap, 0, 0, canvas_.width, canvas_.width);
-						if (gmx.rastersCache) {
-							gmx.rastersCache[rUrl] = canvas;
-						}
+						const canvas = _bitMapToRez(imageBitmap, {tilePoint, gtp});
+						if (ids.rastersCache) ids.rastersCache[rUrl] = canvas;
 						resolve({gtp: tilePoint, gtp1: gtp, image: canvas});
 					})
-					.catch(err => {
-						console.log('skip:', gtp, err);
+					.catch(() => {
+						console.warn('skip:', gtp);
 					});
-/*
-				if (L.gmx.getBitmap) {
-					L.gmx.getBitmap(rUrl, fetchOptions).then(
-						function(res) {
-							if (res) {
-								var imageObj = res.imageBitmap,
-									canvas_ = document.createElement('canvas');
-								canvas_.width = imageObj.width;
-								canvas_.height = imageObj.height;
-								canvas_.getContext('2d').drawImage(imageObj, 0, 0, canvas_.width, canvas_.width);
-								if (gmx.rastersCache) {
-									gmx.rastersCache[rUrl] = canvas_;
-								}
-								resolve({gtp: gtp, image: canvas_});
-								// _this.layer.fire('bitmap', {id: item.id, loaded: true, url: rUrl, result: res});
-							} else {
-								skipUrl();
-							}
-						},
-						skipUrl
-						// function(res) {
-							// _this.layer.fire('bitmap', {id: item.id, loaded: false, url: rUrl, result: res});
-							// tryHigherLevelTile(rUrl);
-						// }
-					)
-					.catch(L.Util.falseFn);
-				}
-*/
 			}
 		};
 
 		tryLoad(gtp);
 	});
 };
-const _getUrlFunction = function (gtp, item, gmx) {
-	return gmx.rasterBGfunc(gtp.x, gtp.y, gtp.z, item);
+/*
+const _getShiftPixels = (it) => {    // get pixels parameters for shifted object
+	var w = it.dx + (it.dx < 0 ? 256 : 0),
+		h = it.dy + (it.dy < 0 ? 256 : 0),
+		sx = 0, sw = 256 - w, dx = w, dw = sw;
+	if (it.tx > it.x) {
+		sx = sw; sw = w; dx = 0; dw = sw;
+	}
+	if (sx === 256 || sw < 1) { return null; }
+
+	var sy = h, sh = 256 - h, dy = 0, dh = sh;
+	if (it.ty > it.y) {
+		sy = 0; dy = sh; sh = h; dh = sh;
+	}
+	if (sy === 256 || sh < 1) { return null; }
+
+	return {
+		sx: sx, sy: sy, sw: sw, sh: sh,
+		dx: dx, dy: dy, dw: dw, dh: dh
+	};
 };
-const _chkZoom = function (zoom, gmx) {
-	return	(zoom >= gmx.minZoomRasters && 'rasterBGfunc' in gmx) ||
-			(zoom >= gmx.minZoomQuicklooks && 'quicklookBGfunc' in gmx);
+*/
+const getTilePosZoomDelta = (tilePoint, zoomFrom, zoomTo) => {		// получить смещение тайла на меньшем zoom
+	const zDelta = Math.pow(2, zoomFrom - zoomTo),
+		size = 256 / zDelta,
+		x = size * (tilePoint.x % zDelta),
+		y = size * (tilePoint.y % zDelta);
+	return { size, zDelta, x, y };
+};
+    // default rasterHook: res - result canvas other parameters as http://www.w3schools.com/tags/canvas_drawimage.asp
+const _defaultRasterHook = (res, image, sx, sy, sw, sh, dx, dy, dw, dh) => {
+	if (image) res.getContext('2d').drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+	return res;
+};
+
+const _bitMapToRez = (imageBitmap, pars) => {
+	const w = imageBitmap.width, h = imageBitmap.height;
+	const canvas = new OffscreenCanvas(w, h);
+	canvas.width = w; canvas.height = h;
+	if (pars.tilePoint.z - pars.gtp.z) {
+		let ps = getTilePosZoomDelta(pars.tilePoint, pars.tilePoint.z, pars.gtp.z);
+		let sw = ps.size;
+		if (sw < 1 / 256) return; // меньше 1px
+		_defaultRasterHook(canvas, imageBitmap, ps.x, ps.y, sw, sw, 0, 0, 256, 256);
+	} else {
+		canvas.getContext('bitmaprenderer').transferFromImageBitmap(imageBitmap);
+	}
+	return canvas;
+};
+const _getUrlFunction = (gtp, item, gmx) => {
+	return gmx.rasterBGfunc(gtp.x, gtp.y, gtp.z, item);
 };
 
 export default {
