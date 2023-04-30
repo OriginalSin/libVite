@@ -426,7 +426,7 @@ const chkSignal = (signalName, signals, opt) => {
 // console.log('sssssss', sObj, signalName)
 	if (sObj) { sObj.abort(); }
 	sObj = signals[signalName] = new AbortController();
-	sObj.signal.addEventListener('abort', (ev) => console.log('Отмена fetch:', ev));
+	sObj.signal.addEventListener('abort', (ev) => console.log('Отмена fetch:', signalName, ev));
 	opt.signal = sObj.signal;
 	signals[signalName] = sObj;
 	return opt;

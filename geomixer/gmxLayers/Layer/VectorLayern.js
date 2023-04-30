@@ -134,7 +134,8 @@ gmx.reqName = gmx.properties.LayerID;
 		for (const key in this._tiles) {
 			let it = this._tiles[key];
 			if (it.coords.z === zoom) {
-				if (flagLoad === true) this._tileReady(it.coords, '', it.el);
+				// if (flagLoad === true) this._tileReady(it.coords, '', it.el);
+
 				// it.el.classList.remove('createTile');
 				// it.el.classList.add('leaflet-tile-loaded');
 				continue;
@@ -284,7 +285,7 @@ gmx.reqName = gmx.properties.LayerID;
 		var tile = L.DomUtil.create('canvas', 'leaflet-tile');
 		var size = this.getTileSize();
 		tile.width = size.x; tile.height = size.y;
-					// done('', tile);
+					done('', tile);
 						// tile.classList.remove('createTile');
 						// tile.classList.add('leaflet-tile-loaded');
 		// tile = tile.transferControlToOffscreen();
@@ -302,6 +303,11 @@ tile.addEventListener("contextrestored", (event) => {
 // console.log('createTile', coords, tile);
 		return tile;
 	},
+
+	_updateOpacity() {
+	},
+
+		/*
 	_update(center) {
 		const map = this._map;
 		if (!map) { return; }
@@ -374,5 +380,5 @@ tile.addEventListener("contextrestored", (event) => {
 			this._level.el.appendChild(fragment);
 		}
 	},
-
+*/
 });

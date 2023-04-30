@@ -3,13 +3,20 @@ import Requests from './Requests';
 
 const getNeedRasterItems = (obs) => {
  // console.log('_getNeedRasterItems :',  obs);
-	if (!obs.items.length) return [];
+	const notPromise = new Promise(resolve => { resolve(); });
+	if (!obs.items.length) {
+ // console.log('notPromise :',  obs);
+		return [];
+		// return notPromise;
+	}
 	let	layerID = obs.layerID,
 		ids = obs.layerData.ids,
 		lData = obs.layerData.parseLayers.layersByID[layerID],
 		lprops = ids.properties,
 		identityField = lprops.identityField;
 	if (!lprops.IsRasterCatalog) return [];
+	// if (!lprops.IsRasterCatalog) return notPromise;
+
 
 	let	items = obs.items,
 		gmx = lprops.gmx || {},
@@ -58,7 +65,7 @@ const getNeedRasterItems = (obs) => {
 const w = 256, h = 256;
 const canvas = new OffscreenCanvas(w, h);
 canvas.width = w; canvas.height = h;
-const _ctxTest = canvas.getContext('2d');
+const _ctxTest = canvas.getContext('2d', { willReadFrequently: true });
 /**/
 const _getVisibleItems = (geoItems, pars) => {
 	if (geoItems.length < 2) {

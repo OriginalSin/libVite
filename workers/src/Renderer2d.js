@@ -126,6 +126,7 @@ const utils = {
 	_fillStroke: function (ph, stroke, fill) {
 		// ph = _reqParse(ph);
 		let options = ph.options,
+			IsRasterCatalog = ph.ids.pProps.properties.IsRasterCatalog,
 			ctx = ph._ctx;
                 // out.canvasPattern = (pt.canvasPattern ? pt.canvasPattern : gmxAPIutils.getPatternIcon(item, pt, indexes));
 
@@ -148,6 +149,7 @@ const utils = {
 			}
 			let fillOpacity = options.fillOpacity !== undefined ? options.fillOpacity : 1;
 // console.log('_fillStroke', ctx.globalAlpha, ph._hover, fillOpacity, options.fillColor);
+			if (IsRasterCatalog) fillOpacity = 1;
 			if (ph._hover && fillOpacity < 1) fillOpacity *= 2;
 			ctx.globalAlpha = fillOpacity;
 		}

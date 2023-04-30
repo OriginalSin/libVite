@@ -80,6 +80,7 @@ const drawItem = (pars) => {
 // console.log('drawItem _______________:', pars.raster_);
 
 	let	pt = {
+		ids: observer.layerData.ids,
 		mInPixel: 256 * tz / Utils.WORLDWIDTHFULL,
 		_drawing: true,
 		_ctx: ctx,

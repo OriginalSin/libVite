@@ -26,7 +26,7 @@ const getMap = (pars) => {
 		const cType = res.headers.get('Content-Type'); // application/json; charset=utf-8 либо  text/javascript; charset=utf-8
 		return cType.indexOf('application/json') > -1 || cType.indexOf('text/javascript') > -1 ? res.json() : {};
 	})
-	.then(function(res) {
+	.then(res => {
 		if (res.Status === 'ok' && res.Result) {
 			const parsed = parseMapTree(res.Result, hostName)
 			const host = Store.getHost(hostName);

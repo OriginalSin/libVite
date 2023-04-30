@@ -21,7 +21,7 @@ const MapInit = () => {
 			center: new L.LatLng(55.965056, 32.460908),
 			attributionControl: false,
 			zoomControl: false,
-			// minZoom: 1,
+			minZoom: 1,
 			zoom: 33
 		}
 	);
@@ -223,7 +223,7 @@ _needSend = false;
 		// console.log('mousemove res', res);
 _needSend = true;
 		let items = res.items;
-		let cursor = '_';
+		let cursor = 'default';
 		let hoverLayer = '';
 		let repaint = false;
 		let repaintLast = false;
@@ -241,9 +241,8 @@ _needSend = true;
 
 		if (map._lastCursor !== cursor) {
 			map._container.style.cursor = map._lastCursor = cursor;
-			// if (hoverLayer && (repaint || lastHoverLayer !== hoverLayer)) hoverLayer.repaint();
-			if (hoverLayer && repaint) hoverLayer.repaint();
-			if (lastHoverLayer && (repaintLast || lastHoverLayer !== hoverLayer)) lastHoverLayer.repaint();
+			if (hoverLayer && !hoverLayer._gmx.properties.IsRasterCatalog && repaint) hoverLayer.repaint();
+			if (lastHoverLayer && !lastHoverLayer._gmx.properties.IsRasterCatalog && (repaintLast || lastHoverLayer !== hoverLayer)) lastHoverLayer.repaint();
 			lastHoverLayer = hoverLayer;
 		}
 	});
