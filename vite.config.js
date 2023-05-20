@@ -3,12 +3,26 @@ import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { svgBuilder } from 'vite-svg-plugin'
 import {nativeSW} from 'vite-plugin-native-sw'
+// import SharedWorker from 'vite-plugin-sharedworker'
+// import webWorkerLoader from 'rollup-plugin-web-worker-loader';
 
 const proxyPrefix = 'https://maps.kosmosnimki.ru';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     svgBuilder({ path: './svg/', prefix: '' }),
+			// webWorkerLoader({
+				// 'shared-worker': './SharedWorkers/sworker.js'
+			// }),
+	// SharedWorker(),
+	// SharedWorker(
+// {
+      // entries: [{
+        // src: resolve(__dirname, 'sworker/sworker.js'),
+        // dist: 'shworker.js',
+      // }]
+    // }	),
+
     nativeSW({
       entries: [{
         src: resolve(__dirname, 'workers/service-worker.js'),
@@ -41,6 +55,9 @@ export default defineConfig({
           leaflet: 'L',
         },
       },
+		// plugins: [
+			// webWorkerLoader(/* configuration */),
+		// ],
     },
   },
   server: {

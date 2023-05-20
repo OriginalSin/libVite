@@ -46,44 +46,18 @@ gmx.reqName = gmx.properties.LayerID;
 
             gmx.beginDate = beginDate;
             gmx.endDate = endDate;
-/*
-            var observer = null,
-				dataManager = gmx.dataManager;
-            for (var key in this._tiles) {
-				this._tiles[key].loaded = 0;
-				observer = this._tiles[key].observer;
-				if (observer) {
-					observer.setDateInterval(beginDate, endDate);
-				}
-            }
-            observer = dataManager.getObserver('_Labels');
-            if (observer) {
-                observer.setDateInterval(beginDate, endDate);
-            }
-			if (gmx.skipTiles === 'NotVisible' || gmx.needBbox || gmx.properties.UseTiles === false) {
-				if (!gmx.needBbox) {
-					gmx.properties.LayerVersion = -1;
-					dataManager.setOptions({LayerVersion: -1});
-				}
-				if (this._map) {
-					L.gmx.layersVersion.now();
-				}
-			}
-*/
-            // this.redraw();
-			// if (this._timerSend) cancelIdleCallback(this._timerSend);
-			// this._timerSend = 
-// this._tileZoom = 0;
-	// this._needSend = this._needSendLast || [];
-
-// this._sendQueue();
-		// if (this._timerSend) cancelIdleCallback(this._timerSend);
-		// this._timerSend = requestIdleCallback(this._sendQueue.bind(this), {timeout: 50});
-
-// console.log('setDateInterval', this._needSend, this._tileZoom);
-			// requestIdleCallback(this.redraw.bind(this), {timeout: 50});
 			this.fire('dateIntervalChanged');
         }
+console.log('setDateInterval', gmx);
+		L.gmx.vw._sendCmd({
+			id: props.name,
+			begin: gmx.beginDate.getTime() / 1000,
+			end: gmx.endDate.getTime() / 1000,
+			cmd: 'setDateInterval'
+		// }).then(console.log);
+		}).then(it => {
+console.log('setDateIff fffffffff nterval', it);
+		});
 
 		var map = this._map;
 		if (map) {
@@ -177,7 +151,7 @@ gmx.reqName = gmx.properties.LayerID;
 			let _this = this;
 			L.gmx.Requests({url: this._gmx.reqName});
 // console.log('_sendQueue', opt);
-			L.gmx.vw._sendCmd('getTiles', opt).then(res => {
+			L.gmx.vw._sendCmd({...opt, cmd: 'getTiles'}).then(res => {
 				_this._needSend = true;
 // console.log('_sendQueue', _this._tileZoom, zoom);
 				// if (_this._tileZoom !== zoom) return;

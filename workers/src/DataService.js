@@ -177,7 +177,7 @@ const clearCache = (layerID, z) => {
 }
 
 const getTiles = (pars) => {
-	let message = pars.attr;
+	let message = pars || {};
 	let hostName = message.hostName || Utils.HOST,
 		layerID = message.layerID,
 		// queue = message.queue,
@@ -222,7 +222,14 @@ const sortLayersData = (data) => {
 	});
 };
 
+const setDateInterval = (data) => {
+	const ids = Store.getHost().ids[data.id];
+	ids.dateInterval = { begin: data.begin, end: data.end };
+	return Promise.resolve(data);
+};
+
 export default {
+	setDateInterval,
 	sortLayersData,
 	setHover,
 	getTile,

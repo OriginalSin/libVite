@@ -12,10 +12,6 @@ let hosts = {},
     bbox = null,
 	_ctxLabels,
 	mapSize,
-	pOrigin,
-	pBounds,
-
-	topLeftMerc,
     bboxBounds = null;
 	// dataManagersLinks = {},
     // hostBusy = {},
@@ -23,14 +19,11 @@ let hosts = {},
 
 const setBbox = (mapPos) => {
 	// let flag = false;
-	topLeftMerc = mapPos.topLeftMerc;
 	if (!mapSize || mapSize.x !== mapPos.mapSize.x || mapSize.y !== mapPos.mapSize.y) {  
 		mapSize = mapPos.mapSize;
 		_ctxLabels = null;
 		
 	}
-	pOrigin = mapPos.pOrigin;
-	pBounds = mapPos.pBounds;
 	if (zoom !== mapPos.zoom || !_ctxLabels) {
 		zoom = mapPos.zoom;
 		bbox = mapPos.bbox;
@@ -93,8 +86,7 @@ const chkHost = (hostName) => {
 			pars = { Name: name, Version: 'v' in pt ? pt.v : -1 };
 		if (props.Temporal) {
 			// props.DateBeginUTC
-			const dint = pt.dateInterval || layer.dateInterval || dateInterval;
-// console.warn('dint:', dint);
+			const dint = layer.dateInterval || dateInterval;
 			pars.dateBegin = dint.begin;
 			pars.dateEnd = dint.end;
 			if (!pars.dateBegin || !pars.dateEnd) continue;
@@ -145,30 +137,7 @@ const chkVersion = () => {
 								postMessage({ cmd: 'request', url: id });
 
 								let pt = ids[id],
-									pl = hostItem.parseLayers.layersByID[id],
-
-									layer = pt.layer,
 									props = it.properties;
-layer.sendMessage({
-	...it,
-	origin: {
-		geometry: pl.geometry,
-		properties: pl.properties
-	},
-	bboxBounds,
-	mapSize,
-	pOrigin,
-	pBounds,
-	zoom,
-	topLeftMerc,
-	cmd: 'version'
-}).then(res1 => {
-	// console.log('___res1_____:', res1);
-	// postMessage({queues: out, z: attr.z, cmdNum: attr.cmdNum}, arr);
-
-									// Observer.waitCheckObservers();
-});
-/*
 								if (props) {
 									pt.v = props.LayerVersion;
 									pt.properties = props;
@@ -197,7 +166,6 @@ layer.sendMessage({
 
 									postMessage({ cmd: 'request', remove: true, url: id });
 								});
-*/
 							} else {
 // console.log('chkVersion layer skiped', id, it);
 							}
@@ -212,7 +180,7 @@ layer.sendMessage({
 const setDateIntervals = (pars) => {
 	pars = pars || {};
 	let data = pars.attr || {};
-	dateInterval = pars.dt;
+	dateInterval = data.dt;
 	// let hostName = data.hostName || Utils.HOST;
 	// let host = hosts[hostName];
 	// let host = hosts[pars.hostName];
@@ -222,33 +190,10 @@ const setDateIntervals = (pars) => {
 	// }
 	// utils.now();
 
-// console.log('setDateIntervals:', pars);
-};
-
-const drawScreen = (pars) => {
-	let hostName = pars.hostName || Utils.HOST;
-	let hostLayers = Store.getHost(hostName),
-	// let hostLayers = hosts[hostName],
-		ids = hostLayers.ids[pars.id];
-		
-// console.log('_drawScreen__ ____:', ids);
-	if (ids && ids.layer) {
-		return ids.layer.sendMessage({
-			...pars,
-			zoom,
-			topLeftMerc
-		}).then(res1 => {
-			// let out = {...pars};
-			if (res1.bitmap) postMessage({...pars, bitmap: res1.bitmap}, [res1.bitmap]);
-			else postMessage({...pars});
-		});
-	}
-
-// console.log('drawScreen:', ids, pars);
+console.log('setDateIntervals:', pars);
 };
 
 export default {
-	drawScreen,
 	restartCheckVer,
 	now: utils.now,
 	stop: utils.stop,

@@ -160,8 +160,6 @@ const toggleLayer = ev => {
 }
 const showPos = ev => {
 	if (_gmx.geometry) {
-		const bounds = L.gmxUtil.getGeometryBounds(_gmx.geometry).toLatLngBounds();
-		gmxMap.leafletMap.fitBounds(bounds);
 		let props = _gmx.properties;
 		let bd = props.DateEndUTC * 1000;
 		if (bd) {
@@ -189,18 +187,21 @@ const showPos = ev => {
 				if (res.Status === 'ok') {
 					let it = res.Result.values[0];
 					let geo = it[it.length - 1];
-					let bounds1 = L.gmxUtil.getGeometryBounds(geo).toLatLngBounds(true);
-					gmxMap.leafletMap.fitBounds(bounds1);
 					bd = it[res.Result.fields.findIndex(el => el === props.TemporalColumnName)] * 1000;
 					let beg = new Date(bd), end = new Date(bd + 1000);
 					layer.setDateInterval(beg, end);
 					titleTimeLine = beg.toLocaleString() + ' по ' + end.toLocaleString();
-// console.log('showPos', bounds1);
+					let bounds1 = L.gmxUtil.getGeometryBounds(geo).toLatLngBounds(true);
+					gmxMap.leafletMap.fitBounds(bounds1);
+console.log('showPos', beg, end);
 				}
 			})
 			.catch(err => console.warn(err));
 
-			layer.setDateInterval(new Date(bd), new Date(bd + 1000));
+			// layer.setDateInterval(new Date(bd), new Date(bd + 1000));
+		} else {
+			const bounds = L.gmxUtil.getGeometryBounds(_gmx.geometry).toLatLngBounds();
+			gmxMap.leafletMap.fitBounds(bounds);
 		}
 	}
 }

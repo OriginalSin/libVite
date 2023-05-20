@@ -4,7 +4,8 @@ import {gmxAPIutils} from './Utils.js';
 */
 var gmxMapManager = {
     getMap: (opt) => {
-		return L.gmx.vw._sendCmd('getMap', opt).then(res => {
+		return L.gmx.vw._sendCmd({...opt, cmd: 'getMap'}).then(res => {
+	console.log('getMap res', res);
 			if (res) L.gmx.gmxMap.addLayersToMap(res, opt);
 			else L.gmxUtil.Notification.view('Данная карта не существует', 'error');
 		});

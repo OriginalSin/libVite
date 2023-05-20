@@ -19,7 +19,21 @@ body > .all.leftMenuOn .map.leaflet-container {
 	left: 40px;
     width: calc(100% - 40px);
 }
+body > .all.leftMenuOn .gmxLayers {
+	z-index: 4444;
+    position: relative;
+	/* left: 20px; */
+}
+body > .all.leftMenuOn.leftMenuOpen .gmxLayers {
+	/* left: 200px; */
+}
 
+body > .all.leftMenuOn .gmxLayers canvas {
+    position: absolute;
+    top: 0px;
+    display: block;
+	transform-origin: left top;
+}
 /*
 .gmx-style-legend .prefixWrapper {
     min-width: 41px;

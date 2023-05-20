@@ -75,15 +75,15 @@ var gmxMap = {
 		return layer;
 	},
     setDateIntervals: (dt) => {
-		L.gmx.vw._sendCmd('setDateIntervals', {dt}).then(res => {
-			console.log('setDateIntervals res', res)
+		L.gmx.vw._sendCmd({dt, cmd: 'setDateIntervals'}).then(res => {
+			// console.log('setDateIntervals res', res)
 		});
 
-		let arr = gmxMap.layers.filter(it => it._gmx && it._gmx.properties.Temporal).map(layer => {
-			layer.setDateInterval(new Date(dt.begin * 1000), new Date(dt.end * 1000));
-			return layer;
-		});
-        console.log('setDateIntervals', dt, arr)
+		// let arr = gmxMap.layers.filter(it => it._gmx && it._gmx.properties.Temporal).map(layer => {
+			// layer.setDateInterval(new Date(dt.begin * 1000), new Date(dt.end * 1000));
+			// return layer;
+		// });
+        // console.log('setDateIntervals', dt, arr)
 
 	},
 /*

@@ -15,9 +15,11 @@
     "svelte": "^3.54.0",
     "vite": "^4.0.0",
     "vite-plugin-native-sw": "^1.2.1",
+    "vite-plugin-sharedworker": "^0.1.0",
     "vite-svg-plugin": "^1.0.2"
   },
   "dependencies": {
+    "rollup-plugin-web-worker-loader": "^1.6.1",
     "self-intersects": "^0.0.3",
     "splaytree": "^3.1.1",
     "tinyqueue": "^2.0.3"

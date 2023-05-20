@@ -153,25 +153,27 @@ console.log('addSource ', hostItem);
 			};
 		} else {
 			let layer = new Ids({
-				id,
-				geometry: linkAttr.geometry,
-				properties: linkAttr.properties
-			});
+						id,
+						geometry: linkAttr.geometry,
+						properties: linkAttr.properties
+					});
 			hostItem.ids[id] = {
 				layer,
 				...pars
 			};
-			// let tt = {
-				// cmd: 'fgfg',
-						// geometry: linkAttr.geometry,
-						// properties: linkAttr.properties
-			// };
-			// layer.sendMessage(tt).then(res => {
-// console.log('res', res);
-			// });
-			// layer.sendMessage(tt).then(res => {
-// console.log('res1', res);
-			// });
+			let tt = {
+				cmd: 'fgfg',
+						geometry: linkAttr.geometry,
+						properties: linkAttr.properties
+			};
+			// layer.sendMessage('ggggggggg');
+			// layer.sendMessage(tt);
+			layer.sendMessage(tt).then(res => {
+console.log('res', res);
+			});
+			layer.sendMessage(tt).then(res => {
+console.log('res1', res);
+			});
 		}
 		let { stylesPromise } = Utils.parseStyles(linkAttr.properties);
 		linkAttr.stylesPromise = stylesPromise;
@@ -198,17 +200,19 @@ const removeSource = (pars) => {
 	pars = pars || {};
 
 	let attr = pars.attr || {};
-	let id = pars.id;
+	let id = attr.id;
 	if (id) {
 		let hostName = attr.hostName || Utils.HOST;
 		let hostItem = Store.getHost(hostName);
 		if (hostItem) {
 			let pt = hostItem.ids[id];
-console.log('removeSource:', pt);
-			if (pt.layer && pt.layer.worker) {
-				// pt.layer.worker.terminate();
+// console.log('signals:', pt.signals, pt);
+			if (pt.signals) {
+				Object.values(pt.signals).forEach((it) => {
+					it.abort();
+				});
 			}
-			// Observer.removeLayer(id);
+			Observer.removeLayer(id);
 			delete hostItem.ids[id];
 			// if (Object.keys(hosts[hostName].ids).length === 0) { delete hosts[hostName]; }
 			if (Object.keys(Store.hosts).length === 0) { ChkVersion.stop(); }

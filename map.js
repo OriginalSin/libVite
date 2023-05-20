@@ -25,6 +25,60 @@ const MapInit = () => {
 			zoom: 33
 		}
 	);
+
+	const sendMapSize = () => {
+		const zoom = map.getZoom(),
+			bounds = map.getBounds(),
+			topLeftMerc = L.CRS.EPSG3857.project(bounds.getNorthEast());
+		map._topLeftMerc = topLeftMerc;
+		let	mapPos = {
+			bbox: L.gmxUtil.getBboxes(map, zoom, bounds),
+			topLeftMerc,
+			mapSize: map.getSize(),
+			pBounds: map.getPixelBounds(),
+			pOrigin: map.getPixelOrigin(),
+			zoom
+		};
+		// console.log('mapPos', mapPos);
+		L.gmx.vw._sendCmd({mapPos, cmd: 'moveend'});
+	};
+	const onMouseMove = (ev) => {
+		if (_timerMouseMove) cancelAnimationFrame(_timerMouseMove);
+		_timerMouseMove = requestAnimationFrame(hoverCheck.bind(this, ev), {timeout: 100});
+		// hoverCheck(ev);
+	};
+
+	map
+	.on('moveend resize', sendMapSize)
+	.on('layeradd', (ev) => {
+		// console.log('layeradd', ev);
+		const layer = ev.layer;
+		const id = layer.options.layerID;
+		const _gmx = layer._gmx;
+		if (id) {
+			const data = {id};
+			if (_gmx.beginDate && _gmx.endDate) {
+				data.dateInterval = {
+					begin: layer._gmx.beginDate.valueOf() /1000,
+					end: layer._gmx.endDate.valueOf() /1000
+				};
+			}
+			L.gmx.vw._sendCmd({...data, cmd: 'layeradd'} );
+		}
+	}).on('layerremove', (ev) => {
+		const layer = ev.layer;
+		const id = layer.options.layerID;
+		if (id) {
+			L.gmx.vw._sendCmd({id, cmd: 'layerremove'});
+		}
+	})
+	.on('mousemove mouseover', onMouseMove, this);
+	
+	sendMapSize();
+	// let gmxLayers = L.DomUtil.create('div', 'gmxLayers', map._container);
+
+// map._gmxLayers = gmxLayers;
+// map.createPane('gmxLayers');
 	L.gmx.map = map;
 	map.addControl(L.control.gmxZoom({}));
 	map.addControl(L.control.gmxIcon({
@@ -193,11 +247,6 @@ let lastHoverLayer;
 let gmx_id = '';
 let _needSend = true;
 
-const onMouseMove = (ev) => {
-	if (_timerMouseMove) cancelAnimationFrame(_timerMouseMove);
-	_timerMouseMove = requestAnimationFrame(hoverCheck.bind(this, ev), {timeout: 100});
-	// hoverCheck(ev);
-};
 const hoverCheck = (ev) => {
 		if (!_needSend || (lastHoverLayer && !lastHoverLayer._needSend)) {
 			if (_timerMouseMove) cancelAnimationFrame(_timerMouseMove);
@@ -208,6 +257,7 @@ _needSend = true;
 _needSend = false;
 	const oEv = ev.originalEvent;
 	const pars = {
+		cmd: 'mousemove',
 		ctrlKey: oEv.ctrlKey,
 		altKey: oEv.altKey,
 		shiftKey: oEv.shiftKey,
@@ -219,7 +269,7 @@ _needSend = false;
 	if (ev.type === 'mouseover') map._lastCursor = '';
 // performance.mark('start');
 	
-	L.gmx.vw._sendCmd('mousemove', pars).then(res => {
+	L.gmx.vw._sendCmd(pars).then(res => {
 		// console.log('mousemove res', res);
 _needSend = true;
 		let items = res.items;
@@ -247,37 +297,6 @@ _needSend = true;
 		}
 	});
 };
-
-map.on('layeradd', (ev) => {
-	// console.log('layeradd', ev);
-	const layer = ev.layer;
-	const id = layer.options.layerID;
-	const _gmx = layer._gmx;
-	if (id) {
-		const data = {id};
-		if (_gmx.beginDate && _gmx.endDate) {
-			data.dateInterval = {
-				begin: layer._gmx.beginDate.valueOf() /1000,
-				end: layer._gmx.endDate.valueOf() /1000
-			};
-		}
-		L.gmx.vw._sendCmd('layeradd', data);
-	}
-	// layer._map.panBy({x:0,y:1});
-	// const bounds =L.gmxUtil.getGeometryBounds(layer._gmx.geometry).toLatLngBounds();
-	// map.fitBounds(bounds);
-}).on('layerremove', (ev) => {
-	const layer = ev.layer;
-	const id = layer.options.layerID;
-	if (id) {
-		L.gmx.vw._sendCmd('layerremove', {id});
-	}
-// }).on('click', (ev) => {
-}).on('moveend resize', (ev) => {
-	// console.log('ggg', ev, map.getSize());
-	let	mapPos = {bbox: L.gmxUtil.getBboxes(map), mapSize: map.getSize(), pBounds: map.getPixelBounds(), pOrigin: map.getPixelOrigin(), zoom: map.getZoom()};
-	L.gmx.vw._sendCmd('moveend', {mapPos});
-}).on('mousemove mouseover', onMouseMove, this);
 
 let cont = map.gmxControlIconManager.get('refresh-gif')._container;
 L.gmx._requests = {};

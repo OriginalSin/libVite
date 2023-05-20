@@ -8,7 +8,8 @@ var DEFAULT_VECTOR_LAYER_ZINDEXOFFSET = 2000000;
 //Build in layer classes
 L.gmx._layerClasses = {
     'Raster': L.gmx.RasterLayer,
-    'Vector': L.gmx.VectorLayer,
+    // 'Vector': L.gmx.VectorLayer,
+    'Vector': L.gmx.VectorLayerFull,
     'VectorView': L.gmx.DummyLayer
 };
 

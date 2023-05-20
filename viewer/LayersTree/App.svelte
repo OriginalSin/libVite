@@ -6,9 +6,14 @@
 	// export let map;
 	export let cont;
 
-	cont.parentNode.classList.add('leftMenuOn');
+	let prntNode = cont.parentNode;
+	prntNode.classList.add('leftMenuOn');
 	let activeTab = 'layers-tree';
-	if (activeTab) cont.classList.add('active');
+	// if (activeTab) cont.classList.add('active');
+	if (activeTab) {
+		prntNode.classList.add('leftMenuOpen');
+		cont.classList.add('active');
+	}
 	const setActive = ev => {
 		const node = ev.target;
 		const name = node.getAttribute('data-id');
@@ -16,9 +21,11 @@
 		if (name === activeTab) {
 			activeTab = '';
 			cont.classList.remove('active');
+			prntNode.classList.remove('leftMenuOpen');
 		} else {
 			activeTab = name;
 			cont.classList.add('active');
+			prntNode.classList.add('leftMenuOpen');
 		}
 		// activeTab = activeTab === 'layers-tree' ? 'forestView' : 'layers-tree';
 		

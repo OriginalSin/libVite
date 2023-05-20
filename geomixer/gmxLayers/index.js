@@ -4,7 +4,8 @@ import './Locale.js';
 import './lang_ru.js';
 import './lang_en.js';
 
-import './Layer/VectorLayern.js';
+import './Layer/CanvasLayer.js';
+// import './Layer/VectorLayern.js';
 import './Layer/LabelsLayern.js';
 import './MapManager.js';
 import './GeomixerMap.js';
