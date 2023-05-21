@@ -32,7 +32,7 @@ const canvBG = new OffscreenCanvas(256, 256);
 
 const utils = {
 	_updatePolyMerc: function (ph, pars) {
-// console.log('_updatePolyMerc', ph.image);
+// console.log('_updatePolyMerc', ph.images);
 		let mInPixel = ph.mInPixel,
 			matrix = ph.matrix,
 			paths = ph.paths,
@@ -67,7 +67,10 @@ const utils = {
 
 		Object.values(images).forEach(it => {
 			const shift = it.gtp.shiftPixels;
+			// const delta = it.gtp.delta;
+// console.log('_getItemBG', delta);
 			ctx.drawImage(it.image, shift.x, shift.y);
+			// ctx.drawImage(it.image, shift.x + delta.dx, shift.y + delta.dy);
 		});
 		return canvBG;
 	},

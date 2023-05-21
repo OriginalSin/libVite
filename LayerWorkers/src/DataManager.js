@@ -32,6 +32,7 @@ const _parseTileRange = (data) => {
 	const zoom = data.zoom;
 	const queue = [];
 	const tHash = {};
+
 	const pz = Math.pow(2, zoom);
 	for (let j = tileRange.min.y; j <= tileRange.max.y; j++) {
 		for (let i = tileRange.min.x; i <= tileRange.max.x; i++) {
@@ -55,10 +56,8 @@ const _parseTileRange = (data) => {
 	return {tHash, queue};
 }
 const drawLayer = async (data, resolve) => {
-	// const pz = _parseTileRange(data);
 	const h2 = Math.pow(2, data.zoom + 7);
 	const mInPixel = 2 * h2 / Utils.WORLDWIDTHFULL;
-	// const mInPixel = Math.pow(2, data.zoom + 8) / Utils.WORLDWIDTHFULL;
 	const matrix = new DOMMatrix([mInPixel, 0, 0, mInPixel, h2 - pBounds.min.x, h2 - pBounds.min.y]);
 
 	let canvas;
@@ -68,11 +67,11 @@ const drawLayer = async (data, resolve) => {
 		canvas.width = w; canvas.height = h;
 	}
 	const tRange = _parseTileRange(data);
-	let rasters;
+	let rasters = [];
 	if (properties.IsRasterCatalog) {
 		rasters = await RasterItems.getNeedRasterItems({tiles, tileAttributeIndexes, properties, tRange, mapSize, canvas, matrix});
 	}
-// console.log('drawLayer1', rasters);
+// console.log('drawLayer1', matrix.e);
 
 	let identityField = properties.identityField;
 	let notEmpty = false;
@@ -132,8 +131,6 @@ const version = async (data) => {
 	pBounds = data.pBounds;
 	let rasters;
 	if (drawScreenCom) {
-		// const tRange = _parseTileRange(drawScreenCom);
-		// if (properties.IsRasterCatalog) rasters = await RasterItems.getNeedRasterItems({tiles, tileAttributeIndexes, tRange});
 // console.log('version1', mapSize, pBounds.min.x - pOrigin.x, styles, tiles, rasters);
 		drawLayer(drawScreenCom, drawScreenCom.resolver);
 	}
@@ -143,30 +140,13 @@ const version = async (data) => {
 		const cmdNum = data.cmdNum;
 		data.tilesPromise = tiles;
 			resolve({cmdNum, tilesCount: tiles.length});
-/*
-			// console.log('___ tiles _____:', drawScreenCom, tiles);
-		versionPromise = TilesLoader.load(data).then(res => {
-			tiles = res.tiles;			// загрузили все нужные тайлы
-			if (drawScreenCom) drawLayer(drawScreenCom, drawScreenCom.resolver);
-			versionPromise = null;
-			resolve({cmdNum, tilesCount: tiles.length});
-		});
-		*/
 	});
 };
 const drawScreen = (data) => {
 	return new Promise(resolve => {
-		const cmdNum = data.cmdNum;
-		// if (versionPromise || !tiles) {
-			data.resolver = resolve;
-			drawScreenCom = data;
-		// } else {
-			// drawLayer(data, resolve);
-		// TilesLoader.load(data).then(arr => {
-			// tiles = arr;			// загрузили все нужные тайлы
-			// console.log('___ tiles _____:', tiles);
-		// });
-		// }
+		// const cmdNum = data.cmdNum;
+		data.resolver = resolve;
+		drawScreenCom = data;
 	});
 };
 

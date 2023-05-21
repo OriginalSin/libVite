@@ -56,11 +56,11 @@ console.log('setDateInterval', gmx);
 console.log('setDateIff fffffffff nterval', it);
 		});
 
-		var map = this._map;
-		if (map) {
-			map.removeLayer(this);
-			map.addLayer(this);
-		}
+		// var map = this._map;
+		// if (map) {
+			// map.removeLayer(this);
+			// map.addLayer(this);
+		// }
         return this;
     },
 
@@ -74,34 +74,16 @@ console.log('setDateIff fffffffff nterval', it);
         };
     },
 	onRemove: function (map) {
+		this._div.parentNode.removeChild(this._div);
 		console.log('onRemove:', map);
 	},
 
 	onAdd: function (map) {
-		if (!this._canvas) {
-			// this._div = L.DomUtil.create('div', 'leaflet-image-layer leaflet-zoom-animated', map._gmxLayers);
-			// this._div = L.DomUtil.create('div', 'leaflet-image-layer', map._gmxLayers);
+		// if (!this._canvas) {
 			this._div = L.DomUtil.create('div', 'leaflet-image-layer gmxLayers', this.getPane());
 			this._canvas = L.DomUtil.create('canvas', 'leaflet-canvas-overlay canv', this._div);
-			// this._canvas1 = L.DomUtil.create('canvas', 'leaflet-canvas-overlay', this._div);
-			// this._canvas1 = L.DomUtil.create('canvas', 'leaflet-canvas-overlay', this._div);
-			// this._canvas1 = L.DomUtil.create('canvas', 'leaflet-canvas-overlay', this._div.parentNode);
-		// this._canvas1.style.display = 'none';
-			// this._canvas.style.zIndex = 1;
 			this._setSize();
-			/*
-			this._canvasBox = this._canvas.getBoundingClientRect();
-			L.DomEvent.on(this._canvas, 'mousemove', this._mousemove, this);
-			*/
-			// const offscreen = this._canvas.transferControlToOffscreen();
-			// this.options.dataManager.postMessage({
-				// cmd: 'addLayer',
-				// id: this.options.layerId,
-				// canvas: offscreen,
-				// dateBegin: this.options.dateBegin,
-				// dateEnd: this.options.dateEnd,
-			// }, [offscreen]);
-		}
+		// }
 
 		// map.on('resize', this._setSize, this);
 		map.on('viewreset', this._viewreset, this);
@@ -120,23 +102,26 @@ console.log('setDateIff fffffffff nterval', it);
 	},
 
 	_rePaint: function () {
-		const pixelBounds = this._getTiledPixelBounds(center),
+/*
+		const map = this._map,
+			zoom = map.getZoom(),
+			center = map.getCenter(),
+			origin = map.project(map.unproject(map.getPixelOrigin()), zoom).round(),
+		// const scale = this._map.getZoomScale(zoom, level.zoom),
+		    translate = origin.subtract(map._getNewPixelOrigin(center, zoom)).round();
+*/
+		const pos = L.DomUtil.getPosition(this._map.getPane('mapPane'));
+// console.log('pos _____:', pos);
+		const pixelBounds = this._getTiledPixelBounds(),
 		    tileRange = this._pxBoundsToTileRange(pixelBounds);
 		L.gmx.vw._sendCmd({id: this.options.id, tileRange, cmd: 'drawScreen'} ).then(res1 => {
 			// console.log('_rePaint res1_____:', res1);
 			this._canvas.getContext('bitmaprenderer').transferFromImageBitmap(res1.bitmap);
-			const pos = L.DomUtil.getPosition(this._map.getPane('mapPane'));
 			L.DomUtil.setTransform(this._div, {x: -pos.x, y: -pos.y}, 1);
 
-			this._canvas.style.display = 'block';
-		// this._canvas1.style.display = 'none';
+			// this._canvas.style.display = 'block';
 
 		});
-		// this.options.dataManager.postMessage({
-			// cmd: 'drawScreen',
-			// width: this._canvas.width,
-			// height: this._canvas.height,
-		// });
 	},
 
 	_pxBoundsToTileRange(bounds) {
@@ -148,12 +133,10 @@ console.log('setDateIff fffffffff nterval', it);
 
 	_getTiledPixelBounds() {
 		const map = this._map,
-		    mapZoom = map._animatingZoom ? Math.max(map._animateToZoom, map.getZoom()) : map.getZoom(),
-		    // mapZoom = map._animatingZoom ? Math.max(map._animateToZoom, map.getZoom()) : map.getZoom(),
+		    mapZoom = map.getZoom(),
 		    _tileZoom = mapZoom,
-		    scale = map.getZoomScale(mapZoom, _tileZoom),
 		    pixelCenter = map.project(map.getCenter(), _tileZoom).floor(),
-		    halfSize = map.getSize().divideBy(scale * 2);
+		    halfSize = map.getSize().divideBy(2);
 
 		return new L.Bounds(pixelCenter.subtract(halfSize), pixelCenter.add(halfSize));
 	},
@@ -161,10 +144,10 @@ console.log('setDateIff fffffffff nterval', it);
 	getEvents: function () {
 		let events = {
 			// movestart: this._movestart,
-			moveend: this._moveend,
+			moveend: this._rePaint,
 			// zoomend: this._zoomend,
-			resize: this._onresize,
-			viewreset: this._onresize
+			resize: this._setSize,
+			viewreset: this._setSize
 		};
 
 		if (this._zoomAnimated) {
@@ -173,134 +156,36 @@ console.log('setDateIff fffffffff nterval', it);
 
 		return events;
 	},
-/*
 
-	_mousemove: function (ev) {
-		  // tell the browser we're handling this event
-		ev.preventDefault();
-		ev.stopPropagation();
-
-		mouseX = parseInt(ev.clientX - this._canvasBox.left);
-		mouseY = parseInt(ev.clientY - this._canvasBox.top);
-
-		console.log('_mousemove:', mouseX, mouseY, ev);
-		// Put your mousemove stuff here
-		// var newCursor;
-		// for(var i=0;i<shapes.length;i++){
-		// var s=shapes[i];
-		// definePath(s.points);
-		// if(ctx.isPointInPath(mouseX,mouseY)){
-		  // newCursor=s.cursor;
-		  // break;
-		// }
-		// }
-	},
-
-	_zoomend: function (ev) {
-		// this._copyCanvas();
-		// this._canvas.style.display = 'block';
-		// this._canvas1.style.display = 'none';
-		this._trans = this._div.style.transform;
-	// this._canvas1.style.transform = this._trans;
-		
-		console.log('_zoomend', this._zoomAnimated, ev);
-		// this._zoomAnimated = false;
-// setTimeout(() => {
-	// this._div.style.transform = this._trans; }
-// , 150);
-
-	},
-*/
-
-	_moveend: function (ev) {
+	// _moveend: function (ev) {
+			// console.log('_moveend res1_____:', ev);
 		// const pos = L.DomUtil.getPosition(this._map.getPane('mapPane'));
 // L.DomUtil.setTransform(this._div, {x: -pos.x, y: -pos.y}, 1);
 		// L.DomUtil.setTransform(this._canvas, {x: pos.x, y: pos.y}, 1);
 		// this._copyCanvas(pos);
 		// console.log('_moveend', ev);
-		this._rePaint();
+		// this._rePaint();
 
-	},
-	_copyCanvas: function (pos) {
-		return;
-		let canvas = this._canvas1;
-/*
-		let sx = pos.x > 0 ? pos.x : -pos.x, sy = pos.y > 0 ? pos.y : -pos.y, sw = this._canvas.width - sx, sh = this._canvas.height - sy;
-		let dx = pos.x > 0 ? pos.x : 0, dy = pos.y > 0 ? pos.y : 0, dw = this._canvas.width - dx, dh = this._canvas.height - dy;
-		if (pos.x > 0) {
-			dw = sw;
-			sx = 0;
-		} else {
-		}
-		if (pos.y > 0) {
-			dh = sh;
-			sy = 0;
-		} else {
-		}
-		// setTimeout(() => {
-			let ctx = canvas.getContext('2d');
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			// ctx.drawImage(this._canvas, 0, 0);
-			ctx.drawImage(this._canvas, sx, sy, sw, sh, dx, dy, dw, dh);
-			*/
-		// canvas.getContext('bitmaprenderer').transferFromImageBitmap(this._canvas);
-			let ctx = canvas.getContext('2d');
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			ctx.drawImage(this._canvas, 0, 0);
-		L.DomUtil.setTransform(canvas, {x: pos.x, y: pos.y}, 1);
-		canvas.style.display = 'block';
-		this._canvas.style.display = 'none';
-		// }, 250);
-	},
-/*
-	_movestart: function (ev) {
-		const pos = L.DomUtil.getPosition(this._map.getPane('mapPane'));
-		// L.DomUtil.setTransform(this._div, {x: -pos.x, y: -pos.y}, 1);
-		// L.DomUtil.setTransform(this._div, {x: -pos.x, y: -pos.y}, 1);
-		// L.DomUtil.setTransform(this._canvas, {x: pos.x, y: pos.y}, 1);
-		this._copyCanvas(pos);
-		// this._copyCanvas();
-		// this._canvas.style.display = 'none';
-		// this._canvas1.style.display = 'block';
-		console.log('_movestart', ev);
-	},
-*/
+	// },
+	// _copyCanvas: function (pos) {
+		// return;
+	// },
 	_setSize: function () {
-		let mapSize = this._map.getSize();
-		let min = this._map.containerPointToLayerPoint(mapSize).round();
-		let size = new L.Bounds(min, min.add(mapSize).round()).getSize();
+        const map = this._map,
+			mapSize = map.getSize(),
+			min = map.containerPointToLayerPoint(mapSize).round(),
+			size = new L.Bounds(min, min.add(mapSize).round()).getSize();
 		this._canvas.width = size.x; this._canvas.height = size.y;
-		// this._canvas1.width = size.x;
-		// this._canvas1.height = size.y;
 console.log('_setSize', size);
 	},
-	// rendered: function (bitmap) {
-		// L.DomUtil.setPosition(this._div, this._map._getMapPanePos().multiplyBy(-1));
-		// if (bitmap) {
-			// let ctx = this._canvas.getContext('2d');
-			// ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-			// ctx.drawImage(bitmap, 0, 0, this._canvas.width, this._canvas.height);
-		// } else {
-// setTimeout(() => {
-			// this._canvas.style.display = 'block';
-			// this._canvas1.style.display = 'none';
-// }, 1750);
-		// }
-		// console.log('rendered', this._zoomAnimated, bitmap);
-	// },
 	_animateZoom: function (e) {
-		// return;
-        let map = this._map;
+        const map = this._map;
 		this._scale = map.getZoomScale(e.zoom);
-			// this._canvas.style.display = 'block';
 			
 		L.DomUtil.setTransform(this._div,
 		    map._latLngBoundsToNewLayerBounds(map.getBounds(), e.zoom, e.center).min,
 			this._scale
 		);
-		// L.DomUtil.setTransform(this._canvas1, {x: 0, y: 0},	this._scale);
-			// this._canvas1.style.display = 'block';
-		// console.log('_animateZoom', this._zoomAnimated, e);
 	},
 
 	_onresize: function (ev) {
@@ -308,10 +193,10 @@ console.log('_setSize', size);
 		const pos = L.DomUtil.getPosition(L.gmx.map.getPane('mapPane'));
 		L.DomUtil.setTransform(this._div, {x: -pos.x, y: -pos.y}, 1);
 		let size = map.getSize();
-// console.log('_onresize', map.getBounds(), size, this._map.getPixelOrigin(), this._map.getPixelBounds(), L.gmxUtil.getBboxes(this._map), ev);
 
 		this._canvas.width = size.x; this._canvas.height = size.y;
 		// this._canvas1.width = size.x; this._canvas1.height = size.y;
 		// this._rePaint();
+console.log('_onresize', map.getBounds(), size, this._map.getPixelOrigin(), this._map.getPixelBounds(), L.gmxUtil.getBboxes(this._map), ev);
 	}
 });

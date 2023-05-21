@@ -224,7 +224,7 @@ const sortLayersData = (data) => {
 
 const setDateInterval = (data) => {
 	const ids = Store.getHost().ids[data.id];
-	ids.dateInterval = { begin: data.begin, end: data.end };
+	if (ids) ids.dateInterval = { begin: data.begin, end: data.end };
 	return Promise.resolve(data);
 };
 

@@ -206,7 +206,7 @@ const removeSource = (pars) => {
 			let pt = hostItem.ids[id];
 console.log('removeSource:', pt);
 			if (pt.layer && pt.layer.worker) {
-				// pt.layer.worker.terminate();
+				pt.layer.worker.terminate();
 			}
 			// Observer.removeLayer(id);
 			delete hostItem.ids[id];

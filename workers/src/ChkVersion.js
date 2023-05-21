@@ -22,13 +22,14 @@ let hosts = {},
     // needReq = {}
 
 const setBbox = (mapPos) => {
+console.log('setBbox', mapPos);
 	// let flag = false;
 	topLeftMerc = mapPos.topLeftMerc;
-	if (!mapSize || mapSize.x !== mapPos.mapSize.x || mapSize.y !== mapPos.mapSize.y) {  
+	// if (!mapSize || mapSize.x !== mapPos.mapSize.x || mapSize.y !== mapPos.mapSize.y) {  
 		mapSize = mapPos.mapSize;
 		_ctxLabels = null;
 		
-	}
+	// }
 	pOrigin = mapPos.pOrigin;
 	pBounds = mapPos.pBounds;
 	if (zoom !== mapPos.zoom || !_ctxLabels) {

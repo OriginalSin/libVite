@@ -178,10 +178,10 @@ let count = 0;
 		}
 		if (!gtp.bounds.intersects(bounds.bounds)) continue;
 		const rUrl = _getUrlFunction({...gtp, rcId});
-		if (requests[rUrl]) {
-			promArr.push(requests[rUrl]);
-			continue;
-		}
+		// if (requests[rUrl]) {
+			// promArr.push(requests[rUrl]);
+			// continue;
+		// }
 		count++;
 		const req = fetch(rUrl)
 			.then(resp => {
