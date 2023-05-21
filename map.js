@@ -1,5 +1,5 @@
 import './geomixer/index.js';
-import viewerInit from './viewer/index.js';
+import viewer from './viewer/index.js';
 
 const mapId = L.gmxUtil.getLocSearch() || 'DefaultMap';
 window.language = 'rus';
@@ -238,10 +238,14 @@ L.gmx.gmxMapManager.getMap(opt).then(res => {
 	// L.gmxMap.leafletMap = L.gmx.map;
 	// L.gmxMap.addLayersToMap(L.gmx.map);
 
-	viewerInit(L.gmx.map);
+	viewer.init(L.gmx.map);
 		// map.addLayer(tLayer);
 
 });
+map._setViewerData = data => {
+	viewer.setData(data);
+};
+
 let _timerMouseMove;
 let lastHoverLayer;
 let gmx_id = '';

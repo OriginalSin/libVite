@@ -3,22 +3,33 @@
     // import { imask } from '@imask/svelte';
     // import Calendar from '../Calendar/Calendar.svelte';
     import { onMount, createEventDispatcher } from 'svelte';
+	import { _dateInterval } from '../stores.js';
 
     const dispatch = createEventDispatcher();
 
-    export let dateInterval = {};
+    // export let dateInterval = {};
     export let value = '';
     // export let position = 'bottom';
     export let exchange = false;
     export let className = '';
-	
+
+	let begin,
+		end;
+    let dateInterval = {};
+	_dateInterval.subscribe(value => {
+		dateInterval = value;
+		console.log('gg', dateInterval);
+	});
+
     $: exchange && (value = exchange) && dispatch('notify', value);
 
 	const day = 24*3600*1000;
 	// let begin = (dateInterval.begin || new Date()).toLocaleDateString();
-	let begin = new Date(dateInterval.begin).toISOString().slice(0, 10);
-	let end = new Date(dateInterval.end).toISOString().slice(0, 10);
-
+	// let begin = new Date(dateInterval.begin).toISOString().slice(0, 10);
+	// let end = new Date(dateInterval.end).toISOString().slice(0, 10);
+	// let bd = new Date(dateInterval.begin || Date.now());
+	// let begin = bd.toISOString().slice(0, 10);
+	// let end = new Date(dateInterval.end || Date.now()).toISOString().slice(0, 10);
     let open = false,
         mouseMove = false,
 		timeIcon = L.gmxUtil.setSVGIcon('time'),
@@ -37,34 +48,11 @@
         // console.log('check', warns)
 	};
     $: dateInterval && (
-		begin = new Date(dateInterval.begin).toISOString().slice(0, 10),
-		end = new Date(dateInterval.end).toISOString().slice(0, 10)
+		begin = new Date(dateInterval.begin || Date.now()).toISOString().slice(0, 10),
+		end = new Date(dateInterval.end || Date.now()).toISOString().slice(0, 10)
 	) && check();
 
-    // const month = ['Январь' , 'Февраль' , 'Март' , 'Апрель' , 'Май' , 'Июнь' , 'Июль' , 'Август' , 'Сентябрь' , 'Октябрь' , 'Ноябрь' , 'Декабрь'];
-    // const option = {
-        // mask: Date,
-        // pattern: 'd . `m . `Y',
-        // format(date) {
-            // let day = date.getDate();
-            // let month = date.getMonth() + 1;
-            // const year = date.getFullYear();
-            // if (day < 10) { day = '0' + day; }
-            // if (month < 10) { month = '0' + month; }
-            // return [day, month, year].join(' . ');
-        // },
-        // parse(str) {
-            // const dayMonthYear = str.split(' . ');
-            // return new Date(dayMonthYear[2], dayMonthYear[1] - 1, dayMonthYear[0]);
-        // },
-        // min: new Date(1900, 0, 1),
-        // max: new Date(2999, 12, 31),
-        // overwrite: true
-    // };
-
     onMount(() => {
-        // svgCalendar.addEventListener('mouseover', () => mouseMove = true);
-        // svgCalendar.addEventListener('mouseout', () => mouseMove = false);
 		L.gmx.gmxMap.setDateIntervals({
 			begin: dateInterval.begin / 1000,
 			end: dateInterval.end / 1000
@@ -101,7 +89,7 @@
 		}
 		L.gmx.gmxMap.setDateIntervals({
 			begin: dateInterval.begin / 1000,
-			end: (dateInterval.end + day) / 1000
+			end: (dateInterval.end + 0) / 1000
 		});
         console.log('change', target.onfocus, dateInterval)
     }

@@ -1,9 +1,18 @@
 import './viewer.css';
 import LayersTree from './LayersTree/index.js'
 import Print from './Print/index.js'
+import { _dateInterval } from './stores.js';
 
-const app = () => {
+const init = () => {
 	LayersTree();
 	Print();
 }
-export default app
+const setData = (data) => {
+	if (data.dateInterval) {
+		_dateInterval.update(data.dateInterval);
+	}
+}
+export default {
+	setData,
+	init
+}

@@ -55,6 +55,10 @@ console.log('setDateInterval', gmx);
 		}).then(it => {
 console.log('setDateIff fffffffff nterval', it);
 		});
+		if (this._map) {
+			this._rePaint();
+		}
+		// if (this._map) requestAnimationFrame(this._rePaint.bind(this), {timeout: 150});
 
 		// var map = this._map;
 		// if (map) {
@@ -76,6 +80,7 @@ console.log('setDateIff fffffffff nterval', it);
 	onRemove: function (map) {
 		this._div.parentNode.removeChild(this._div);
 		console.log('onRemove:', map);
+		// this._map = null;
 	},
 
 	onAdd: function (map) {

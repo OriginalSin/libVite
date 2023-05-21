@@ -819,11 +819,11 @@ const utils = {
         };
     },
 
-	getStyleNum: function(itemArr, layerAttr, zoom) {
-		let indexes = layerAttr.tileAttributeIndexes;
-		if (layerAttr.stylesParsed) {
-			for (let i = 0, len = layerAttr.stylesParsed.length; i < len; i++) {
-				let st = layerAttr.stylesParsed[i];
+	getStyleNum: function(itemArr, styles, indexes, zoom) {
+		// let indexes = layerAttr.tileAttributeIndexes;
+		if (styles && styles.length) {
+			for (let i = 0, len = styles.length; i < len; i++) {
+				let st = styles[i];
 				if (zoom && (zoom < st.MinZoom || zoom > st.MaxZoom)) { continue; }
 				if (st.filterFun(itemArr, indexes)) { return i; }
 			}

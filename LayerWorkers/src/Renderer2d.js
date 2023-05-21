@@ -32,7 +32,7 @@ const canvBG = new OffscreenCanvas(256, 256);
 
 const utils = {
 	_updatePolyMerc: function (ph, pars) {
-// console.log('_updatePolyMerc', ph.images);
+// console.log('_updatePolyMerc', ph);
 		let mInPixel = ph.mInPixel,
 			matrix = ph.matrix,
 			paths = ph.paths,
@@ -77,9 +77,9 @@ const utils = {
 	
 	_fillStroke: function (ctx, ph, stroke, fill) {
 		// ph = _reqParse(ph);
-		let options = ph.options || {},
+		let options = ph.styles.renderStyle || {},
 			// IsRasterCatalog = ph.ids.pProps.properties.IsRasterCatalog,
-			IsRasterCatalog = false;
+			IsRasterCatalog = ph.IsRasterCatalog;
 			// ctx = ph._ctx;
                 // out.canvasPattern = (pt.canvasPattern ? pt.canvasPattern : gmxAPIutils.getPatternIcon(item, pt, indexes));
 
@@ -109,7 +109,7 @@ const utils = {
 			let fillOpacity = options.fillOpacity !== undefined ? options.fillOpacity : 0.2;
 // console.log('_fillStroke', ctx.globalAlpha, ph._hover, fillOpacity, options.fillColor);
 			if (IsRasterCatalog) fillOpacity = 1;
-fillOpacity = 1;
+// fillOpacity = 1;
 			if (ph._hover && fillOpacity < 1) fillOpacity *= 2;
 			ctx.globalAlpha = fillOpacity;
 		}

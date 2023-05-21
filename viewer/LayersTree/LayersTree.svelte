@@ -4,15 +4,6 @@
 	import DateRange from '../DateRange/DateRange.svelte'
 	import { _layerTree } from '../stores.js';
 
-	// export let map;
-
-	const day = 24*3600*1000;
-
-	let now = new Date();
-	// var begin = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-	var begin = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-	let end = begin.valueOf() + day - 1000;
-	let dateInterval = { begin, end };
 	let gmxMap = L.gmx.gmxMap;
 	let layersCont;
 	let props = gmxMap.properties || {};
@@ -41,7 +32,7 @@
 	<div class="mainmap-title">{props.title}</div>
 	<div class="leftPanelCont scrollbar">
 		<div class="layers-before">
-			<DateRange {dateInterval} />
+			<DateRange />
 		</div>
 
 		<div class="layers" bind:this={layersCont} >

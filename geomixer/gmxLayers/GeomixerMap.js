@@ -79,10 +79,10 @@ var gmxMap = {
 			// console.log('setDateIntervals res', res)
 		});
 
-		// let arr = gmxMap.layers.filter(it => it._gmx && it._gmx.properties.Temporal).map(layer => {
-			// layer.setDateInterval(new Date(dt.begin * 1000), new Date(dt.end * 1000));
-			// return layer;
-		// });
+		let arr = gmxMap.layers.filter(it => it._gmx && it._gmx.properties.Temporal).map(layer => {
+			layer.setDateInterval(new Date(dt.begin * 1000), new Date(dt.end * 1000));
+			return layer;
+		});
         // console.log('setDateIntervals', dt, arr)
 
 	},

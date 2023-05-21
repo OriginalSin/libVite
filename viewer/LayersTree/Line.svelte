@@ -1,7 +1,7 @@
 <script>
 import Group from './Group.svelte'
 import { onMount, onDestroy, beforeUpdate, afterUpdate, createEventDispatcher } from 'svelte';
-import { _layerTree } from '../stores.js';
+import { _layerTree, _dateInterval } from '../stores.js';
 
 export let layerID;
 export let prp = {};
@@ -186,10 +186,12 @@ const showPos = ev => {
 			.then(res => {
 				if (res.Status === 'ok') {
 					let it = res.Result.values[0];
+					let begin = it[res.Result.fields.findIndex(el => el === props.TemporalColumnName)];
 					let geo = it[it.length - 1];
-					bd = it[res.Result.fields.findIndex(el => el === props.TemporalColumnName)] * 1000;
+					bd = begin * 1000;
 					let beg = new Date(bd), end = new Date(bd + 1000);
 					layer.setDateInterval(beg, end);
+_dateInterval.set({ begin: bd, end: bd + 1000});
 					titleTimeLine = beg.toLocaleString() + ' по ' + end.toLocaleString();
 					let bounds1 = L.gmxUtil.getGeometryBounds(geo).toLatLngBounds(true);
 					gmxMap.leafletMap.fitBounds(bounds1);

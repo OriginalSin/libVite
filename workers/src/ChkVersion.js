@@ -150,9 +150,11 @@ const chkVersion = () => {
 
 									layer = pt.layer,
 									props = it.properties;
+console.warn('chkVersion:', pt, pl);
 layer.sendMessage({
 	...it,
 	origin: {
+		dateInterval: pt.dateInterval,
 		geometry: pl.geometry,
 		properties: pl.properties
 	},
@@ -234,6 +236,7 @@ const drawScreen = (pars) => {
 		
 // console.log('_drawScreen__ ____:', ids);
 	if (ids && ids.layer) {
+		utils.now();
 		return ids.layer.sendMessage({
 			...pars,
 			zoom,
