@@ -8,7 +8,7 @@ import Renderer2d from './Renderer2d';
 
 // let hosts = {},
 let	hover = {},
-    tiles,
+    tiles = [],
     geometry,
     properties,
 	tileAttributeIndexes,
@@ -17,18 +17,20 @@ let	hover = {},
 	versionPromise,
 	drawScreenCom,
 	dateInterval = {},
-	filters = [
-		(arr) => {
+	filterTypes = {
+		dateInterval: (arr) => {
 			if (properties.TemporalColumnName) {
 				let tmp = arr[tileAttributeIndexes[properties.TemporalColumnName]];
 // console.log('filters dateInterval', new Date(dateInterval.begin * 1000).toISOString(), tmp, new Date(dateInterval.end * 1000).toISOString());
 				if (dateInterval.begin > tmp || dateInterval.end < tmp) return false;
-				// if (dateInterval.begin > tmp || dateInterval.end < tmp) {
-				// return false; }
 			}
 			return true;
-		}
-	],
+		},
+		hover: (arr, pars) => {
+			let ib = pars.bounds;
+			return Utils.chkHoverItem(arr[arr.length - 1], ib.boundsArr, pars.merc, ib.bounds);
+		},
+	},
     // bbox = null,
 mapSize,
 bboxBounds,
@@ -67,12 +69,51 @@ const _parseTileRange = (data) => {
 	}
 	return {tHash, queue};
 }
-const chkFilters = (data) => {
+const chkFilters = (filters, data, dp) => {
 	let flag = true;
 	for (let i = 0, len = filters.length; i < len; i++) {
-		if (!filters[i](data)) return false;
+		if (!filters[i](data, dp)) return false;
 	}
 	return true;
+}
+const getItems = (pars) => {
+	let filters = [filterTypes.dateInterval];
+	let skipDraw = false;
+	if (pars.cmd === 'mousemove') {
+		skipDraw = true;
+		filters.push(filterTypes.hover);
+	}
+	
+	const IsRasterCatalog = properties.IsRasterCatalog;
+	const rArr = [];
+	tiles.forEach(it => {
+		const itemsbounds = it.itemsbounds;
+		const itemsStyleNums = it.itemsStyleNums || [];
+		it.paths.forEach((it1, i) => {
+			const item = it.values[i];
+
+			let bounds = itemsbounds[i];
+			if (!bounds) {
+				bounds = Requests.geoItemBounds(item[item.length - 1]);
+				itemsbounds[i] = bounds;
+			}
+			if (!bounds.bounds.intersects(bboxBounds)) return;
+			if (!chkFilters(filters, item, {...pars, bounds})) return;
+
+			const idr = item[tileAttributeIndexes[properties.identityField]];
+			let num = itemsStyleNums[i];
+			if (num === undefined) {
+				num = Utils.getStyleNum(item, styles, tileAttributeIndexes, zoom);
+				itemsStyleNums[i] = num;
+				it.itemsStyleNums = itemsStyleNums;
+			}
+
+			let pt = {idr, item, IsRasterCatalog};
+			if (!skipDraw) pt = {...pt, styles: styles[num], paths: it1, images: pars.rasters[idr], canvas: pars.canvas, matrix: pars.matrix};
+			rArr.push(pt);
+		});
+	});
+	return rArr;
 }
 const drawLayer = async (data, resolve) => {
 	const zoom = data.zoom;
@@ -86,51 +127,17 @@ const drawLayer = async (data, resolve) => {
 		canvas = new OffscreenCanvas(w, h);
 		canvas.width = w; canvas.height = h;
 	}
-	const tRange = _parseTileRange(data);
 	let rasters = [];
-	let IsRasterCatalog = properties.IsRasterCatalog;
-	if (IsRasterCatalog) {
-		rasters = await RasterItems.getNeedRasterItems({tiles, tileAttributeIndexes, properties, tRange, mapSize, canvas, matrix});
+	if (properties.IsRasterCatalog) {
+		rasters = await RasterItems.getNeedRasterItems({tiles, tileAttributeIndexes, properties, tRange: _parseTileRange(data), mapSize, canvas, matrix});
 	}
-console.log('drawLayer1', dateInterval);
+console.log('drawLayer1', rasters);
 
-	let identityField = properties.identityField;
-	let notEmpty = false;
-	let rArr = [];
-	tiles.forEach(it => {
-		let itemsbounds = it.itemsbounds;
-		let itemsStyleNums = it.itemsStyleNums || [];
-		it.paths.forEach((it1, i) => {
-			let item = it.values[i];
-			if (!chkFilters(item)) return;
-
-			let bounds = itemsbounds[i];
-			let geo = item[item.length - 1];
-			if (!bounds) {
-				bounds = Requests.geoItemBounds(geo);
-				itemsbounds[i] = bounds;
-			}
-			if (!bounds.bounds.intersects(bboxBounds)) return;
-
-			let idr = item[tileAttributeIndexes[identityField]];
-			let st = itemsStyleNums[i];
-			if (st === undefined) {
-				st = Utils.getStyleNum(item, styles, tileAttributeIndexes, zoom);
-				itemsStyleNums[i] = st;
-				it.itemsStyleNums = itemsStyleNums;
-			}
-
-// if (idr !== 306851) return;
-			let images = rasters[idr];
-			notEmpty = true;
-			rArr.push({idr, IsRasterCatalog, styles: styles[st], paths: it1, images, canvas, matrix});
-			// Renderer2d.updatePolyMerc({paths: it1, images, canvas, matrix});
-		});
-	});
+	const rArr = getItems({ canvas, rasters, matrix });
 	rArr.sort((a, b) => a.idr - b.idr).forEach(it => Renderer2d.updatePolyMerc(it));
 	delete data.resolver;
 	drawScreenCom = undefined;
-	let bitmap = notEmpty ? canvas.transferToImageBitmap() : null;
+	const bitmap = rArr.length ? canvas.transferToImageBitmap() : null;
 	resolve({...data, bitmap});
 };
 /*
@@ -184,11 +191,19 @@ const drawScreen = (data) => {
 		drawScreenCom = data;
 	});
 };
+const mousemove = (data) => {
+	return new Promise(resolve => {
+		const cmdNum = data.cmdNum;
+		const items = getItems(data);
+
+		resolve({cmdNum, items});
+	});
+};
 
 export default {
 	drawScreen,				// нужна отрисовка
 	version,				// получили список тайлов для загрузки
-	// setDateInterval,
+	mousemove,				// поиск объектов
 	// sortLayersData,
 	// setHover,
 	// getTile,

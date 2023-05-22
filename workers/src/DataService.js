@@ -1,10 +1,10 @@
-import Utils from './Utils';
-import Requests from './Requests';
 import Store from './Store';
-import ChkVersion from './ChkVersion';
-import TilesLoader from './TilesLoader';
-import Renderer2d from './Renderer2d';
-import Observer from './Observer';
+// import Utils from './Utils';
+// import Requests from './Requests';
+// import ChkVersion from './ChkVersion';
+// import TilesLoader from './TilesLoader';
+// import Renderer2d from './Renderer2d';
+// import Observer from './Observer';
 
 // let hosts = {},
 let	hover = {},
@@ -17,7 +17,7 @@ mapSize,
     // hostBusy = {},
     // needReq = {}
 
-
+/*
 const drawLabels = (pars) => {
 	// let observer = pars.observer,
 		// ctx = observer.ctx,
@@ -132,39 +132,6 @@ const setValsByStyle = (pt) => {
 // console.log('setValsByStyle ',res, pt);
 }
 
-const getTile = (pars) => {
-	let message = pars.attr;
-	// setBbox(message.mapPos);
-	// if (setBbox(message.mapPos)) 
-	let hostName = message.hostName,
-		layerID = message.layerID,
-		queue = message.queue,
-		cmdNum = message.cmdNum,
-		z = message.z,
-		hostItem = Store.getHost(hostName);
-		// hostLayers = Store.hosts[hostName];
-// Store.getHost(hostName)
-	if (hostItem && hostItem.ids && hostItem.ids[layerID]) {
-		let observers = hostItem.ids[layerID].observers;
-		for (let key in observers) {
-			if (observers[key].pars.z !== z) {
-				observers[key].resolver(null);
-				delete observers[key];
-			}
-		}
-	}
-	// const parseLayers = hostLayers && hostLayers.parseLayers && hostLayers.parseLayers.layersByID[layerID];
-	// if (parseLayers && parseLayers.layersByID[layerID]) {
-		// const layer = parseLayers.layersByID[layerID];
-		// if (hostLayers && hostLayers.parseLayers && hostLayers.parseLayers[layerID]) {
-				// hostLayers.parseLayers.isVisible.forEach(it => {addSource(it)});
-		// }
-	// }
-// console.log('vvvvvvvvvv ___res____ ', message);
-	return Promise.all(queue.map(coords => 
-		Observer.add({ type: 'screen', coords, zKey: coords.x + ':' + coords.y + ':' + coords.z + '_' + cmdNum , ...message})
-	));
-};
 const offScreenCache = {};
 const clearCache = (layerID, z) => {
 // console.log('setHover _______________:', hover, obj);
@@ -175,39 +142,6 @@ const clearCache = (layerID, z) => {
 		});
 	}
 }
-
-const getTiles = (pars) => {
-	let message = pars || {};
-	let hostName = message.hostName || Utils.HOST,
-		layerID = message.layerID,
-		// queue = message.queue,
-		queues = message.queues,
-		// cmdNum = message.cmdNum,
-		z = message.z,
-		hostItem = Store.getHost(hostName);
-		// hostLayers = hosts[hostName];
-// Store.getHost(hostName)
-
-	if (hostItem && hostItem.ids && hostItem.ids[layerID]) {
-		let observers = hostItem.ids[layerID].observers;
-		for (let key in observers) {
-			if (observers[key].pars.z !== z) {
-				observers[key].resolver(null);
-				delete observers[key];
-			}
-		}
-	}
-	hostItem.parseLayers.layersByID[layerID].zIndex = message.zIndex;
-	delete message.queues;
-	clearCache(layerID, z);
-	offScreenCache[layerID] = offScreenCache[layerID] || {};
-	offScreenCache[layerID][z] = offScreenCache[layerID][z] || {};
-
-	const arrPromise = queues.map(it => Observer.add({ ...message, ...it, type: 'screen',  queue: it}));
-	if (message.flagLoad) ChkVersion.now();
-	else Observer.waitCheckObservers(5);
-	return Promise.all(arrPromise);
-};
 
 const sortLayersData = (data) => {
 	let hostName = Utils.HOST,
@@ -221,7 +155,7 @@ const sortLayersData = (data) => {
 		return zl ? zl : a.items[0] - b.items[0];
 	});
 };
-
+*/
 const setDateInterval = (data) => {
 	const ids = Store.getHost().ids[data.id];
 	if (ids) ids.dateInterval = { begin: data.begin, end: data.end };
@@ -230,10 +164,8 @@ const setDateInterval = (data) => {
 
 export default {
 	setDateInterval,
-	sortLayersData,
-	setHover,
-	getTile,
-	getTiles,
-	drawItem,
-	drawLabels
+	// sortLayersData,
+	// setHover,
+	// drawItem,
+	// drawLabels
 };

@@ -248,17 +248,10 @@ map._setViewerData = data => {
 
 let _timerMouseMove;
 let lastHoverLayer;
-let gmx_id = '';
+// let gmx_id = '';
 let _needSend = true;
 
 const hoverCheck = (ev) => {
-		if (!_needSend || (lastHoverLayer && !lastHoverLayer._needSend)) {
-			if (_timerMouseMove) cancelAnimationFrame(_timerMouseMove);
-			_timerMouseMove = requestAnimationFrame(hoverCheck.bind(this, ev), {timeout: 300});
-_needSend = true;
-			return;
-		}
-_needSend = false;
 	const oEv = ev.originalEvent;
 	const pars = {
 		cmd: 'mousemove',
@@ -269,35 +262,38 @@ _needSend = false;
 		merc: L.Projection.SphericalMercator.project(ev.latlng.wrap()),
 		layerPoint: ev.layerPoint
 	};
-	// pars.bbox = 
-	if (ev.type === 'mouseover') map._lastCursor = '';
-// performance.mark('start');
+	// if (ev.type === 'mouseover') map._lastCursor = '';
 	
 	L.gmx.vw._sendCmd(pars).then(res => {
 		// console.log('mousemove res', res);
-_needSend = true;
 		let items = res.items;
-		let cursor = 'default';
-		let hoverLayer = '';
+		let cursor = 'grab';
+		let hLayer = '';
 		let repaint = false;
 		let repaintLast = false;
 		if (items.length) {
-			let item = items[0];
+			let item = items[0],
+				gmx_id = item.items[0].idr;
 			cursor = 'pointer';
-			hoverLayer = L.gmx.gmxMap.layersByID[item.layerID];
-			if (gmx_id !== item.items[0] || lastHoverLayer !== hoverLayer) { map._lastCursor = '*'; repaint = true; }
-		// console.log('mousemove res', item.items[0] , gmx_id, map._lastCursor);
-			gmx_id = item.items[0];
-		} else {
-			if (gmx_id !== '') { map._lastCursor = '*'; repaintLast = true; }
-			gmx_id = '';
+			hLayer = L.gmx.gmxMap.layersByID[item.layerID];
+			if (lastHoverLayer && lastHoverLayer !== hLayer) {
+				lastHoverLayer.clearHover();
+				// if (gmx_id !== hLayer.options.hId) {
+					map._lastCursor = '*';
+				// }
+			} else if (gmx_id !== hLayer.options.hId) {
+				hLayer.setHover(gmx_id);
+				map._lastCursor = '*';
+			}
+		} else if (lastHoverLayer) {
+			if (lastHoverLayer.options.hId) map._lastCursor = '*';
+			lastHoverLayer.clearHover();
+			lastHoverLayer = undefined;
 		}
 
 		if (map._lastCursor !== cursor) {
 			map._container.style.cursor = map._lastCursor = cursor;
-			if (hoverLayer && !hoverLayer._gmx.properties.IsRasterCatalog && repaint) hoverLayer.repaint();
-			if (lastHoverLayer && !lastHoverLayer._gmx.properties.IsRasterCatalog && (repaintLast || lastHoverLayer !== hoverLayer)) lastHoverLayer.repaint();
-			lastHoverLayer = hoverLayer;
+			lastHoverLayer = hLayer;
 		}
 	});
 };

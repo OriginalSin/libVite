@@ -106,6 +106,20 @@ console.log('setDateIff fffffffff nterval', it);
 		});
 	},
 
+	clearHover: function () {
+		delete this.options.hId;
+		this._rePaint();
+	},
+
+	setHover: function (id) {
+		this.options.hId = id;
+		this._rePaint();
+	},
+
+	repaint: function () {
+		this._rePaint();
+	},
+
 	_rePaint: function () {
 /*
 		const map = this._map,

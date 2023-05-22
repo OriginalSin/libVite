@@ -82,7 +82,6 @@ const restartCheckVer = () => {
 const chkHost = (hostName) => {
 	// console.log('chkVersion:', hostName);
 	let hostLayers = Store.getHost(hostName),
-	// let hostLayers = hosts[hostName],
 		ids = hostLayers.ids,
 		layersByID = hostLayers.parseLayers.layersByID,
 		arr = [];
@@ -93,7 +92,6 @@ const chkHost = (hostName) => {
 			props = layer.properties || {},
 			pars = { Name: name, Version: 'v' in pt ? pt.v : -1 };
 		if (props.Temporal) {
-			// props.DateBeginUTC
 			const dint = pt.dateInterval || layer.dateInterval || dateInterval;
 // console.warn('dint:', dint);
 			pars.dateBegin = dint.begin;
@@ -143,63 +141,36 @@ const chkVersion = () => {
 						res.Result.forEach(it => {
 							let id = it.name;
 							if (ids[id]) {
-								postMessage({ cmd: 'request', url: id });
+								// postMessage({ cmd: 'request', url: id });
 
 								let pt = ids[id],
 									pl = hostItem.parseLayers.layersByID[id],
 
 									layer = pt.layer,
 									props = it.properties;
-console.warn('chkVersion:', pt, pl);
-layer.sendMessage({
-	...it,
-	origin: {
-		dateInterval: pt.dateInterval,
-		geometry: pl.geometry,
-		properties: pl.properties
-	},
-	bboxBounds,
-	mapSize,
-	pOrigin,
-	pBounds,
-	zoom,
-	topLeftMerc,
-	cmd: 'version'
-}).then(res1 => {
-	// console.log('___res1_____:', res1);
-	// postMessage({queues: out, z: attr.z, cmdNum: attr.cmdNum}, arr);
+// console.warn('chkVersion:', pt, pl);
+								layer.sendMessage({
+									...it,
+									origin: {
+										dateInterval: pt.dateInterval,
+										geometry: pl.geometry,
+										properties: pl.properties
+									},
+									bboxBounds,
+									mapSize,
+									pOrigin,
+									pBounds,
+									zoom,
+									topLeftMerc,
+									cmd: 'version'
+								}).then(res1 => {
+									// console.log('___res1_____:', res1);
+									// postMessage({queues: out, z: attr.z, cmdNum: attr.cmdNum}, arr);
 
-									// Observer.waitCheckObservers();
-});
-/*
-								if (props) {
-									pt.v = props.LayerVersion;
-									pt.properties = props;
-									pt.geometry = it.geometry;
-									if (!pt.tileAttributeIndexes) {
-										Utils.idsFill(pt);
-										// Requests.extend(pt, Utils.getTileAttributes(props));
-										// let tmp = Utils.getTileAttributes(props);
-										// pt.tileAttributeIndexes = tmp.tileAttributeIndexes;
-										// pt.tileAttributeTypes = tmp.tileAttributeTypes;
-									}
-								}
-	// console.log('chkVersion1:', pt);
-								pt.id = id;
-								pt.pProps = hostItem.parseLayers.layersByID[id];
-								pt.hostName = host;
-								pt.tiles = it.tiles;
-								pt.tilesOrder = it.tilesOrder;
-								pt.isGeneralized = pt.isGeneralized || {};
-								TilesLoader.load(pt);
-								// Promise.all(Object.values(pt.tilesPromise)).then(Observer.waitCheckObservers);
-								Promise.all(Object.values(pt.tilesPromise)).then(() => {
-	// console.log('chkVersion1:', pt.tilesPromise);
-									Observer.waitCheckObservers();
-									// utils.now();
-
-									postMessage({ cmd: 'request', remove: true, url: id });
+																	// Observer.waitCheckObservers();
 								});
+/*
+									postMessage({ cmd: 'request', remove: true, url: id });
 */
 							} else {
 // console.log('chkVersion layer skiped', id, it);

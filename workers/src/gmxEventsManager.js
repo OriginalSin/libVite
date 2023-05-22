@@ -1,42 +1,28 @@
 import Store from './Store';
-import DataService from './DataService';
-import Observer from './Observer';
 
-	let hover = {};
-	DataService.setHover(hover);
-const mousemove = (pars) => {
-	const {hostName = 'maps.kosmosnimki.ru'} = pars;
-	const hostItem = Store.getHost(hostName);
-	if (!hostItem || !hostItem.ids) return new Promise((resolve => resolve));
-
-	const prom = Observer.add({ type: 'mousemove', ...pars}).then(res => {
-		let newHover = {};
-		const out = {from: pars};
-		if (Object.keys(res).length) {
-			
-			out.items = DataService.sortLayersData(res);
-			if (res.items && res.items.length) {
-				const item = res.items[0];
-				const ids = hostItem.ids[item.layerID];
-				const pArr = item.items;
-				const layerID = item.layerID;
-				const hoverId = pArr[ids.tileAttributeIndexes.gmx_id];
-				newHover = {
-					layerID,
-					hoverId
-				};
-			} else {
-				newHover = {};
-			}
-			let needScan = hover.layerID !== newHover.layerID || hover.hoverId !== newHover.hoverId;
-			hover = newHover;
-			DataService.setHover(hover);
-// console.log('eventCheck111', needScan, hover, res);
-		}
-		return out;
+const mousemove = async (pars) => {
+	let vLayers = [];
+	Object.values(Store.hosts).forEach(host => {
+		const ids = host.ids,
+			layersByID = host.parseLayers.layersByID;
+		
+		Object.values(ids).forEach(it => {
+			const id = it.layer.id,
+				props = layersByID[id];
+			vLayers.push({...it, props});
+		});
 	});
-	Observer.waitCheckObservers();
-	return prom;
+	vLayers = vLayers.sort((a, b) => b.props.zIndex - a.props.zIndex);
+	let out = [];
+	for (let i = 0, len = vLayers.length; i < len; i++) {
+		const it = vLayers[i];
+		const res = await it.layer.sendMessage(pars);
+		if (res.items.length) out.push({layerID: it.id, items: res.items});
+		// const items = await it.layer.worker.postMessage(pars);
+// console.log('hhh', out);
+	}
+// console.log('pars', vLayers, pars);
+	return Promise.resolve({...pars, items: out});
 };
 
 export default {

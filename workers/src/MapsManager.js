@@ -49,12 +49,14 @@ const parseMapTree = (mapInfo, hostName) => {
 	const lHash = {};
 	const lArr = [];
 	const isVisible = [];
+	let zIndex = 0;
 	let needStart = false;
 	const fun = (it, i) => {
 		if (it.type === 'layer') {
 			let c = {...it.content};
 			let prp = c.properties;
-			c = {...c, ...Utils.parseStyles(prp)};
+			zIndex++;
+			c = {...c, ...Utils.parseStyles(prp), zIndex};
 			const LayerID = prp.LayerID;
 			if (prp.type === 'Vector') {
 				if (prp.visible) {

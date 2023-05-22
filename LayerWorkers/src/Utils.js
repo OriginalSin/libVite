@@ -894,6 +894,94 @@ const utils = {
         }
         return 0;
     },
+
+	chkHoverItem: (geo, boundsArr, merc, bounds) => {
+		let flag = false;
+		let type = geo.type;
+		let coords = geo.coordinates;
+		const chkPoint = [merc.x, merc.y];
+		
+		// let fill = currentStyle.fillStyle || currentStyle.canvasPattern || parsedStyle.bgImage ||
+			// ('fillColor' in parsedStyle) || parsedStyle.fillPattern;
+		// let	marker = parsedStyle && parsedStyle.image ? parsedStyle.image : null;
+		let	chktype = type;
+		// let boundsArr = bounds.boundsArr;
+		
+				// if (type === 'MULTIPOLYGON' || type === 'POLYGON') {
+					// if (marker) {
+						// chktype = 'POINT';
+					// } else if (!fill) {
+						// if (type === 'POLYGON') {
+							// chktype = 'MULTILINESTRING';
+							// hiddenLines = hiddenLines[0];
+						// } else {
+							// chktype = 'LIKEMULTILINESTRING';
+						// }
+						// ph.hidden = hiddenLines;
+					// }
+				// }
+
+		if (chktype === 'LINESTRING') {
+			// if (!gmxAPIutils.isPointInPolyLine(mercPoint, lineWidth / mInPixel, coords)) {
+				// nodePoint = gmxAPIutils.bounds([point]).addBuffer(offset[0] / mInPixel, offset[1] / mInPixel).isNodeIntersect(coords);
+				// if (nodePoint === null) { continue; }
+			// }
+		} else if (chktype === 'LIKEMULTILINESTRING') {
+			// ph.delta = lineWidth / mInPixel;
+			// var flag = false;
+			// for (j = 0, len = coords.length; j < len; j++) {
+				// ph.coords = coords[j];
+				// ph.hidden = hiddenLines ? hiddenLines[j] : null;
+				// ph.boundsArr = boundsArr[j];
+				// if (gmxAPIutils.isPointInLines(ph)) {
+					// flag = true;
+					// break;
+				// }
+			// }
+			// if (!flag) { continue; }
+		} else if (chktype === 'MULTILINESTRING') {
+			// ph.delta = lineWidth / mInPixel;
+			// ph.hidden = hiddenLines;
+			// if (!gmxAPIutils.isPointInLines(ph)) {
+				// var pBounds = gmxAPIutils.bounds([point]).addBuffer(offset[0] / mInPixel, offset[1] / mInPixel);
+				// for (j = 0, len = coords.length; j < len; j++) {
+					// nodePoint = pBounds.isNodeIntersect(coords[j]);
+					// if (nodePoint !== null) {
+						// nodePoint.ring = j;
+						// break;
+					// }
+				// }
+				// if (nodePoint === null) { continue; }
+			// }
+		} else if (chktype === 'MULTIPOLYGON' || chktype === 'POLYGON') {
+			flag = false;
+			if (chktype === 'POLYGON') {
+				coords = [geo.coordinates];
+				boundsArr = [boundsArr];
+			}
+			for (let j = 0, len = coords.length; j < len; j++) {
+				let arr = coords[j],
+					bbox = boundsArr[j];
+				for (let j1 = 0, len1 = arr.length; j1 < len1; j1++) {
+					let b = bbox[j1];
+					if (b.intersects(bounds)) {
+						if (utils.isPointInPolygonWithHoles(chkPoint, arr)) {
+							flag = j1 === 0 ? true : false;
+							break;
+						}
+					}
+				}
+			}
+			// if (!flag) { continue; }
+		} else if (chktype === 'POINT') {
+			// if (parsedStyle.type === 'circle') {
+				// var x = (coords[0] - point[0]) * mInPixel,
+					// y = (coords[1] - point[1]) * mInPixel;
+				// if (x * x + y * y > radius * radius) { continue; }
+			// }
+		}
+		return flag;
+	},
 /*
     setLabel: function(ctx, txt, coord, style) {
         var x = coord[0],
