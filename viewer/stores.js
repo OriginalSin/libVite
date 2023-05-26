@@ -16,3 +16,4 @@ _dateInterval.set({ begin, end });
 	// return dateInterval;
 });
 // export const _notification = writable(notification);
+export const _contextMenu = writable({});

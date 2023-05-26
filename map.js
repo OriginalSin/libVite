@@ -245,6 +245,12 @@ L.gmx.gmxMapManager.getMap(opt).then(res => {
 map._setViewerData = data => {
 	viewer.setData(data);
 };
+map._showContextMenu = data => {
+	viewer.showContextMenu(data);
+};
+map._showTableAttrs = data => {
+	viewer.showTableAttrs(data);
+};
 
 let _timerMouseMove;
 let lastHoverLayer;

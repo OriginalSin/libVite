@@ -26,10 +26,13 @@
 		_layerTree.set(tree);
 		// childs = tree.children.slice();
 	}
+	const onRightClick = e => {
+		gmxMap.leafletMap._showContextMenu({key: 'mapName', x: e.clientX, y: e.clientY });
+	}
 
 </script>
 <div class="map">
-	<div class="mainmap-title">{props.title}</div>
+	<div class="mainmap-title" on:contextmenu|preventDefault={onRightClick}>{props.title}</div>
 	<div class="leftPanelCont scrollbar">
 		<div class="layers-before">
 			<DateRange />

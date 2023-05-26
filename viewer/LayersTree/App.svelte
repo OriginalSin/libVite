@@ -2,6 +2,7 @@
 	import LayersTree from './LayersTree.svelte';
   // import svelteLogo from './assets/svelte.svg'
   // import Counter from './lib/Counter.svelte'
+// import CustomMenu from '../ContextMenu/CustomMenu.svelte'
   
 	// export let map;
 	export let cont;
@@ -32,7 +33,7 @@
 		
 	}
 </script>
-<div class="iconSidebarControl">
+<div class="iconSidebarControl" on:contextmenu|preventDefault>
 	<ul class="tabs">
 		<li class="tab {activeTab === 'layers-tree' ? 'active' : ''}" data-id="layers-tree" on:click={setActive}>
 			<svg role="img" class="svgIcon"><use href="#s-tree" /></svg>
@@ -48,6 +49,8 @@
 		<div data-id="forestView" class="pane forest {activeTab === 'forestView' ? 'active' : ''}">forestView
 		</div>
 	</div>
+<!-- CustomMenu / -->
+
 </div>
 
 <style>

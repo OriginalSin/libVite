@@ -1,7 +1,7 @@
 <script>
 import Group from './Group.svelte'
 import { onMount, onDestroy, beforeUpdate, afterUpdate, createEventDispatcher } from 'svelte';
-import { _layerTree, _dateInterval } from '../stores.js';
+import { _layerTree, _dateInterval, _contextMenu } from '../stores.js';
 
 export let layerID;
 export let prp = {};
@@ -207,10 +207,15 @@ console.log('showPos', beg, end);
 		}
 	}
 }
+const onRightClick = e => {
+	gmxMap.leafletMap._showContextMenu({layerID, key: 'layerName', x: e.clientX, y: e.clientY });
+	// _contextMenu.set({layerID, key: 'layerName'});
+console.log('onRightClick', layerID);
+}
 
 </script>
 
-<div bind:this={nodeItem} class="line">
+<div bind:this={nodeItem} class="line" on:contextmenu|preventDefault={onRightClick}>
 	<span class="beforeIcon" on:click={clickMe} title={titleTimeLine}>{@html beforeIcon}</span>
 	{#if showCheckbox}<input type="checkbox" name="root" class="box" checked={visible} on:click={toggleLayer} />{/if}
 	{#if gmxStyle}<span class="colorIcon" title="Редактировать стили" style={iconStyle}>{@html iconImage}</span>{/if}
