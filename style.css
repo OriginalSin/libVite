@@ -5,6 +5,10 @@ html, body, .all {
 	overflow: hidden;
 
 }
+body {
+	justify-content: center;
+}
+
 .map {
     height: calc(100vh - 36px);
 	/* width: 100%; */

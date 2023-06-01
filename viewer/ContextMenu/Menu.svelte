@@ -31,7 +31,7 @@ console.log('item', data);
 	let items;
 	let menuEl;
 	function onPageClick(e) {
-console.log('onPageClick', e.target);
+// console.log('onPageClick', e.target);
 		if (e.target === menuEl || menuEl.contains(e.target)) return;
 		dispatch('clickoutside');
 		items = undefined;
@@ -41,19 +41,19 @@ console.log('selOp', it, data);
 		items = undefined;
 		switch(it.cmd) {
 			case 'DownloadLayer':
-				L.gmxUtil.sendCrossDomainPostRequest('https://maps.kosmosnimki.ru/DownloadLayer.ashx', {t: data.layerID});
-				// const fd = new FormData();
-				// fd.append('t', data.layerID);
-				// return fetch('https://maps.kosmosnimki.ru/DownloadLayer.ashx', {
-					// method: 'POST', mode: 'cors', credentials: 'include', body: fd
-				// });
+				L.gmxUtil.layerHelper.downloadLayer({t: data.layerID});
+				break;
+			case 'addObjects':
+				let params = {LayerName: data.layerID, FromLayer: data.FromLayer, Query: data.Query};
+				L.gmxUtil.layerHelper.appendLayerData(params);
 				break;
 			case 'attr':
 				L.gmx.gmxMap.leafletMap._showTableAttrs(data);
 				break;
+			case 'addObject':
+				L.gmx.gmxMap.leafletMap._showEditObject(data);
+				break;
 		}
-		// else {
-		// }
 	}
 	onMount(() => {
 		if (data) {

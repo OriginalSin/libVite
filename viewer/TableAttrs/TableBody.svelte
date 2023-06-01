@@ -1,50 +1,44 @@
 <script>
 	// import Draggable from '../Modal/Draggable.svelte';
 	// import Modal from '../Modal/Modal.svelte';
-	import './Table.css';
-	import TableBody from './TableBody.svelte';
-	import TableFoot from './TableFoot.svelte';
-	import FindForm from './FindForm.svelte';
-	import TableFindOper from './TableFindOper.svelte';
-
+	// import TableFoot from './TableFoot.svelte';
+	// import Find from './Find.svelte';
+	import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
 
 	export let layerID;
+	export let items;
+	export let selectItems = {};
+	export let selectCols = {};
+	export let identityField;
 
 	// let layerID = data.layerID;
-	let map = L.gmx.gmxMap.leafletMap;
 	let showModal = true;
 	let lprops;
-	let attributes = [];
-	let identityField;
+	// let identityField;
 	let orderBy;
 	let orderdirection = 'DESC'; //'ASC';
-	let foot = {layerID};
-	let selectItems = {};
-	let formsKeys = {};
-	let selectCols;
-	let items;
+	// let selectItems = {};
+	let loading;
 	let count = 0,
 		mPage,
 		pStart = 0,
 		cPage = 0,
 		pSize = 20;
-	let closeIcon = L.gmxUtil.setSVGIcon('close');
-
+	
 	const prefix = 'https://maps.kosmosnimki.ru/';
 	const showInfo = L.gmxUtil.Notification;
-
 	const _respJson = (resp) => {
-			if (resp.status === 200) return resp.json();
-			else {
-				showInfo.view('Серверная ошибка: ' + resp.status, 'error');
-			}
-		};
+		if (resp.status === 200) return resp.json();
+		else {
+			showInfo.view('Серверная ошибка: ' + resp.status, 'error');
+		}
+	};
+/*
 	const getPage = async (pars) => {
 console.log('pars', pars);
-		// let loading;
-		// loading = true;
-		foot = {...foot, loading: true};
+		loading = true;
 		if (!lprops) {
 			let url = prefix + 'Layer/GetLayerJson.ashx?WrapStyle=none&LayerName=' + layerID;
 			lprops = await fetch(url).then(_respJson);
@@ -53,7 +47,6 @@ console.log('pars', pars);
 		}
 		// else {
 			// lprops = lprops.Result;
-		attributes = lprops.properties.attributes;
 		identityField = lprops.properties.identityField;
 		let sprefix = prefix + 'VectorLayer/Search.ashx?WrapStyle=none&layer=' + layerID;
 		let sr = await fetch(sprefix+ '&count=true').then(_respJson);
@@ -68,8 +61,8 @@ console.log('pars', pars);
 		});
 
 		let params = {
-			page: pars.cPage,
-			pagesize: pars.pSize,
+			page: cPage,
+			pagesize: pSize,
 			orderBy: orderBy || identityField,
 			orderdirection,
 			layer: layerID,
@@ -82,8 +75,6 @@ console.log('pars', pars);
 		// url += '&orderdirection=' + orderdirection;
 //[{"Value":"GeomIsEmpty([geomixergeojson])","Alias":"__GeomIsEmpty__"},{"Value":"[gmx_id]"},
 // {"Value":"[region]"},{"Value":"[forestry]"},{"Value":"[district_f]"},{"Value":"[district]"},{"Value":"[kv]"},{"Value":"[area]"},{"Value":"[id]"}]
-		let cPage = pars.cPage || 0,
-			pSize = pars.pSize || 20;
         const fd = new FormData();
         fd.append('WrapStyle', 'None');
         fd.append('layer', layerID);
@@ -96,20 +87,15 @@ console.log('pars', pars);
 		sr = await fetch(url, {method: 'POST', mode: 'cors', credentials: 'include', body: fd}).then(_respJson);
 		if (sr.Status === 'ok') {
 			items = sr.Result || 0;
-			let needChecked = !selectCols;
-			if (needChecked) selectCols = {};
 			items.indexes = items.fields.reduce((a, c, i) => {
 				a[c] = i;
-				if (needChecked) selectCols[c] = true;
 				return a;
 			}, {});
 			// items.rawKeys = items.fields.filter(k => k !== identityField);
 			// items.rawKeys.unshift(identityField);
 			mPage = Math.floor(count / pSize);
-			foot = {...foot, mPage, count, cPage, pSize};
 		}
-		// loading = undefined;
-		foot = {...foot, loading: undefined};
+		loading = undefined;
 
 console.log('getPage', lprops, count, items);
 
@@ -117,19 +103,18 @@ console.log('getPage', lprops, count, items);
 
 		// const lprops = await fetch(prefix + 'Layer/GetLayerJson.5ashx?WrapStyle=none&LayerName=' + pars.layerID).then(_respJson);
 	};
-	if (layerID) getPage({});
-
+*/
 	onMount(() => {
-		// thead.style.transform = 'translate(0, -2px)';
+		thead.style.transform = 'translate(0, -2px)';
 		// console.log('ggggggggg', attrsTableParent);
 	});
-/*	
 	let thead;
 	const scrollMe = (ev) => {
 		const target = ev.target;
 		thead.style.transform = 'translate(0, ' + (target.scrollTop - 2) + 'px)';
 console.log('scrollMe', target.scrollTop);
 	};
+/*
 	const setPageSize = (ev) => {
 		const target = ev.target;
 		pSize = target.options[target.selectedIndex].value;
@@ -148,6 +133,11 @@ console.log('setPage', pStart, mPage);
 		getPage({});
 		selectItems = {...selectItems};
 	};
+	if (layerID) {
+		getPage({});
+		// setPage(0);
+	}
+
 	const selPageItems = (ev) => {
 		const target = ev.target;
 		if (!target.checked) selectItems = {};
@@ -159,12 +149,13 @@ console.log('setPage', pStart, mPage);
 		}
 		selectItems = {...selectItems};
 	}
-	*/
+*/
 	const selItem = (it) => {
 		const id = it[items.indexes[identityField]];
-		if (selectItems[id]) delete selectItems[id];
-		else selectItems[id] = it;
-		selectItems = {...selectItems};
+		dispatch('notify', {cmd: 'selItem', id, it});
+		// if (selectItems[id]) delete selectItems[id];
+		// else selectItems[id] = it;
+		// selectItems = {...selectItems};
 	};
 	const showItem = async (it) => {
 		const id = it[items.indexes[identityField]];
@@ -180,211 +171,66 @@ console.log('setPage', pStart, mPage);
 	const editItem = (it) => {
 console.log('editItem', it);
 	};
-	const closeMe = () => {
-		map._destroyTableAttrs(layerID);
-		// $$self.$destroy();
-console.log('closeMe');
-	};
-	const notify = (ev) => {
-		const detail = ev.detail,
-			key = detail.key,
-			cmd = detail.cmd;
-
-		switch(cmd) {
-			case 'setPage':
-				foot = {...foot, ...detail};
-				getPage(foot);
-				break;
-			case 'selCols':
-				if (key) {
-					if (selectCols[key]) delete selectCols[key];
-					else selectCols[key] = true;
-				} else {
-					items.fields.forEach(key => {
-						if (!detail.flag) delete selectCols[key];
-						else selectCols[key] = true;
-					});
-				}
-				selectCols = {...selectCols};
-				break;
-			case 'selItem':
-				let id = detail.id;
-				if (selectItems[id]) delete selectItems[id];
-				else selectItems[id] = detail.it;
-				selectItems = {...selectItems};
-				break;
-			case 'selPageItems':
-				items.values.forEach(it => {
-					const id = it[items.indexes[identityField]];
-					if (!detail.flag) delete selectItems[id];
-					else selectItems[id] = it;
-				});
-				selectItems = {...selectItems};
-				break;
-			case 'sortItems':
-				if (orderBy === key) orderdirection = orderdirection === 'DESC' ? 'ASC' : 'DESC';
-				else { orderdirection = 'DESC'; orderBy = key; }
-				getPage(foot);
-				break;
-			case 'formsKeys':
-				if (formsKeys[key]) delete formsKeys[key];
-				else formsKeys[key] = true;
-				formsKeys = {...formsKeys};
-				break;
-			default:
-				break;
-		}
-console.log('notify', selectCols);
+	const sortItems = (key) => {
+		dispatch('notify', {cmd: 'sortItems', key});
 	};
 
 </script>
 
-<section class="TableAttrs">
+<section class="TableBody">
 
-<div class='TableAttrs {open ? 'active' : ''}'>
-	<div class="header">
-		<span class="title">Таблица атрибутов слоя:</span>
-		<span class="value">{lprops?.properties.title || ''}</span>
-		<button on:click={closeMe} type="button" class="close">{@html closeIcon}</button>
-	</div>
-
-
-	<div class="body">
-		<div>
-			<table><tbody>
+<div class="attrsTableBody">
+	<div on:scroll={scrollMe} class="scrollbar scrollTable">
+		<table class="table-scroll fixed_header scrollbar">
+		<thead bind:this={thead}>
 			<tr>
-				<td class="find-container"><FindForm {attributes} {formsKeys} on:notify={notify} /></td>
-				<td class="top">
-					<TableFindOper {layerID} {attributes} {selectItems} {selectCols} {items} on:notify={notify} />
-					<TableBody {layerID} {items} {identityField} {selectItems} {selectCols} on:notify={notify} />
-					<TableFoot {foot} on:notify={notify} />
-				</td>
+				{#each (items?.fields || []) as key}
+				{@const col = items.indexes[key]}
+				{#if key === '__GeomIsEmpty__'}
+				<th class="oper"></th>
+				{:else if selectCols[key]}
+				<th class="col_{col}">
+				<button on:click={() => sortItems(key)} title="Сортировать">
+				{key}
+				</button>
+				</th>
+				{/if}
+				{/each}
 			</tr>
-			</tbody></table>
-
-
-		</div>
+		</thead>
+		<tbody>
+			{#each (items?.values || []) as it, raw}
+				{@const id = it[items.indexes[identityField]]}
+			<tr class="raw_{raw} {id}">
+				{#each (items?.fields || []) as key}
+				{@const col = items.indexes[key]}
+				{@const type = items.types[col]}
+				{@const val = it[col]}
+				{#if key === '__GeomIsEmpty__'}
+				<td class="oper">
+				<div>
+				<input on:change={() => selItem(it)} checked={selectItems[id] ? true : false} type="checkbox" title="Удалить" />
+				<button on:click={() => showItem(it)} class="show {val ? '' : 'active'}" title="Показать" />
+				<button on:click={() => editItem(it)} class="edit" title="Редактировать" />
+				</div>
+				</td>
+				{:else if selectCols[key]}
+					<td class="col_{col}">{val}</td>
+				{/if}
+				{/each}
+			</tr>
+			{/each}
+		</tbody>
+		</table>
 	</div>
 </div>
 </section>
 
 <style>
-.TableAttrs {
+.TableBody {
 	background-color: white;
-	height: 100%;
-}
-.TableAttrs .close {
-    position: absolute;
-    right: 0px;
-}
-.TableAttrs .header .value{
-	font-weight: bold;
-}
-
-.TableAttrs .body {
-	cursor: default;
 }
 /*
-.attrsSelectedCont .hiddenCommands {
-	visibility: hidden;
-}
-.attrsSelectedCont .hiddenCommands.active {
-	visibility: visible;
-}
-
-.tablePages {
-    user-select: none;
-}
-.attrsSelectedCont .hiddenCommands .selectedCount,
-.tablePages .header .value{
-	font-weight: bold;
-}
-
-.tablePages button.next.active,
-.tablePages button.last.active,
-.tablePages button.first.active,
-.tablePages button.prev.active {
-	visibility: visible;
-	pointer-events: visible;
-}
-.tablePages button.next,
-.tablePages button.last,
-.tablePages button.first,
-.tablePages button.prev {
-	visibility: hidden;
-}
-.tablePages button.active {
-	pointer-events: none;
-	font-weight: bold;
-}
-
-.buttons {
-    font-size: 12px;
-}
-button {
-	outline: none;
-}
-.buttons button {
-    text-decoration: underline;
-	padding: 0;
-}
-.attrsSelectedCont .col_2 {
-    text-align: right;
-}
-.buttons .attrsColumnsList {
-    display: none;
-}
-.buttons .attrsColumnsList.active {
-    display: block;
-}
-
-.TableAttrs table {
-    width: 100%;
-}
-.TableAttrs table th {
-    text-align: center;
-}
-
-.table-foot .col_1 {
-    width: 25%;
-}
-.table-foot .col_1 .cur {
-    padding-right: 6px;
-}
-.table-foot .col_3 {
-    text-align: right;
-	width: 60px;
-}
-.table-foot .col_2 {
-    text-align: center;
-}
-.table-foot .col_2 .pn {
-	padding: 2px
-}
-.table-foot .col_2 button.first {
-    background: url(../img/first.png);
-}
-.table-foot .col_2 button.prev {
-    background: url(../img/prev.png);
-}
-.table-foot .col_2 button.next {
-    background: url(../img/next.png);
-}
-.table-foot .col_2 button.last {
-    background: url(../img/last.png);
-}
-.table-foot .col_2 button.first,
-.table-foot .col_2 button.prev,
-.table-foot .col_2 button.next,
-.table-foot .col_2 button.last {
-	width: 18px;
-    height: 14px;
-    border: none;
-	padding: 0px;
-	margin-bottom: -7px;
-	background-repeat: no-repeat;
-}
-
 tfoot,
 .foot-buttons,
 .find-container {
@@ -408,9 +254,10 @@ tfoot,
 .fixed_header td,
 .fixed_header th {
 }
-  
+*/
 .scrollTable {
 	height: 320px;
+	max-width: calc(var(--tableAttrs-width) - 10px);
     overflow: auto;
 }
 .scrollTable table {
@@ -420,6 +267,12 @@ tfoot,
 }
 .scrollTable thead {
 	background-color: black;
+    color: white;
+}
+.scrollTable th button {
+    text-decoration: underline;
+	padding: 0;
+	background-color: transparent;
     color: white;
 }
 .scrollTable th, .scrollTable td {
@@ -453,5 +306,4 @@ tfoot,
 	display: inline-block;
 	width: 52px;
 }
-*/
 </style>

@@ -2785,7 +2785,34 @@ var gmxAPIutils = {
             tileAttributeIndexes: tileAttributeIndexes
         };
     },
-
+    chkResp: (resp, format) => {
+		if (resp.status !== 200) {
+			L.gmxUtil.Notification.view('Ошибка сервера: ' + resp.status, 'error');
+		}
+		return format === 'text' ? resp.text() : resp.json();
+    },
+    getJson: async (url, params, format = 'json') => {
+		const map = L.gmx.gmxMap.leafletMap;
+        url += '?' + Object.keys(params).map(k => k + '=' + params[k]).join('&');
+        return await fetch(url, { method: 'GET', credentials: 'include' })
+            .then(resp => gmxAPIutils.chkResp(resp, format))
+            .catch(e => {
+				console.error(e);
+			});
+    },
+    postData: async (url, params, format = 'json') => {
+        const fd = new FormData();
+		for (let k in params) fd.append(k, params[k]);
+		const _respJson = (resp => format === 'json' ? resp.json() : resp.text());
+        return await fetch(url, {
+                method: 'POST',
+                credentials: 'include',
+                body: fd
+            })
+            .then(resp => gmxAPIutils.chkResp(resp, format))
+            // .then(data => resolve(data))
+            .catch(e => console.error(e));            
+    },
 /*
     getTileAttributes: function(prop) {
 	},
@@ -3102,7 +3129,8 @@ gmxAPIutils.Bounds.prototype = {
 			arr[1][0] = gmxAPIutils.fromWebMercY(this.max.y);
 		}
 		return L.latLngBounds(arr);
-    }
+    },
+
 };
 
 gmxAPIutils.bounds = function(arr) {
@@ -3192,7 +3220,67 @@ gmxAPIutils.layerHelper = {
 				}
 			)
 		}).catch(console.log);
-    }
+    },
+    downloadLayer: function (params, url) {
+		let prefix = 'https://maps.kosmosnimki.ru/';
+		url = url || (prefix + 'DownloadLayer.ashx');
+		L.gmxUtil.sendCrossDomainPostRequest(url, params);
+	},
+    appendLayerData: async (params, url) => {
+		let prefix = 'https://maps.kosmosnimki.ru/';
+		url = url || (prefix + 'VectorLayer/Append');
+
+		let res = await gmxAPIutils.getJson(url, params);
+		if (res.Status === 'ok') {
+			gmxAPIutils.layerHelper._poll(res.Result.TaskID);
+			
+
+		} else {
+			L.gmxUtil.Notification.view('Ошибка сервера: ' + res.Error, 'warn');
+
+		}
+		// L.gmxUtil.sendCrossDomainPostRequest(url, params);
+	},
+	_poll: (taskID) => {
+		let prefix = 'https://maps.kosmosnimki.ru/';
+		return new Promise((resolve, reject) => {
+			const id = window.setInterval(async () => {
+				let data = fetch(`${prefix}AsyncTask.ashx?WrapStyle=None&TaskID=${taskID}`, {
+					method: 'GET',
+					credentials: 'include',
+					headers: {
+						'Content-Type': 'application/json'
+					},            
+				})
+				.then(gmxAPIutils.chkResp)
+				.catch(err => {
+					window.clearInterval(id);
+					L.gmxUtil.Notification.view('Ошибка сервера: ' + err, 'error');
+				});
+				
+				// .then(data => {
+					if (data) {
+						const {Status, Result} = data;
+						if (Status === 'ok') {
+							if (Result.Completed) {
+								window.clearInterval(id);
+								resolve(Result);
+							}                        
+						}                        
+					}
+					else {
+						window.clearInterval(id);
+						reject();
+					}
+				// })
+				// .catch(() => {
+					// window.clearInterval(id);
+					// reject();
+				// });
+			}, 3000);        
+		});        
+    },
+
 };
 
 if (!L.gmxUtil) { L.gmxUtil = {}; }
@@ -3288,7 +3376,9 @@ L.extend(L.gmxUtil, {
     normalizeHostname: gmxAPIutils.normalizeHostname,
     getTileBounds: gmxAPIutils.getTileBounds,
 	getBoundsByTilePoint: gmxAPIutils.getBoundsByTilePoint,
-    parseTemplate: gmxAPIutils.parseTemplate
+    parseTemplate: gmxAPIutils.parseTemplate,
+    getJson: gmxAPIutils.getJson,
+    postData: gmxAPIutils.postData
 });
 
 L.gmxUtil.layerHelper = gmxAPIutils.layerHelper;

@@ -45,7 +45,7 @@ L.gmx.VectorLayerFull = L.Layer.extend({
             gmx.endDate = endDate;
 			this.fire('dateIntervalChanged');
         }
-console.log('setDateInterval', gmx);
+// console.log('setDateInterval', gmx);
 		L.gmx.vw._sendCmd({
 			id: props.name,
 			begin: gmx.beginDate.getTime() / 1000,
@@ -53,7 +53,7 @@ console.log('setDateInterval', gmx);
 			cmd: 'setDateInterval'
 		// }).then(console.log);
 		}).then(it => {
-console.log('setDateIff fffffffff nterval', it);
+// console.log('setDateIff fffffffff nterval', it);
 		});
 		if (this._map) {
 			this._rePaint();

@@ -3,28 +3,35 @@
 
 	let dialog; // HTMLDialogElement
 
-	$: if (dialog && showModal) dialog.showModal();
+	$: {
+		if (dialog && showModal) dialog.showModal();
+		// if (dialog && !showModal) dialog.close();
+	}
+const ok1 = (ev) => {
+	dialog.close();
+	// showModal = false;
+console.log('ok1', ev);
+};
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<dialog class="scrollbar1"
+<dialog class="mod"
 	bind:this={dialog}
 	on:close={() => (showModal = false)}
-	on:click|self={() => dialog.close()}
+	on:click|self={() => { dialog.close()}}
 >
 	<div on:click|stopPropagation>
 		<slot />
-		<hr />
 	</div>
 </dialog>
 
 <style>
 	dialog {
-		max-width: 800px;
+	/*	max-width: 800px;*/
 		border-radius: 0.2em;
 		border: none;
 		padding: 0;
-		width: 100%;
+	/*	width: 100%;*/
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);

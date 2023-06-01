@@ -1,0 +1,15 @@
+.TableAttrs {
+	font-size: 12px;
+}
+.TableAttrs button {
+	border: unset;
+	outline: none;
+}
+.TableAttrs button svg {
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+}
+:root {
+  --tableAttrs-width: 800px;
+}
