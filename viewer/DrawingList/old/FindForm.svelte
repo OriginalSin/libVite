@@ -1,18 +1,11 @@
 <script>
 	import FindAttr from './FindAttr.js';
-	import DrawingList from '../DrawingList/DrawingList.svelte';
-	import { createEventDispatcher } from 'svelte';
-
-	const dispatch = createEventDispatcher();
 
 	// export let formsKeys;
 
 	export let attributes = {};
 	export let formsKeys = {};
 
-	let map = L.gmx.gmxMap.leafletMap;
-	let drawingList;
-	let geoJSON;
 	let textarea;
 	let active = '';
 	$: {
@@ -26,77 +19,60 @@
 console.log('setVal', target);
 	};
 	const setGeo = (pt) => {
-// console.log('setGeo', pt);
-		if (map._drawingList) map._drawingList.$destroy();
-		map._drawingList = new DrawingList({
-			target: document.body,
-			props: {
-				onSelect: (it) => {
-					geoJSON = it.toGeoJSON().geometry;
-					map._drawingList.$destroy();
-console.log('onSelect', geoJSON);
-				},
-				left: 200,
-				top: 200
-			}
-		});
-
+console.log('setGeo', pt);
 	};
-	const find = () => {
-		let query = '';
-		if (textarea.value) query += textarea.value;
-		if (geoJSON) {
-			if (textarea.value) query = '(' + query + ') AND ';
-			query += 'intersects([geomixergeojson], GeometryFromGeoJson(\'' + JSON.stringify(geoJSON) + '\', 4326))';
-		}
-		
-		// const prp = {cmd: 'find', query};
-		dispatch('notify', {cmd: 'find', query});
-// console.log('find', prp);
+	const find = (pt) => {
+console.log('find', pt);
 	};
 	
 console.log('FindAttr', attributes, formsKeys, FindAttr);
 	const setFunc = (pt) => {
-		setRangeText(pt.func);
-		// let str = textarea.value;
-		// str += '' + pt.func + '';
-		// textarea.innerHTML = str;
-		// textarea.value += '' + pt.func + '';
-		// textarea.value = str;
-// console.log('setFunc', str);
+		textarea.textContent += '' + pt.func + '';
+console.log('setFunc', pt);
 	};
 	const setOper = (pt) => {
-		setRangeText(pt.name);
-		// let str = textarea.value;
-		// str += '' + pt.name + '';
-		// textarea.value = str;
-		// textarea.innerText = str;
-// console.log('setOper', str);
+		textarea.innerHTML += '' + pt.name + '';
+console.log('setOper', pt);
 	};
 	const setField = (f) => {
-		setRangeText('"' + f + '"');
-	};
-	const setRangeText = (st) => {
-		if (textarea.selectionStart !== textarea.selectionEnd) {
-			textarea.setRangeText(st, textarea.selectionStart, textarea.selectionEnd);
-		} else textarea.value += st;
+		const st = '"' + f + '"';
+		let str = textarea.textContent;
+		if (textarea.selectionEnd) {
+			str = str.substr(0, textarea.selectionStart) + st + str.substr(textarea.selectionEnd);
+		} else str += st;
+		textarea.textContent = str;
 	};
 // {@debug attributes}
 
 </script>
 
 <div class="find {active}">
-	<div on:click={() => dispatch('notify', {cmd: 'formsKeys', key: 'find' })} class="close"><button>Скрыть</button></div>
+	<div class="close"><button>Скрыть</button></div>
+	<div class="geometryCont">
+		<span>
+			<span class="geomtitle">Искать по пересечению с объектом</span>
+			<button on:click={setGeo} class="geom" />
+			<div class="drawingObjectsItemCanvas">
+				<span class="drawingObjectsItem">
+					<span class="Polygon"></span>
+					<span class="drawingObjectsItemTitle">многоугольник</span>
+					<span class="drawingObjectsItemTitle"></span>
+					<span class="summary">(251615 кв. км)</span>
+				</span>
+				<span title="Удалить" class="gmx-icon-close"></span>
+			</div>
+		</span>
+	</div>
 	<div class="middle">
 		<div class="query-container">
 			<div class="where">
 				<span>
 					<span>WHERE</span>
 				</span>
-				<button on:click={() => textarea.value = ''} class="clean">Очистить</button>
+				<button class="clean">Очистить</button>
 			</div>
 			<div class="query">
-				<textarea bind:this={textarea} placeholder="&quot;field1&quot; = 1 AND &quot;field2&quot; = 'value'" />
+				<textarea bind:this={textarea} placeholder="&quot;field1&quot; = 1 AND &quot;field2&quot; = 'value'"></textarea>
 			</div>
 
 			<div class="suggest">
@@ -153,37 +129,20 @@ console.log('FindAttr', attributes, formsKeys, FindAttr);
 			</div>
 		</div>
 	</div>
-	<div class="foot">
-		<div class="geometryCont">
-			<span>
-				<span class="geomtitle">Искать по пересечению с объектом</span>
-				<button on:click={setGeo} class="geom" />
-				{#if geoJSON}
-				<div>
-					<span class="{geoJSON.type}"></span>
-					<span class="name">{geoJSON.type}</span>
-					<span class="summary">({L.gmxUtil.getGeoJSONSummary(geoJSON)})</span>
-					<button on:click={() => geoJSON = undefined} class="name">{@html L.gmxUtil.setSVGIcon('close')}</button>
-				</div>
-				{/if}
 
-			</span>
-		</div>
-
-		<div class="searchButtonContainer">
-			<button on:click={find} class="search">Найти</button>
-		</div>
+	<div class="searchButtonContainer">
+		<button on:click={find} class="search">Найти</button>
 	</div>
 </div>
 
 <style>
 .find .searchButtonContainer {
-    /* bottom: 10px; */
-    /* position: absolute; */
+    bottom: 10px;
+    position: absolute;
 }
 .find .geometryCont {
-    /* bottom: 40px; */
-    /* position: absolute; */
+    bottom: 40px;
+    position: absolute;
 }
 .find {
 	display: none;
@@ -196,25 +155,19 @@ console.log('FindAttr', attributes, formsKeys, FindAttr);
 	display: block;
 }
 .find .where {
-    position: relative;
+    display: flex;
 }
 .find .where span {
     width: 180px;
     display: inline-block;
 }
-.find .close button,
 .find .where button {
 	text-decoration: underline;
     padding: 0;
-}
-.find .where button {
-}
-.find .where button {
-    right: 0;
-    position: absolute;
+	display: flex;
 }
 .find .query textarea {
-    width: calc(100% - 6px);
+    width: 100%;
     height: 122px;
 }
 .find .suggest table tr td {
@@ -226,16 +179,12 @@ console.log('FindAttr', attributes, formsKeys, FindAttr);
     width: 94px;
     border: 1px solid #AFC0D5;
 }
-.find .suggest table tr td > div button.attr {
-	/* height: unset; */
-    /* padding: 4px; */
-}
 .find .suggest table tr td > div button {
     display: flex;
     border-radius: unset;
     background-color: #FFFFFF;
-    /* height: 20px; */
-	padding: 4px;
+    height: 20px;
+	padding: 0 4px;
 }
 .find .suggest table tr td > div .helper {
 	display: none;
@@ -243,7 +192,7 @@ console.log('FindAttr', attributes, formsKeys, FindAttr);
 }
 .find .suggest table tr td > div.active .helper {
 	display: block;
-    height: 126px;
+    height: 154px;
 	overflow-y: auto;
 	overflow-x: hidden;
 	border-top: 1px solid #AFC0D5;
@@ -258,13 +207,11 @@ console.log('FindAttr', attributes, formsKeys, FindAttr);
 .find .suggest table tr td > div .helper button {
 	border: unset;
 	background: transparent;
-	width: 100%;
 }
 .find .middle {
-	height: 318px;
-    /* z-index: 1; */
-    /* position: relative; */
-    /* background-color: white; */
+    z-index: 1;
+    position: relative;
+    background-color: white;
 }
 .find .geometryCont button.geom {
 	background-image: url(/img/choose2.png);

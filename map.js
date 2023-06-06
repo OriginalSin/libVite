@@ -1,6 +1,8 @@
 import './geomixer/index.js';
 import viewer from './viewer/index.js';
 
+L.gmx.viewer = viewer;
+
 const mapId = L.gmxUtil.getLocSearch() || 'DefaultMap';
 window.language = 'rus';
 const MapInit = () => {

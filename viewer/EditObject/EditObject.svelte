@@ -1,15 +1,19 @@
 <script>
 import Draggable from '../Modal/Draggable.svelte';
 import CreateDescr from './CreateDescr.svelte';
+import DrawingList from '../DrawingList/DrawingList.svelte';
 
-export let data;
+export let data = [];
+export let indexes = {};
+export let layerID;
 
-let layerID = data.layerID;
+// let layerID = data.layerID;
 let gmxMap = L.gmx.gmxMap;
 let map = gmxMap.leafletMap;
 let layersByID = gmxMap.layersByID;
 let props = layersByID[layerID]._gmx.properties;
 let attributes = props.attributes;
+	let drawingList;
 
 let closeIcon = L.gmxUtil.setSVGIcon('close');
 
@@ -22,7 +26,8 @@ L.gmx.gmxDrawing.on('drawstop', (ev) => {
 	features = gmxDrawing.getFeatures();
 });
 const closeMe = () => {
-	map._destroyEditObject(layerID);
+	map._editObject.$destroy();
+	// map._destroyEditObject(layerID);
 };
 const setGeo = (pt) => {
 // console.log('setGeo', pt);
@@ -46,6 +51,8 @@ const ok = (ev) => {
 	showModal = false;
 console.log('ok', ev);
 };
+
+let geoInput;
 const editDescr = (ev) => {
 	showModal = true;
 	
@@ -65,6 +72,9 @@ console.log('editDescr', ev);
 const save = (ev) => {
 console.log('save', ev);
 };
+const del = (ev) => {
+console.log('del', ev);
+};
 
 console.log('attributes', layerID, data);
 
@@ -80,17 +90,24 @@ console.log('attributes', layerID, data);
 	<div class="body scrollbar">
 		<table><tbody>
 		<tr class="rawGeo">
-			<td class="name" colspan=2>
+			<td class="name">
 				<span class="edit-obj-geomtitle">Геометрия</span><button on:click={setGeo} class="geom" />
 			</td>
+			<td class="val">
+			{#if geoJSON}
+				<span class="name">{geoJSON.type}</span>
+				<span class="summary">({L.gmxUtil.getGeoJSONSummary(geoJSON)})</span>
+			{/if}
+			</td>
 		</tr>
-		{#each (attributes || []) as name}
+		{#each (attributes || []) as name, i}
+		{@const val = data[indexes[name]]}
 		<tr>
 			<td class="name">
 				<span>{name}</span>
 			</td>
 			<td class="val">
-				<input type="text" />
+				<input type="text" value={val || ''} />
 			</td>
 		</tr>
 		{/each}
@@ -105,7 +122,8 @@ console.log('attributes', layerID, data);
 		</tbody></table>
 	</div>
 	<div class="foot">
-		<button on:click={save} class="save">Создать</button>
+		<button on:click={save} class="save">{data.length ? 'Изменить' : 'Создать'}</button>
+		{#if data.length}<button on:click={del} class="save">Удалить</button>{/if}
 	</div>
 </div>
 

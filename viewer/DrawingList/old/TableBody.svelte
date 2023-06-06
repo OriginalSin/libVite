@@ -1,18 +1,19 @@
 <script>
-	import EditObject from '../EditObject/EditObject.svelte';
+	// import Draggable from '../Modal/Draggable.svelte';
+	// import Modal from '../Modal/Modal.svelte';
+	// import TableFoot from './TableFoot.svelte';
+	// import Find from './Find.svelte';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
 
 	export let layerID;
-	export let attributes;
 	export let items;
 	export let selectItems = {};
 	export let selectCols = {};
 	export let identityField;
 
 	// let layerID = data.layerID;
-	let map = L.gmx.gmxMap.leafletMap;
 	let showModal = true;
 	let lprops;
 	// let identityField;
@@ -167,23 +168,8 @@ console.log('setPage', pStart, mPage);
 			L.gmx.gmxMap.leafletMap.fitBounds(geoJson.getBounds());
 		}
 	};
-	const editItem = (data) => {
-console.log('editItem', data);
-		// const id = it[items.indexes[identityField]];
-		if (map._editObject) map._editObject.$destroy();
-		map._editObject = new EditObject({
-			target: document.body,
-			props: {
-				data,
-				indexes: items.indexes,
-				layerID,
-				onSelect: (it) => {
-					// geoJSON = it.toGeoJSON().geometry;
-					map._editObject.$destroy();
-console.log('onSelect', it);
-				}
-			}
-		});
+	const editItem = (it) => {
+console.log('editItem', it);
 	};
 	const sortItems = (key) => {
 		dispatch('notify', {cmd: 'sortItems', key});
@@ -271,9 +257,7 @@ tfoot,
 */
 .scrollTable {
 	height: 320px;
-	width: calc(100% - 4px);
-
-	/* max-width: calc(var(--tableAttrs-width) - 10px); */
+	max-width: calc(var(--tableAttrs-width) - 10px);
     overflow: auto;
 }
 .scrollTable table {
@@ -298,7 +282,6 @@ tfoot,
     border: 1px solid #dedede;
     font-size: 12px;
     font-weight: normal;
-	user-select: text;
 }
 .scrollTable .oper button.show.active {
 	display:inline-block;

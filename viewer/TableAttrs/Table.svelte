@@ -24,6 +24,7 @@
 	let formsKeys = {};
 	let selectCols;
 	let items;
+	let query;
 	let count = 0,
 		mPage,
 		pStart = 0,
@@ -55,10 +56,16 @@ console.log('pars', pars);
 			// lprops = lprops.Result;
 		attributes = lprops.properties.attributes;
 		identityField = lprops.properties.identityField;
-		let sprefix = prefix + 'VectorLayer/Search.ashx?WrapStyle=none&layer=' + layerID;
-		let sr = await fetch(sprefix+ '&count=true').then(_respJson);
-		if (sr.Status === 'ok') count = sr.Result || 0;
+		
+        const fd = new FormData();
+        fd.append('WrapStyle', 'None');
+        fd.append('layer', layerID);
+		if (query) fd.append('query', query);
+        fd.append('count', true);
 		let url = prefix + 'VectorLayer/Search.ashx';
+		let sr = await fetch(url, {method: 'POST', mode: 'cors', credentials: 'include', body: fd}).then(_respJson);
+        fd.delete('count');
+		if (sr.Status === 'ok') count = sr.Result || 0;
 		let columns = [
 			{"Value":"GeomIsEmpty([geomixergeojson])","Alias":"__GeomIsEmpty__"},
 			{"Value":'[' + identityField + ']'}
@@ -67,31 +74,13 @@ console.log('pars', pars);
 			columns.push({"Value":'[' + key + ']'});
 		});
 
-		let params = {
-			page: pars.cPage,
-			pagesize: pars.pSize,
-			orderBy: orderBy || identityField,
-			orderdirection,
-			layer: layerID,
-			columns,
-			WrapStyle: 'none'
-		};
-		// url += '&page=' + cPage;
-		// url += '&pagesize=' + pSize;
-		// url += '&orderBy=' + (orderBy || identityField);
-		// url += '&orderdirection=' + orderdirection;
-//[{"Value":"GeomIsEmpty([geomixergeojson])","Alias":"__GeomIsEmpty__"},{"Value":"[gmx_id]"},
-// {"Value":"[region]"},{"Value":"[forestry]"},{"Value":"[district_f]"},{"Value":"[district]"},{"Value":"[kv]"},{"Value":"[area]"},{"Value":"[id]"}]
 		let cPage = pars.cPage || 0,
 			pSize = pars.pSize || 20;
-        const fd = new FormData();
-        fd.append('WrapStyle', 'None');
-        fd.append('layer', layerID);
-        fd.append('columns', JSON.stringify(columns));
         fd.append('orderdirection', orderdirection);
         fd.append('orderBy', orderBy || identityField);
         fd.append('pagesize', pSize);
         fd.append('page', cPage);
+        fd.append('columns', JSON.stringify(columns));
 
 		sr = await fetch(url, {method: 'POST', mode: 'cors', credentials: 'include', body: fd}).then(_respJson);
 		if (sr.Status === 'ok') {
@@ -231,6 +220,20 @@ console.log('closeMe');
 				else formsKeys[key] = true;
 				formsKeys = {...formsKeys};
 				break;
+			case 'find':
+				query = detail.query || '';
+				getPage(detail);
+				break;
+			case 'downloadLayer':
+				let prp = {t: layerID};
+				if (detail.format) prp.format = detail.format;
+				if (query) prp.query = query;
+				L.gmxUtil.layerHelper.downloadLayer(prp);
+				break;
+			case 'getSquare':
+				// query = detail.query || '';
+				// getPage(detail);
+				break;
 			default:
 				break;
 		}
@@ -248,22 +251,14 @@ console.log('notify', selectCols);
 		<button on:click={closeMe} type="button" class="close">{@html closeIcon}</button>
 	</div>
 
+	<div class="body {formsKeys.find ? 'findActive' : ''}">
+		<span class="find-container"><FindForm {attributes} {formsKeys} on:notify={notify} /></span>
+		<span class="top secondTable">
+			<div><TableFindOper {layerID} {attributes} {selectItems} {selectCols} {items} on:notify={notify} /></div>
+			<div><TableBody {layerID} {attributes} {items} {identityField} {selectItems} {selectCols} on:notify={notify} /></div>
+			<div><TableFoot {foot} on:notify={notify} /></div>
+		</span>
 
-	<div class="body">
-		<div>
-			<table><tbody>
-			<tr>
-				<td class="find-container"><FindForm {attributes} {formsKeys} on:notify={notify} /></td>
-				<td class="top">
-					<TableFindOper {layerID} {attributes} {selectItems} {selectCols} {items} on:notify={notify} />
-					<TableBody {layerID} {items} {identityField} {selectItems} {selectCols} on:notify={notify} />
-					<TableFoot {foot} on:notify={notify} />
-				</td>
-			</tr>
-			</tbody></table>
-
-
-		</div>
 	</div>
 </div>
 </section>
@@ -283,6 +278,31 @@ console.log('notify', selectCols);
 
 .TableAttrs .body {
 	cursor: default;
+	display: flex;
+}
+.TableAttrs .body td.secondTable {
+	/* display: block; */
+}
+.TableAttrs .body .find-container {
+	padding: 4px;
+
+    /* display: none; */
+}
+.TableAttrs .body.findActive .find-container {
+	/* width: 300px; */
+    /* display: inline-block; */
+}
+.TableAttrs .body .secondTable {
+    width: calc(100% - 8px);
+}
+.TableAttrs .body.findActive .secondTable {
+	width: calc(100% - 308px);
+}
+ 
+
+.TableAttrs .body tbody,
+.TableAttrs .body table {
+	/* display: block; */
 }
 /*
 .attrsSelectedCont .hiddenCommands {

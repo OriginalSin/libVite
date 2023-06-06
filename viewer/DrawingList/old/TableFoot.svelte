@@ -19,36 +19,22 @@
 	});
 
 	const getShape = () => {
-		dispatch('notify', {cmd: 'downloadLayer'});
-		// L.gmxUtil.layerHelper.downloadLayer({t: foot.layerID});
+		L.gmxUtil.layerHelper.downloadLayer({t: foot.layerID});
 	};
 	const getCsv = () => {
 		// t: 4B830D2287904B2BA414D9E1E629F362
 // format: csv
 // columns: [{"Value":"[gmx_id]","Alias":"gmx_id"},{"Value":"[t]","Alias":"t"}]
-		// L.gmxUtil.layerHelper.downloadLayer({t: foot.layerID, format: 'csv'});
-		dispatch('notify', {cmd: 'downloadLayer', format: 'csv'});
+		L.gmxUtil.layerHelper.downloadLayer({t: foot.layerID, format: 'csv'});
 	};
 	const getGeojson = () => {
-		dispatch('notify', {cmd: 'downloadLayer', format: 'geojson'});
+		L.gmxUtil.layerHelper.downloadLayer({t: foot.layerID, format: 'geojson'});
 	};
 	const createLayer = () => {
-		dispatch('notify', {cmd: 'createLayer'});
 	};
 	const copyObjects = () => {
-		dispatch('notify', {cmd: 'copyObjects'});
 	};
 	const getSquare = () => {
-		dispatch('notify', {cmd: 'getSquare'});
-		// const prefix = 'https://maps.kosmosnimki.ru/';
-		// let url = prefix + 'VectorLayer/Search.ashx?WrapStyle=none&layer=' + foot.layerID;
-			// let url = prefix + 'Layer/GetLayerJson.ashx?WrapStyle=none&LayerName=' + layerID;
-// layer: 41661D2970A9417698BC9BA039C579AF
-// query: left("SCENE_ID", 3)='15J';
-// columns: [{value: "[GeomixerGeoJson]"}]
-			
-		// let sr = await fetch(url, {method: 'POST', mode: 'cors', credentials: 'include', body: fd}).then(_respJson);
-		// columns: [{value: "[GeomixerGeoJson]"}]
 	// <button on:click={getCsv} class="csv">Скачать csv</button>
 	// <button on:click={getGeojson} class="geojson">Скачать geojson</button>
 	// <button on:click={createLayer} class="createLayer">Создать слой</button>
@@ -110,22 +96,16 @@ console.log('setPage', foot);
 
 		</td>
 	</tr>
-	<tr>
-		<td class="col_1 foot-buttons" colspan=2>
+	</tbody>
+</table>
+
+<div class="foot-buttons">
 	<button on:click={getShape} class="shp">Скачать shp</button>
 	<button on:click={getCsv} class="csv">Скачать csv</button>
 	<button on:click={getGeojson} class="geojson">Скачать geojson</button>
 	<button on:click={createLayer} class="createLayer">Создать слой</button>
 	<button on:click={copyObjects} class="copyObjects">Копировать объекты</button>
-		</td>
-		<td class="col_3">
 	<button on:click={getSquare} class="square">Суммарная площадь</button>
-		</td>
-	</tr>
-	</tbody>
-</table>
-
-<div class="foot-buttons">
 </div>
 
 </section>
@@ -134,19 +114,18 @@ console.log('setPage', foot);
 .foot table {
     width: 100%;
 }
-.col_3 button,
-.col_1 button {
+.foot-buttons button {
     font-size: 12px;
     text-decoration: underline;
 	padding: 0;
     border: none;
 }
-/* .foot-buttons button.square { */
-    /* position: absolute; */
-    /* right: 0; */
-    /* bottom: 3px; */
+.foot-buttons button.square {
+    position: absolute;
+    right: 0;
+    bottom: 3px;
     /* display: flex; */
-/* } */
+}
 
 .table-foot .col_1 {
     width: 25%;
