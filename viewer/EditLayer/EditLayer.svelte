@@ -15,14 +15,6 @@ let {layerID, width, height = 460} = attr;
 let gmxMap = L.gmx.gmxMap;
 let map = gmxMap.leafletMap;
 let layersByID = gmxMap.layersByID;
-let props = {};
-let SourceType = 'Файл';
-let GeometryType = 'linestring';
-let IsRasterCatalog = false;
-let isOpenMaxPeriod = false;
-let isOpenShablon = false;
-let isOpenAttrs = false;
-let TemporalLayer = false;
 
 let properties = layersByID[layerID]._gmx.properties;
 // let attributes = props.attributes;
@@ -38,6 +30,16 @@ let features = gmxDrawing.getFeatures();
 let geoJSON;
 let dialog;
 
+let props = {};
+let SourceType = 'Файл';
+let GeometryType = 'linestring';
+let IsRasterCatalog = false;
+let isOpenMaxPeriod = false;
+let isOpenShablon = false;
+let isQuicklook = false;
+let TemporalLayer = false;
+let Quicklook;
+let colsArr = [];
 
 const getItem = async layerID => {
 	props = await Utils.getLayerInfo(layerID);
@@ -45,14 +47,28 @@ const getItem = async layerID => {
 	GeometryType = props.GeometryType || 'linestring';
 	IsRasterCatalog = props.IsRasterCatalog;
 	TemporalLayer = props.TemporalLayer;
+	if (props.Quicklook) {
+		Quicklook = JSON.parse(props.Quicklook);
+		isQuicklook = true;
+	}
+	colsArr = props.Columns.filter(it => !it.IsPrimary && it.name !== 'GMX_RasterCatalogID' && it.name !== 'wkb_geometry');
 
-console.log('getItem', props);
+
+console.log('getItem', props, colsArr);
 	// fields = res.fields;
 	// indexes = res.indexes;
 	// data = res.values[0];
 	// geoJSON = L.gmxUtil.geometryToGeoJSON(data[indexes.geomixergeojson], true, true);
 };
 layerID && getItem(layerID);
+
+const getColumnsOption = (f) => {
+	// f = f.toUpperCase();
+	return colsArr.map(it => {
+		const n = it.Name;
+		return '<option value="' + n + '" ' + (f === n.toUpperCase() ? 'selected' : '') + '>' + n + '</option>';
+	});
+};
 
 L.gmx.gmxDrawing.on('drawstop', (ev) => {
 	features = gmxDrawing.getFeatures();
@@ -185,7 +201,32 @@ console.log('attributes', layerID, attr);
 							<span>Источник:<br> Файл</span>
 						</td>
 						<td class="val">
-							<input type="text" value={props.ShapePath?.Path || ''} class="ShapePath {props.ShapePath?.Exists ? 'Exists' : ''}" /><button on:click={setGeo} class="img geom" />
+							<input type="text" value={props.ShapePath?.Path || ''} class="ShapePath short {props.ShapePath?.Exists ? 'Exists' : ''}" /><button on:click={setGeo} class="img geom" />
+						</td>
+						{:else if SourceType === 'table'}
+						<td class="title">
+							<span>Источник:<br> Таблица</span>
+						</td>
+						<td class="val">
+							<input type="text" value={props.TableName || ''} class="TableName short" /><button on:click={setGeo} class="img geom" />
+							<div class="manual">
+								<span>Проекция</span>
+								<select class="selectEPSG">
+									<option value="EPSG:4326" selected={props.TableCS === 'EPSG:4326'}>Широта/Долгота (EPSG:4326)</option>
+									<option value="EPSG:3395" selected={props.TableCS === 'EPSG:3395'}>Меркатор (EPSG:3395)</option>
+								</select>
+							</div>
+						</td>
+						{:else if SourceType === 'manual'}
+						<td class="title">
+							<span>Геометрия:</span>
+						</td>
+						<td class="val">
+							<span class="manual {GeometryType}">
+								<button on:click={selGeometryType} class="polygon" title="полигоны"></button>
+								<button on:click={selGeometryType} class="linestring" title="линии"></button>
+								<button on:click={selGeometryType} class="point" title="точки"></button>
+							</span>
 						</td>
 						{/if}
 					</tr>
@@ -200,9 +241,9 @@ console.log('attributes', layerID, attr);
 					</td>
 					<td class="val">
 						{#if SourceType === 'file'}
-							<input type="text" value="" class="tt" /><button on:click={setGeo} class="img geom" />
-						{:else if SourceType === 'Таблица'}
-							<input type="text" value="" class="tt" /><button on:click={setGeo} class="img geom" />
+							<input type="text" value="" class="ShapePath short" /><button on:click={setGeo} class="img geom" />
+						{:else if SourceType === 'table'}
+							<input type="text" value="" class="TableName short" /><button on:click={setGeo} class="img geom" />
 							<div class="manual">
 								<span>Проекция</span>
 								<select class="selectEPSG">
@@ -281,7 +322,7 @@ console.log('attributes', layerID, attr);
 					</td>
 					<td class="val">
 						<input type="text" data-key='val' value={it.Value || ''} />
-						<img src="img/recycle.png" class="removeIcon">
+						<button on:click={delCol} class="img del" />
 					</td>
 				</tr>
 				{/each}
@@ -291,7 +332,7 @@ console.log('attributes', layerID, attr);
 					</td>
 					<td class="val">
 						<input type="text" data-key='val' value={''} />
-						<img src="img/recycle.png" class="removeIcon">
+						<button on:click={delCol} class="img del" />
 					</td>
 				</tr>
 			</tbody>
@@ -321,9 +362,10 @@ console.log('attributes', layerID, attr);
 						<div class="line">
 							<span>Тайлы по дням до</span>
 							<select class="maxPeriod">
-								<option name="1">1</option>
-								<option name="16">16</option>
-								<option name="256" selected="selected">256</option>
+							{#each (TemporalPeriods || []) as it, i}
+							{@const name = it.Name}
+								<option value={it} selected={i === TemporalPeriods.length - 1}>{it}</option>
+							{/each}
 							</select>
 						</div>
 					</details>
@@ -359,32 +401,48 @@ console.log('attributes', layerID, attr);
 										<input type="text" data-key='title' value={it.Value || ''} />
 									</td>
 									<td class="op">
-										<img src="img/recycle.png" class="removeIcon">
+										<button on:click={delCol} class="img del" />
 									</td>
 								</tr>
 								{/each}
+								<tr>
+									<td class="title">
+										<input type="text" data-key='title' />
+									</td>
+									<td class="val">
+										<input type="text" data-key='title' />
+									</td>
+									<td class="op">
+										<button on:click={delCol} class="img del" />
+									</td>
+								</tr>
 							</tbody>
 							</table>
 						</div>
 					</details>
-					<details bind:open={isOpenAttrs} class="nrastr">
+					<details bind:open={isQuicklook} class="quicklook">
 						<summary>Накладываемое изображение</summary>
 						<div class="line">
-							<label>Мин. зум<input type="text" value={props.RCMinZoomForRasters || ''} class="minzoom" /></label>
+							<label>Мин. зум<input type="text" value={Quicklook?.minZoom || ''} class="minzoom" /></label>
 						</div>
-						<textarea class="inputStyle lqw-textarea"></textarea>
+						<button class="link">Атрибут</button><br />
+						<textarea class="template">{Quicklook?.template || ''}</textarea>
 						<div class="link">Атрибуты привязки</div>
 						<div class="line">
+							{#if Quicklook}
 							<table class="lqw"><tbody>
+								{#each [1, 2, 3, 4] as i}
+								{@const x = 'X' + i}
+								{@const y = 'Y' + i}
+								{@const xo = getColumnsOption(Quicklook[x] || x)}
+								{@const yo = getColumnsOption(Quicklook[y] || y)}
 								<tr>
-									<td class="error">X1<select data-name="X1" class="point"><option value=""></option></select></td>
-									<td class="error">Y1<select data-name="Y1" class="point"><option value=""></option></select></td>
+									<td class="error">{x}<select data-name="{x}" class="point">{@html xo}</select></td>
+									<td class="error">{y}<select data-name="{y}" class="point">{@html yo}</select></td>
 								</tr>
-								<tr>
-									<td class="error">X2<select data-name="X2" class="point"><option value=""></option></select></td>
-									<td class="error">Y2<select data-name="Y2" class="point"><option value=""></option></select></td>
-								</tr>
+								{/each}
 							</tbody></table>
+							{/if}
 						</div>
 
 					</details>
@@ -546,11 +604,15 @@ console.log('attributes', layerID, attr);
 .EditLayer table {
     width: 100%;
 }
+
 .EditLayer textarea,
 .EditLayer input[type=text] {
     width: calc(100% - 16px);
 	font-size: 1em;
     font-family: Tahoma, Arial, sans-serif;
+}
+.EditLayer input[type=text].short {
+    width: calc(100% - 36px);
 }
 .EditLayer input[type=text].shablon {
     width: 220px;
