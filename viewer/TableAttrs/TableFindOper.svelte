@@ -27,6 +27,19 @@ console.log('update', ev);
 	};
 	const add = (ev) => {
 console.log('add', ev);
+		const key = '_' + layerID;
+		map._showEditObject({
+			layerID,
+			// identityField,
+			indexes: attributes,
+			onSelect: (it) => {
+				// geoJSON = it.toGeoJSON().geometry;
+				// map._editObject.$destroy();
+				map._destroyEditObject(key);
+console.log('onSelect', it);
+			}
+		});
+/*
 		if (map._editObject) map._editObject.$destroy();
 		map._editObject = new EditObject({
 			target: document.body,
@@ -41,6 +54,7 @@ console.log('onSelect', it);
 			}
 		});
 		// dispatch('notify', {cmd: 'setPage', cPage});
+*/
 	};
 	const list = (ev) => {
 console.log('list', ev);
@@ -90,6 +104,7 @@ console.log('check', key);
 		</span>
 		</td>
 		<td class="col_2">
+		<div>
 		<button on:click={show} class="show-columns">Показывать колонки</button>
 		<div bind:this={attrsColumnsList} class="attrsColumnsList scrollbar">
 			<div class="all">
@@ -104,6 +119,7 @@ console.log('check', key);
 				{/if}
 				{/each}
 			</div>
+		</div>
 		</div>
 		</td>
 	</tr>
@@ -124,8 +140,14 @@ console.log('check', key);
 .TableFindOper table td.col_2 {
     width: 20%;
 }
+.TableFindOper table td.col_2 > div {
+    right: 10px;
+    top: 58px;
+    position: absolute;
+}
 .TableFindOper .attrsColumnsList {
     display: none;
+	max-width: 112px;
 	text-align: left;
 	white-space: nowrap;
 	max-height: 310px;
@@ -134,7 +156,6 @@ console.log('check', key);
     background-color: white;
     overflow-y: auto;
 	box-shadow: rgba(100, 100, 100, 0.7) 0px 0px 3px;
-	    margin: 4px 7px 0 0;
     padding: 5px;
 
 }

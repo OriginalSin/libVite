@@ -2,6 +2,7 @@
 import Group from './Group.svelte'
 import { onMount, onDestroy, beforeUpdate, afterUpdate, createEventDispatcher } from 'svelte';
 import { _layerTree, _dateInterval, _contextMenu } from '../stores.js';
+import Utils from '../Utils.js';
 
 export let layerID;
 export let prp = {};
@@ -158,7 +159,8 @@ const toggleLayer = ev => {
 		}
 	}
 }
-const showPos = ev => {
+const showPos = async ev => {
+console.log('_gmx.geometry', _gmx.geometry);
 	if (_gmx.geometry) {
 		let props = _gmx.properties;
 		let bd = props.DateEndUTC * 1000;
@@ -173,33 +175,22 @@ const showPos = ev => {
 				orderby: props.identityField,
 				orderdirection: 'DESC'
 			};
-			let body = Object.keys(par).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(par[key]); }).join('&');
-
-			fetch('//maps.kosmosnimki.ru/VectorLayer/Search.ashx', {
-				method: 'post',
-				mode: 'cors',
-				credentials: 'include',
-				headers: {'Content-type': 'application/x-www-form-urlencoded'},
-				body: body
-			})
-			.then(res => res.json())
-			.then(res => {
-				if (res.Status === 'ok') {
-					let it = res.Result.values[0];
-					let begin = it[res.Result.fields.findIndex(el => el === props.TemporalColumnName)];
-					let geo = it[it.length - 1];
-					bd = begin * 1000;
-					let beg = new Date(bd), end = new Date(bd + 1000);
-					layer.setDateInterval(beg, end);
+			let res = await Utils.search(par);
+			if (res && res.values && res.values.length) {
+				let ind = res.indexes;
+				let it = res.values[0];
+				let begin = it[res.fields.findIndex(el => el === props.TemporalColumnName)];
+			const geo = it[res.indexes.geomixergeojson];
+				// let geo = it[it.length - 1];
+				bd = begin * 1000;
+				let beg = new Date(bd), end = new Date(bd + 1000);
+				layer.setDateInterval(beg, end);
 _dateInterval.set({ begin: bd, end: bd + 1000});
-					titleTimeLine = beg.toLocaleString() + ' по ' + end.toLocaleString();
-					let bounds1 = L.gmxUtil.getGeometryBounds(geo).toLatLngBounds(true);
-					gmxMap.leafletMap.fitBounds(bounds1);
+				titleTimeLine = beg.toLocaleString() + ' по ' + end.toLocaleString();
+				let bounds1 = L.gmxUtil.getGeometryBounds(geo).toLatLngBounds(true);
+				gmxMap.leafletMap.fitBounds(bounds1);
 console.log('showPos', beg, end);
-				}
-			})
-			.catch(err => console.warn(err));
-
+			}
 			// layer.setDateInterval(new Date(bd), new Date(bd + 1000));
 		} else {
 			const bounds = L.gmxUtil.getGeometryBounds(_gmx.geometry).toLatLngBounds();
@@ -215,7 +206,7 @@ console.log('onRightClick', layerID);
 
 </script>
 
-<div bind:this={nodeItem} class="line" on:contextmenu|preventDefault={onRightClick}>
+<div bind:this={nodeItem} class="line" on:contextmenu|stopPropagation|preventDefault={onRightClick}>
 	<span class="beforeIcon" on:click={clickMe} title={titleTimeLine}>{@html beforeIcon}</span>
 	{#if showCheckbox}<input type="checkbox" name="root" class="box" checked={visible} on:click={toggleLayer} />{/if}
 	{#if gmxStyle}<span class="colorIcon" title="Редактировать стили" style={iconStyle}>{@html iconImage}</span>{/if}

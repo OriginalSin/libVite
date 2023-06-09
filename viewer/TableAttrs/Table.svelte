@@ -6,16 +6,22 @@
 	import TableFoot from './TableFoot.svelte';
 	import FindForm from './FindForm.svelte';
 	import TableFindOper from './TableFindOper.svelte';
+import Utils from '../Utils.js';
 
 	import { onMount } from 'svelte';
 
 	export let layerID;
 
 	// let layerID = data.layerID;
-	let map = L.gmx.gmxMap.leafletMap;
+let gmxMap = L.gmx.gmxMap;
+let map = gmxMap.leafletMap;
+let layersByID = gmxMap.layersByID;
+let lprops = layersByID[layerID]._gmx;
+let attributes = lprops.properties.attributes;
+	// let map = L.gmx.gmxMap.leafletMap;
 	let showModal = true;
-	let lprops;
-	let attributes = [];
+// let lprops;
+// let attributes = [];
 	let identityField;
 	let orderBy;
 	let orderdirection = 'DESC'; //'ASC';
@@ -47,25 +53,31 @@ console.log('pars', pars);
 		// loading = true;
 		foot = {...foot, loading: true};
 		if (!lprops) {
-			let url = prefix + 'Layer/GetLayerJson.ashx?WrapStyle=none&LayerName=' + layerID;
-			lprops = await fetch(url).then(_respJson);
-			if (lprops.Status === 'error') showInfo.view('Серверная ошибка: ' + lprops.ErrorInfo.ErrorMessage, 'error');
-			lprops = lprops.Result;
+			lprops = await Utils.getLayerJson(layerID);
+
+			// let url = prefix + 'Layer/GetLayerJson.ashx?WrapStyle=none&LayerName=' + layerID;
+			// lprops = await fetch(url).then(_respJson);
+			// if (lprops.Status === 'error') showInfo.view('Серверная ошибка: ' + lprops.ErrorInfo.ErrorMessage, 'error');
+			// lprops = lprops.Result;
 		}
 		// else {
 			// lprops = lprops.Result;
 		attributes = lprops.properties.attributes;
 		identityField = lprops.properties.identityField;
 		
-        const fd = new FormData();
-        fd.append('WrapStyle', 'None');
-        fd.append('layer', layerID);
-		if (query) fd.append('query', query);
-        fd.append('count', true);
-		let url = prefix + 'VectorLayer/Search.ashx';
-		let sr = await fetch(url, {method: 'POST', mode: 'cors', credentials: 'include', body: fd}).then(_respJson);
-        fd.delete('count');
-		if (sr.Status === 'ok') count = sr.Result || 0;
+		let attr = {
+			layer: layerID,
+			count: true
+		};
+		if (query) attr.query = query;
+		count = await Utils.search(attr);
+		delete attr.count;
+
+		attr.page = pars.cPage || 0;
+		attr.pagesize = pars.pSize || 20;
+		attr.orderdirection = orderdirection;
+		attr.orderBy = orderBy || identityField;
+
 		let columns = [
 			{"Value":"GeomIsEmpty([geomixergeojson])","Alias":"__GeomIsEmpty__"},
 			{"Value":'[' + identityField + ']'}
@@ -73,38 +85,19 @@ console.log('pars', pars);
 		lprops.properties.attributes.forEach(key => {
 			columns.push({"Value":'[' + key + ']'});
 		});
-
-		let cPage = pars.cPage || 0,
-			pSize = pars.pSize || 20;
-        fd.append('orderdirection', orderdirection);
-        fd.append('orderBy', orderBy || identityField);
-        fd.append('pagesize', pSize);
-        fd.append('page', cPage);
-        fd.append('columns', JSON.stringify(columns));
-
-		sr = await fetch(url, {method: 'POST', mode: 'cors', credentials: 'include', body: fd}).then(_respJson);
-		if (sr.Status === 'ok') {
-			items = sr.Result || 0;
+		attr.columns = JSON.stringify(columns);
+		items = await Utils.search(attr);
+		
+		if (items) {
 			let needChecked = !selectCols;
-			if (needChecked) selectCols = {};
-			items.indexes = items.fields.reduce((a, c, i) => {
-				a[c] = i;
-				if (needChecked) selectCols[c] = true;
-				return a;
-			}, {});
-			// items.rawKeys = items.fields.filter(k => k !== identityField);
-			// items.rawKeys.unshift(identityField);
-			mPage = Math.floor(count / pSize);
-			foot = {...foot, mPage, count, cPage, pSize};
+			if (needChecked) {
+				selectCols = {};
+				items.fields.forEach(k => selectCols[k] = true);
+			}
+			mPage = Math.floor(count / attr.pagesize);
+			foot = {...foot, mPage, count, cPage: attr.page, pSize: attr.pagesize};
 		}
-		// loading = undefined;
 		foot = {...foot, loading: undefined};
-
-console.log('getPage', lprops, count, items);
-
-		// }
-
-		// const lprops = await fetch(prefix + 'Layer/GetLayerJson.5ashx?WrapStyle=none&LayerName=' + pars.layerID).then(_respJson);
 	};
 	if (layerID) getPage({});
 

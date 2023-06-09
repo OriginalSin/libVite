@@ -28,6 +28,7 @@ console.log('item', data);
 		// }
 	// });
 	
+	let map = L.gmx.gmxMap.leafletMap;
 	let items;
 	let menuEl;
 	function onPageClick(e) {
@@ -48,10 +49,12 @@ console.log('selOp', it, data);
 				L.gmxUtil.layerHelper.appendLayerData(params);
 				break;
 			case 'attr':
-				L.gmx.gmxMap.leafletMap._showTableAttrs(data);
+				map._showTableAttrs(data);
 				break;
 			case 'addObject':
-				L.gmx.gmxMap.leafletMap._showEditObject(data);
+				map._showEditObject(data);
+			case 'props':
+				map._showEditLayer(data);
 				break;
 		}
 	}
@@ -84,6 +87,6 @@ console.log('selOp', it, data);
 		border: 1px solid #0003;
 		box-shadow: 2px 2px 5px 0px #0002;
 		background: white;
-		z-index: 400;
+		z-index: 1000;
 	}
 </style>

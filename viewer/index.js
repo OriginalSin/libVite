@@ -6,15 +6,15 @@ import ContextMenu from './ContextMenu/Menu.svelte'
 // import TableAttrs from './TableAttrs/Table.svelte'
 import TableAttrs from './TableAttrs/index.svelte'
 import EditObject from './EditObject/EditObject.svelte';
+import EditLayer from './EditLayer/EditLayer.svelte';
 
 let map;
 const init = () => {
 	map = L.gmx.gmxMap.leafletMap;
 console.log('init', map);
-	map._destroyTableAttrs = destroyTableAttrs;
-	map._showTableAttrs = showTableAttrs;
-	map._showEditObject = showEditObject;
-	map._destroyEditObject = destroyEditObject;
+	map._showTableAttrs = showTableAttrs;	map._destroyTableAttrs = destroyTableAttrs;
+	map._showEditObject = showEditObject;	map._destroyEditObject = destroyEditObject;
+	map._showEditLayer = showEditLayer;		map._destroyEditLayer = destroyEditLayer;
 	map._showContextMenu = showContextMenu;
 	map._setViewerData = setData;
 
@@ -48,30 +48,31 @@ const showTableAttrs = (data) => {
 	});
 }
 let editObjects = {};
-const destroyEditObject = (layerID) => {
-	if (editObjects[layerID]) editObjects[layerID].$destroy();
-}
-const showEditObject = (data) => {
-	const layerID = data.layerID;
-	destroyEditObject(layerID);
-	editObjects[layerID] = new EditObject({
-		target: document.body,
-		  props: {
-			  data
-		 } 
-	});
+const destroyEditObject = (key) => { if (editObjects[key]) editObjects[key].$destroy(); }
+const showEditObject = (attr) => {
+	const {layerID, id} = attr;
+	const key = id + '_' + layerID;
+	destroyEditObject(key);
+	editObjects[key] = new EditObject({target: document.body, props: {attr}});
 }
 
+let editLayers = {};
+const destroyEditLayer = (layerID) => { if (editLayers[layerID]) editLayers[layerID].$destroy(); }
+const showEditLayer = (attr) => {
+	const {layerID} = attr;
+	if (!attr.width) attr.width = 380;
+	destroyEditLayer(layerID);
+	editLayers[layerID] = new EditLayer({target: document.body, props: {attr}});
+}
 const setData = (data) => {
 	if (data.dateInterval) {
 		_dateInterval.update(data.dateInterval);
 	}
 }
 export default {
-	showEditObject,
-	destroyEditObject,
-	showTableAttrs,
-	destroyTableAttrs,
+	showEditLayer,	destroyEditLayer,
+	showEditObject,	destroyEditObject,
+	showTableAttrs,	destroyTableAttrs,
 	showContextMenu,
 	setData,
 	init

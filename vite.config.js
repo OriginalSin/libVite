@@ -61,12 +61,19 @@ export default defineConfig({
     },
   },
   server: {
+	// host: '127.0.0.1',
+	// port: 8080,
+	// https: true,
 	port: 5172,
     proxy: {
+		// changeOrigin: true,
       // string shorthand
       '/TileSender.ashx': proxyPrefix + '/TileSender.ashx',
-      '/Layer/CheckVersion.ashx': proxyPrefix + '/Layer/CheckVersion.ashx',
-      // '/Layer': proxyPrefix + '/Layer',
+      // '/Layer/CheckVersion.ashx': proxyPrefix + '/Layer/CheckVersion.ashx',
+      // '^/Layer/': {
+                // target: proxyPrefix + '/Layer/',
+                // changeOrigin: true,
+            // },
       '/VectorLayer': proxyPrefix + '/VectorLayer',
 	}
   }

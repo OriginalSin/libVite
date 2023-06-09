@@ -1,11 +1,15 @@
 <script>
+	import { onMount } from 'svelte';
+
 	export let left;
 	export let top;
+	export let width = undefined;
+	export let height = undefined;
 	
 	let moving = false;
 	let type = '';
 	let cont;
-	let height, width;
+	// let height, width;
 
 	function isHeader(e) {
 		const t = e.target;
@@ -34,6 +38,12 @@ console.log('onMouseDown', height, cont.clientWidth, cont.clientHeight);
 			moving = true;
 		}
 	}
+	onMount(() => {
+			height = cont.clientHeight - 8, width = cont.clientWidth - 8;
+			left = cont.offsetLeft; top = cont.offsetTop;
+		// thead.style.transform = 'translate(0, -2px)';
+		// console.log('ggggggggg', attrsTableParent);
+	});
 	
 	function onMouseMove(e) {
 		if (moving) {
@@ -77,6 +87,9 @@ console.log('onMouseDown', height, cont.clientWidth, cont.clientHeight);
   --tableAttrs-height: 320px;
 }
 .draggable {
+	
+    max-width: 80%;
+
 		overflow: hidden;
 		white-space: nowrap;
 	user-select: none;
@@ -99,28 +112,28 @@ console.log('onMouseDown', height, cont.clientWidth, cont.clientHeight);
 .draggable .n {
 	cursor: n-resize;
 	width: 100%;
-	height: 2px;
+	height: 4px;
 	left: 0;
 	top: 0;
 }
 .draggable .e {
 	cursor: e-resize;
 	height: 100%;
-	width: 2px;
+	width: 4px;
 	top: 0;
 	right: 0;
 }
 .draggable .s {
 	cursor: s-resize;
 	width: 100%;
-	height: 2px;
+	height: 4px;
 	left: 0;
 	bottom: 0;
 }
 .draggable .w {
 	cursor: w-resize;
 	height: 100%;
-	width: 2px;
+	width: 4px;
 	top: 0;
 	left: 0;
 }

@@ -3,6 +3,7 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
+import Utils from '../Utils.js';
 
 	export let layerID;
 	export let attributes;
@@ -158,17 +159,36 @@ console.log('setPage', pStart, mPage);
 	};
 	const showItem = async (it) => {
 		const id = it[items.indexes[identityField]];
-		const sprefix = prefix + 'VectorLayer/Search.ashx?WrapStyle=none&geometry=true&out_cs=4326&layer=' + layerID;
-		const sr = await fetch(sprefix + '&query=[' + identityField + ']=' + id).then(_respJson);
-		if (sr.Status  === 'ok') {
-			const pt = sr.Result.values[0];
-			const geo = pt[pt.length - 1];
+		const res = await Utils.search({
+			geometry:true,
+			out_cs:4326,
+			query: '[' + identityField + ']=' + id,
+			layer: layerID
+		});
+		if (res && res.values && res.values.length) {
+			const pt = res.values[0];
+			const geo = pt[res.indexes.geomixergeojson];
 			const geoJson = L.geoJson(L.gmxUtil.geometryToGeoJSON(geo));
 			L.gmx.gmxMap.leafletMap.fitBounds(geoJson.getBounds());
 		}
 	};
 	const editItem = (data) => {
+		const id = data[items.indexes[identityField]];
+		const key = id + '_' + layerID;
+		map._showEditObject({
+			layerID,
+			id,
+			identityField,
+			indexes: items.indexes,
+			onSelect: (it) => {
+				// geoJSON = it.toGeoJSON().geometry;
+				// map._editObject.$destroy();
+				map._destroyEditObject(key);
+console.log('onSelect', it);
+			}
+		});
 console.log('editItem', data);
+/*
 		// const id = it[items.indexes[identityField]];
 		if (map._editObject) map._editObject.$destroy();
 		map._editObject = new EditObject({
@@ -184,6 +204,7 @@ console.log('onSelect', it);
 				}
 			}
 		});
+*/
 	};
 	const sortItems = (key) => {
 		dispatch('notify', {cmd: 'sortItems', key});

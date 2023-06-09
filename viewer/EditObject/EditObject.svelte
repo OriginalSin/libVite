@@ -2,17 +2,25 @@
 import Draggable from '../Modal/Draggable.svelte';
 import CreateDescr from './CreateDescr.svelte';
 import DrawingList from '../DrawingList/DrawingList.svelte';
+import Utils from '../Utils.js';
 
-export let data = [];
-export let indexes = {};
-export let layerID;
+export let attr = {};
 
-// let layerID = data.layerID;
+// export 
+let indexes = {};
+// export let layerID = data.layerID;
+
+let {layerID, id} = attr;
+let fields = attr.indexes;
+let data = [];
+let contNode;
+
 let gmxMap = L.gmx.gmxMap;
 let map = gmxMap.leafletMap;
 let layersByID = gmxMap.layersByID;
 let props = layersByID[layerID]._gmx.properties;
 let attributes = props.attributes;
+if (!fields) fields = attributes;
 	let drawingList;
 
 let closeIcon = L.gmxUtil.setSVGIcon('close');
@@ -22,12 +30,26 @@ let features = gmxDrawing.getFeatures();
 let geoJSON;
 let dialog;
 
+const getItem = async (layerID, id) => {
+	let res = await Utils.search({
+		geometry: true,
+		layer: layerID,
+		query: '[gmx_id]=' + id
+	});
+	fields = res.fields;
+	indexes = res.indexes;
+	data = res.values[0];
+	geoJSON = L.gmxUtil.geometryToGeoJSON(data[indexes.geomixergeojson], true, true);
+};
+id && getItem(layerID, id);
+
 L.gmx.gmxDrawing.on('drawstop', (ev) => {
 	features = gmxDrawing.getFeatures();
 });
 const closeMe = () => {
-	map._editObject.$destroy();
-	// map._destroyEditObject(layerID);
+	const key = id + '_' + layerID;
+	// map._editObject.$destroy();
+	map._destroyEditObject(key);
 };
 const setGeo = (pt) => {
 // console.log('setGeo', pt);
@@ -69,22 +91,28 @@ const editDescr = (ev) => {
 	});
 console.log('editDescr', ev);
 };
-const save = (ev) => {
-console.log('save', ev);
+const save = () => {
+	const out = {};
+	const inputs = contNode.getElementsByTagName('input');
+	Object.values(inputs).forEach(inp => {
+		out[inp.getAttribute('data-key')] = inp.value;
+// console.log('inp', inp);
+	});
+console.log('save', out);
 };
 const del = (ev) => {
 console.log('del', ev);
 };
 
-console.log('attributes', layerID, data);
+console.log('attributes', layerID, attr);
 
 </script>
 
 <Draggable>
 
-<div class="EditObject">
-	<div class="header">
-		<span class="title">Создать объект слоя: </span>
+<div class="EditObject" bind:this={contNode}>
+	<div class="header"> 
+		<span class="title">{id ? 'Редактировать' : 'Создать'} объект слоя: </span>
 		<button on:click={closeMe} type="button" class="close">{@html closeIcon}</button>
 	</div>
 	<div class="body scrollbar">
@@ -100,16 +128,19 @@ console.log('attributes', layerID, data);
 			{/if}
 			</td>
 		</tr>
-		{#each (attributes || []) as name, i}
+		{#each (fields || []) as name, i}
 		{@const val = data[indexes[name]]}
+			{#if name !== 'geomixergeojson'}
+		
 		<tr>
 			<td class="name">
 				<span>{name}</span>
 			</td>
 			<td class="val">
-				<input type="text" value={val || ''} />
+				<input type="text" data-key={name} value={val || ''} />
 			</td>
 		</tr>
+			{/if}
 		{/each}
 		<tr class="Descr">
 			<td class="name">
@@ -122,8 +153,8 @@ console.log('attributes', layerID, data);
 		</tbody></table>
 	</div>
 	<div class="foot">
-		<button on:click={save} class="save">{data.length ? 'Изменить' : 'Создать'}</button>
-		{#if data.length}<button on:click={del} class="save">Удалить</button>{/if}
+		<button on:click={save} class="save">{id ? 'Изменить' : 'Создать'}</button>
+		{#if id}<button on:click={del} class="save">Удалить</button>{/if}
 	</div>
 </div>
 
