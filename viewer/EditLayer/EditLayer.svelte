@@ -2,6 +2,7 @@
 import Draggable from '../Modal/Draggable.svelte';
 // import CreateDescr from './CreateDescr.svelte';
 import DrawingList from '../DrawingList/DrawingList.svelte';
+import GetDirectoryContent from './GetDirectoryContent.svelte';
 import Utils from '../Utils.js';
 
 export let attr = {};
@@ -139,6 +140,25 @@ const delCol = (ev) => {
 	// GeometryType = tabNode.className;
 console.log('delCol', GeometryType);
 };
+const setDirectory = (pt) => {
+// console.log('setGeo', pt);
+	map._directoryContent = new GetDirectoryContent({
+		target: document.body,
+		props: {
+			attr: {
+				layerID,
+				onSelect: (it) => {
+					geoJSON = it.toGeoJSON().geometry;
+					map._directoryContent.$destroy();
+	console.log('onSelect', geoJSON);
+				},
+				left: 200,
+				top: 200
+			}
+		}
+	});
+
+};
 
 console.log('attributes', layerID, attr);
 
@@ -201,7 +221,7 @@ console.log('attributes', layerID, attr);
 							<span>Источник:<br> Файл</span>
 						</td>
 						<td class="val">
-							<input type="text" value={props.ShapePath?.Path || ''} class="ShapePath short {props.ShapePath?.Exists ? 'Exists' : ''}" /><button on:click={setGeo} class="img geom" />
+							<input type="text" value={props.ShapePath?.Path || ''} class="ShapePath short {props.ShapePath?.Exists ? 'Exists' : ''}" /><button on:click={setDirectory} class="img geom" />
 						</td>
 						{:else if SourceType === 'table'}
 						<td class="title">

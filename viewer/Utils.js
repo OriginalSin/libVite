@@ -12,6 +12,41 @@ const Utils = {
 			Utils.notification.view('Серверная ошибка: ' + resp.status, 'error');
 		}
 	},
+	getDrives: () => {
+		let url = Utils.prefix + 'FileBrowser/GetDrives.ashx';
+		return new Promise(resolve => {
+			L.gmxUtil.sendCrossDomainPostRequest(url, {WrapStyle: 'message'}, json => {
+				let out = json.Result;
+				const st = json.Status;
+				if (st === 'auth') {
+					out = json;
+					Utils.notification.view('Серверная ошибка: Необходимо авторизоваться', 'error');
+				} else if (st !== 'ok') {
+					Utils.notification.view('Серверная ошибка: ' + json.ErrorInfo.ErrorMessage, 'error');
+					out = json.ErrorInfo;
+				}
+				resolve(out);
+			});
+		});
+	},
+	getDirectoryContent: layerID => {
+		let url = Utils.prefix + 'FileBrowser/GetDirectoryContent.ashx';
+		let root = '@SergikOriginal/Maps/sergt_oper/';
+		return new Promise(resolve => {
+			L.gmxUtil.sendCrossDomainPostRequest(url, {root, WrapStyle: 'message'}, json => {
+				let out = json.Result;
+				const st = json.Status;
+				if (st === 'auth') {
+					out = json;
+					Utils.notification.view('Серверная ошибка: Необходимо авторизоваться', 'error');
+				} else if (st !== 'ok') {
+					Utils.notification.view('Серверная ошибка: ' + json.ErrorInfo.ErrorMessage, 'error');
+					out = json.ErrorInfo;
+				}
+				resolve(out);
+			});
+		});
+	},
 	getLayerInfo: layerID => {
 		let url = Utils.prefix + 'Layer/GetLayerInfo.ashx';
 		return new Promise(resolve => {
