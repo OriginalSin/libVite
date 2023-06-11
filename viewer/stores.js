@@ -3,6 +3,8 @@ import { writable } from 'svelte/store';
 
 // const notification = new Notification();
 const day = 24*3600*1000;
+const prefix = 'https://maps.kosmosnimki.ru/';
+const options = {mode: 'cors', credentials: 'include'};
 
 export const _layerTree = writable({});
 export const _dateInterval = writable({}, () => {
@@ -17,3 +19,11 @@ _dateInterval.set({ begin, end });
 });
 // export const _notification = writable(notification);
 export const _contextMenu = writable({});
+export const _userInfo = writable({}, async () => {
+	const res = await fetch(prefix + 'User/GetUserInfo.ashx', options).then(resp => resp.json());
+	_userInfo.set(res?.Result);
+});
+export const _drivesInfo = writable([], async () => {
+	const res = await fetch(prefix + 'FileBrowser/GetDrives.ashx', options).then(resp => resp.json());
+	_drivesInfo.set(res?.Result);
+});

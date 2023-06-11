@@ -52,10 +52,10 @@ const getItem = async layerID => {
 		Quicklook = JSON.parse(props.Quicklook);
 		isQuicklook = true;
 	}
-	colsArr = props.Columns.filter(it => !it.IsPrimary && it.name !== 'GMX_RasterCatalogID' && it.name !== 'wkb_geometry');
+	colsArr = (props.Columns || []).filter(it => !it.IsPrimary && it.name !== 'GMX_RasterCatalogID' && it.name !== 'wkb_geometry');
 
 
-console.log('getItem', props, colsArr);
+console.log('getItem', props, properties);
 	// fields = res.fields;
 	// indexes = res.indexes;
 	// data = res.values[0];
@@ -68,6 +68,20 @@ const getColumnsOption = (f) => {
 	return colsArr.map(it => {
 		const n = it.Name;
 		return '<option value="' + n + '" ' + (f === n.toUpperCase() ? 'selected' : '') + '>' + n + '</option>';
+	});
+};
+const getEncodeSourceOption = (f) => {
+	return [
+		'windows-1251',
+		'utf-8',
+		'koi8-r',
+		'utf-7',
+		'iso-8859-5',
+		'koi8-u',
+		'cp866'
+	].map(n => {
+		// const n = it.Name;
+		return '<option value="' + n + '" ' + (f === n ? 'selected' : '') + '>' + n + '</option>';
 	});
 };
 
@@ -222,6 +236,16 @@ console.log('attributes', layerID, attr);
 						</td>
 						<td class="val">
 							<input type="text" value={props.ShapePath?.Path || ''} class="ShapePath short {props.ShapePath?.Exists ? 'Exists' : ''}" /><button on:click={setDirectory} class="img geom" />
+							<div class="manual">
+								<span>Кодировка</span>
+								<select class="EncodeSource">
+									{@html getEncodeSourceOption(props.EncodeSource)}
+								</select>
+							</div>
+							<div class="otherEncoding">
+								<label><input type="checkbox" /> Другая</label>
+								<input class="VectorLayerEncodingInput" disabled="disabled" />
+							</div>
 						</td>
 						{:else if SourceType === 'table'}
 						<td class="title">
@@ -498,6 +522,10 @@ console.log('attributes', layerID, attr);
 }
 .EditLayer .header .title {
 	pointer-events: none;
+	overflow: hidden;
+    text-overflow: ellipsis;
+    width: calc(100% - 16px);
+    display: inline-block;
 }
 .EditLayer .header .close {
     right: 4px;
@@ -630,6 +658,17 @@ console.log('attributes', layerID, attr);
     width: calc(100% - 16px);
 	font-size: 1em;
     font-family: Tahoma, Arial, sans-serif;
+	    border: 1px solid #AFC0D5;
+    background-color: #FFFFFF;
+    height: 14px;
+    padding: 2px;
+    margin: 1px 3px;
+}
+.EditLayer select {
+	border: 1px solid #AFC0D5;
+    background-color: #FFFFFF;
+    height: 20px;
+    margin: 1px 3px;
 }
 .EditLayer input[type=text].short {
     width: calc(100% - 36px);

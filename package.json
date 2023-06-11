@@ -19,6 +19,8 @@
     "vite-svg-plugin": "^1.0.2"
   },
   "dependencies": {
+    "@svelte-parts/drop-file": "^0.0.23",
+    "fetch-progress": "^1.3.0",
     "rollup-plugin-web-worker-loader": "^1.6.1",
     "self-intersects": "^0.0.3",
     "splaytree": "^3.1.1",

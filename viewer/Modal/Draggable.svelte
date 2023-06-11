@@ -31,7 +31,7 @@
 		return flag;
 	}
 	function onMouseDown(e) {
-console.log('onMouseDown', height, cont.clientWidth, cont.clientHeight);
+// console.log('onMouseDown', height, cont.clientWidth, cont.clientHeight);
 		if (isHeader(e)) {
 			height = cont.clientHeight - 8, width = cont.clientWidth - 8;
 			left = cont.offsetLeft; top = cont.offsetTop;

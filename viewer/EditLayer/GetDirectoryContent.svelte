@@ -1,8 +1,10 @@
 <script>
+import DropFile from '@svelte-parts/drop-file'
 import Draggable from '../Modal/Draggable.svelte';
 // import CreateDescr from './CreateDescr.svelte';
 import DrawingList from '../DrawingList/DrawingList.svelte';
 import Utils from '../Utils.js';
+import {_drivesInfo, _userInfo} from '../stores.js';
 
 export let attr = {};
 
@@ -41,28 +43,88 @@ let TemporalLayer = false;
 let Quicklook;
 let colsArr = [];
 let drives;
+let folder = '';
+let folderMap;
+let folderCont = [];
+let userInfo;
+let files;
+let progressbar;
+let foot;
+ let fileOver = false;
+let pathCount = 0;
 
-const getItem = async layerID => {
-	drives = await Utils.getDrives();
-	props = await Utils.getDirectoryContent(layerID);
-	// SourceType = props.SourceType || 'Файл';
-	// GeometryType = props.GeometryType || 'linestring';
-	// IsRasterCatalog = props.IsRasterCatalog;
-	// TemporalLayer = props.TemporalLayer;
-	// if (props.Quicklook) {
-		// Quicklook = JSON.parse(props.Quicklook);
-		// isQuicklook = true;
-	// }
-	// colsArr = props.Columns.filter(it => !it.IsPrimary && it.name !== 'GMX_RasterCatalogID' && it.name !== 'wkb_geometry');
+const onDrop = (arr) => {
+	fileOver = false
+	files = arr;
+	// sendFiles(files);
+}
 
+const dropFiles = e => {
+  files = e.dataTransfer.files;
+}
+const sendFiles = async files => {
+	foot.classList.add('active');
+	let res = await Utils.upload(files, folder, progressbar);
+	foot.classList.remove('active');
+	if (res.length) getFolder(folder);
+}
+$: if (files) sendFiles(files);
 
-console.log('getItem', props, drives);
-	// fields = res.fields;
-	// indexes = res.indexes;
-	// data = res.values[0];
-	// geoJSON = L.gmxUtil.geometryToGeoJSON(data[indexes.geomixergeojson], true, true);
+const getFolder = async it => {
+	folder = it;
+	let arr = await Utils.getDirectoryContent(folder);
+	if (Array.isArray(arr)) {
+		pathCount = folder.split('/').filter(it => it).length - 1;
+		folderCont = sortFolderCont(arr);
+	}
 };
-layerID && getItem(layerID);
+
+_userInfo.subscribe(value => {
+	if (value.Folder) {
+		folderMap = value.Folder + '/Maps/' + L.gmx.gmxMap.properties.title + '/';
+		userInfo = value;
+		getFolder(folderMap);
+	}
+});
+_drivesInfo.subscribe(value => {
+	drives = value;
+});
+
+let sortAttr = {
+	key: 'Name',
+	desc: false
+};
+const sortFolderCont = (arr) => {
+	const desc = sortAttr.desc ? 1 : -1;
+	const key = sortAttr.key;
+	return arr.sort((a, b) => {
+		let aa = a[key] || '', bb = b[key] || '';
+		let nn = aa.localeCompare && bb.localeCompare ? aa.localeCompare(bb) : aa - bb;
+		return (+b.Directory) - (+a.Directory) || (desc * nn);
+	});
+};
+const pathCount1 = () => {
+	return folder.replace(/\\/g, '').split('/').length - 1;
+};
+const sortBy = (k) => {
+	if (sortAttr.key === k) sortAttr.desc = !sortAttr.desc;
+	sortAttr.key = k;
+	folderCont = sortFolderCont(folderCont); 
+};
+
+let newFolderShow;
+const addFolder = async (ev) => {
+	let name = ev.target.previousElementSibling.value;
+	if (name && await Utils.createFolder(folder + name) === 'ok') getFolder(folder);
+};
+const goParent = () => {
+	let name = folder.replace(/([^\/]+\/)$/, '');
+	if (name) getFolder(name);
+};
+const goMain = () => {
+	getFolder(userInfo.Folder);
+console.log('userInfo', userInfo);
+};
 
 const getColumnsOption = (f) => {
 	// f = f.toUpperCase();
@@ -131,142 +193,117 @@ const selTab = (ev) => {
 	tab = tabNode.className;
 console.log('del', tab);
 };
-const selGeometryType = (ev) => {
-	const tabNode = ev.target;
-	GeometryType = tabNode.className;
-console.log('del', GeometryType);
+const goSubFolder = (it) => {
+	getFolder(folder + it.Name + '/');
+console.log('goSubFolder', folder, it);
 };
-const delCol = (ev) => {
-	// const tabNode = ev.target;
-	// GeometryType = tabNode.className;
-console.log('delCol', GeometryType);
+const goChoose = (ev) => {
+console.log('goChoose', ev);
 };
 
 console.log('attributes', layerID, attr);
+// {@debug	drives}
 
 </script>
 
 <Draggable {width} {height}>
 
 
-<div class="EditLayer">
-	
+<div class="GetDirectoryContent">
 	<div class="header">
 		<span class="title">{layerID ? 'Файл: ' : 'Создать векторный слой'}<b>{props.Title || ''}</b></span>
 		<button on:click={closeMe} type="button" class="close">{@html closeIcon}</button>
 	</div>
 	<div class="body">
-	<div class="line folders">
-		{#each (drives || []) as it}
-		<button>{it}</button>
-		{/each}
-		<button title="Обновить" class="reload img" />
-		<button title="Директория проекта" class="home img" />
-		<button title="Новая папка" class="newfolder img" />
+		<div class="line folders">
+			{#each (drives || []) as it}
+			<button on:click={() => getFolder(it)}>{it}</button>
+			{/each}
+			<button on:click={() => getFolder(folder)} title="Обновить" class="reload img" />
+			<button on:click={() => getFolder(folderMap)} title="Директория проекта" class="home img" />
+			<button on:click={() => newFolderShow = !newFolderShow} title="Новая папка" class="newfolder img" />
+			<span class="newfolder {newFolderShow ? 'active':''}">
+				<input /><button on:click={addFolder}>Создать</button>
+			</span>
+		</div>
 
-<img src="img/reload.png" title="Обновить" style="cursor: pointer; border: none; margin: 0px 5px 0px 10px; width: 14px; height: 15px;">
-<img src="img/home.png" title="Директория проекта" style="cursor: pointer; border: none; margin: 0px 10px 0px 5px; width: 15px; height: 15px;">
-<img src="img/newfolder.png" title="Новая папка" style="cursor: pointer; border: none; width: 16px; height: 13px; margin-right: 10px;">
+		<div class="currentDir">
+			<span class="fileBrowser-pathElem">{folder}</span>
+			<br>
+			<label class="filter">Фильтр: <input type="text" /></label>
+		</div>
+
+		<div class="table scrollbar">
+			<table><thead>
+				<tr>
+					<th class="col_0"><button on:click={() => getFolder(userInfo.Folder)}>\</button></th>
+					<th class="col_1"><button on:click={() => sortBy('name')}>Имя</button></th>
+					<th class="col_2"><button on:click={() => sortBy('type')}>Тип</button></th>
+					<th class="col_3"><button on:click={() => sortBy('Size')}>Размер</button></th>
+					<th class="col_4"><button on:click={() => sortBy('Date')}>Дата</button></th>
+				</tr>
+				</thead>
+			<tbody>
+				
+				{#if pathCount > 0}
+				<tr>
+					<td class="col_1" colspan=5><button on:click={goParent} class="rawButton img">[..]</button></td>
+				</tr>
+				{/if}
+			{#each (folderCont || []) as it, i}
+				{@const date = new Date(it.Date * 1000).toLocaleString()}
+				{@const size = Utils.formatBytes(it.Size)}
+				{@const name = it.Name.match(/([^\.]+)/)[0]}
+				{@const type = it.Name.match(/\.([^.]+)$|$/)[1]}
+				
+				{@const choose = type === 'geojson' || type === 'shp' || type === 'tab'}
+				{@const up = it.Directory1}
+				{#if it.Directory}
+				<tr on:click={() => goSubFolder(it)}>
+					<td class="col_0"></td>
+					<td class="col_1 folder">{it.name}</td>
+					<td class="col_2"></td>
+					<td class="col_3">Папка</td>
+					<td class="col_4">{it.date}</td>
+				</tr>
+				{:else}
+				<tr>
+					<td class="col_0">{#if choose}<button class="choose img" on:click={goChoose} />{/if}</td>
+					<td class="col_1">{it.name}</td>
+					<td class="col_2">{it.type}</td>
+					<td class="col_3">{it.size}</td>
+					<td class="col_4">{it.date}</td>
+				</tr>
+				{/if}
+			{/each}
+			</tbody></table>
+		</div>
 	</div>
+
+	<div bind:this={foot} class="foot">
+		<input bind:files multiple type="file" />
+		<DropFile onDrop={onDrop} onEnter={() => fileOver = true} onLeave={() => fileOver = false}>
+			<div bind:this={progressbar} class="progressbar" />
+			<span class="dropTitle {`drop-zone ${fileOver ? 'over' : ''}`}">
+			{#if fileOver}
+			  Drop it!
+			{:else}
+			  Перетащите файлы сюда
+			{/if}
+			</span>
+		</DropFile>
+
 	</div>
-
-<!--  input class="btn" type="submit" value="y:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="w:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="x:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="z:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="t:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="q:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="r:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="p:\" style="padding: 0px 5px;"></td>
-<td valign="top">
-
-<img src="img/reload.png" title="Обновить" style="cursor: pointer; border: none; margin: 0px 5px 0px 10px; width: 14px; height: 15px;"></td><td valign="top">
-<img src="img/home.png" title="Директория проекта" style="cursor: pointer; border: none; margin: 0px 10px 0px 5px; width: 15px; height: 15px;"></td><td valign="top" style="height: 20px;"><table><tbody><tr><td valign="top">
-<img src="img/newfolder.png" title="Новая папка" style="cursor: pointer; border: none; width: 16px; height: 13px; margin-right: 10px;"></td><td>
-<input class="inputStyle" style="width: 150px; margin: 0px 3px; display: none;"></td><td>
-<input class="btn" type="submit" value="Создать" style="padding: 0px 5px; display: none;"></td></tr></tbody></table></td></tr></tbody></table></div>
-
-		<label>Мин. зум<input type="text" value={props.RCMinZoomForRasters || ''} class="minzoom" /></label>
+<!-- div bind:this={dropBox} class="dragFiles" on:drop|capture|stopPropagation|preventDefault={dropFiles}>
+	<div bind:this={progressbar} class="progressbar" style="width: 75%;">
 	</div>
-
-
-<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-describedby="ui-id-142" aria-labelledby="ui-id-143" style="position: absolute; height: auto; width: 800px; top: 179px; left: 87px; display: block;">
-
-<div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix">
-
-<span id="ui-id-143" class="ui-dialog-title">Файл</span>
-<button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" aria-disabled="false" title="">
-<span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span>
-<span class="ui-button-text"></span></button></div>
-
-<div id="ui-id-142" class="ui-dialog-content ui-widget-content" style="width: auto; min-height: 0px; max-height: none; height: 349px;">
-
-<div id="fileBrowserDialog">
-
-<div style="height: 24px;"><table><tbody><tr><td>
-
-<input class="btn" type="submit" value="workfolder\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="y:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="w:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="x:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="z:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="t:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="q:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="r:\" style="padding: 0px 5px;"></td><td>
-<input class="btn" type="submit" value="p:\" style="padding: 0px 5px;"></td>
-<td valign="top">
-<img src="img/reload.png" title="Обновить" style="cursor: pointer; border: none; margin: 0px 5px 0px 10px; width: 14px; height: 15px;"></td><td valign="top">
-<img src="img/home.png" title="Директория проекта" style="cursor: pointer; border: none; margin: 0px 10px 0px 5px; width: 15px; height: 15px;"></td><td valign="top" style="height: 20px;"><table><tbody><tr><td valign="top">
-<img src="img/newfolder.png" title="Новая папка" style="cursor: pointer; border: none; width: 16px; height: 13px; margin-right: 10px;"></td><td>
-<input class="inputStyle" style="width: 150px; margin: 0px 3px; display: none;"></td><td>
-<input class="btn" type="submit" value="Создать" style="padding: 0px 5px; display: none;"></td></tr></tbody></table></td></tr></tbody></table></div>
-
-<div class="fileCanvas">
-
-<div class="currentDir" style="color: rgb(21, 48, 105); font-size: 12px;">
-<span class="fileBrowser-pathWidget">
-<span class="fileBrowser-pathElem">@SergikOriginal\</span>
-<span class="fileBrowser-pathElem">Maps\</span>
-<span class="fileBrowser-pathElem">sergt_oper\</span></span><br>Фильтр
-<input class="inputStyle" style="width: 200px;">
-
-<div class="fileBrowser-progress" style="display: none;"></div></div>
-
-<div style="overflow-y: scroll; height: 235px;"><table style="width: 100%;"><thead><tr><td style="width: 20px;">
-<input class="btn" type="submit" value="\" style="padding: 0px 5px;"></td><td style="text-align: left;">
-<span class="buttonLink">Имя</span></td><td style="width: 10%; text-align: center;">
-<span class="buttonLink">Тип</span></td><td style="width: 15%; text-align: center;">
-<span class="buttonLink">Размер</span></td><td style="width: 25%; text-align: center;">
-<span class="buttonLink">Дата</span></td></tr></thead><tbody><tr class=""><td></td><td>[..]</td><td></td><td></td><td></td></tr><tr class=""><td></td><td>
-
-<div class="fileCanvas-folder-icon"></div>
-
-<div style="display: inline-block; position: relative;">
-<span style="font-size: 12px;">test1</span></div></td><td></td><td class="invisible" style="text-align: center;">Папка</td><td class="invisible" style="text-align: center;">18.12.2018 10:18:50</td></tr><tr class=""><td></td><td>
-
-<div style="display: inline-block; position: relative;">
-<span style="font-size: 12px;">test1</span></div></td><td style="text-align: right; font-size: 12px;">zip</td><td size="4414" class="invisible" style="text-align: right;">4.31 Кб</td><td class="invisible" style="text-align: center;">18.12.2017 12:43:50</td></tr></tbody></table></div></div>
-<div class="fileUpload">
-<div class="fileBrowser-progressBar ui-progressbar ui-widget ui-widget-content ui-corner-all" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" style="display: none;">
-<div class="ui-progressbar-value ui-widget-header ui-corner-left ui-corner-right" style="display: block; width: 100%;"></div></div>
-<div style="height: 30px;">
-<div class="fileBrowser-dragFileMessage">Перетащите файлы сюда</div><table><tbody><tr><td style="padding-top: 18px;"><form enctype="multipart/form-data" method="post" action="https://maps.kosmosnimki.ru/FileBrowser/Upload.ashx?WrapStyle=message" target="fileBrowserUpload_iframe">
-<input type="file" name="rawdata" multiple="multiple" style="width: 200px;"></form></td></tr></tbody></table></div></div></div></div>
-<div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div>
-<div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div>
-<div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div>
-<div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div>
-<div class="ui-resizable-handle ui-resizable-se" style="z-index: 90;"></div>
-<div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div>
-<div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div>
-<div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div -->
-
+</div -->
 </div>
 
 </Draggable>
 
 <style>
-.EditLayer {
+.GetDirectoryContent {
     background-color: #FFFFFF;
 	width: calc(100% - 8px);
     height: calc(100% - 8px);
@@ -274,13 +311,13 @@ console.log('attributes', layerID, attr);
     padding: 4px;
     font-size: 12px;
 }
-.EditLayer .header {
+.GetDirectoryContent .header {
     font-weight: bold;
 }
-.EditLayer .header .title {
+.GetDirectoryContent .header .title {
 	pointer-events: none;
 }
-.EditLayer .header .close {
+.GetDirectoryContent .header .close {
     right: 4px;
     position: absolute;
     border: unset;
@@ -289,159 +326,160 @@ console.log('attributes', layerID, attr);
     height: 12px;
 }
 
-.EditLayer .folders button {
-	border: none;
-	    outline: none;
-	margin: 0;
-    padding: 6px;
-}
-.EditLayer button.img {
-    background-repeat: no-repeat;
-    display: inline-block;
-	    border: unset;
-		border-radius: unset;
-    padding: 0;
-    margin-left: 4px;
-        width: 20px;
+.GetDirectoryContent .folders button {
+    border: 1px solid;
+    border-radius: 0;
+    /* border-collapse: collapse; */
+    outline: none;
+    margin: 0;
+    padding: 0 6px;
     height: 20px;
+    /* display: inline-flex; */
+    font-family: Tahoma, Arial, sans-serif;
 }
+.GetDirectoryContent button.img {
+    background-repeat: no-repeat;
+    border: unset;
+    border-radius: unset;
+	padding: 0;
+    /* margin-left: 4px; */
+    width: 15px;
+    height: 15px;
+    top: 2px;
+    position: relative;
+    margin-left: 6px;
+    /* top: 5px; */
+    /* left: -8px; */
+    background-size: contain;
 
-.EditLayer button.reload {
+}
+.GetDirectoryContent button.reload {
     background-image: url(/img/reload.png);
 }
 
-.EditLayer button.home {
+.GetDirectoryContent button.home {
     background-image: url(/img/home.png);
 }
 
-.EditLayer button.newfolder {
+.GetDirectoryContent button.newfolder {
     background-image: url(/img/newfolder.png);
 }
+.GetDirectoryContent .folders span.newfolder {
+	visibility: hidden;
+}
+.GetDirectoryContent .folders span.newfolder.active {
+	visibility: visible;
+}
+.GetDirectoryContent .folders span.newfolder input {
+    width: 100px;
+}
 
-
-.EditLayer .tabs.main .tab.main form label {
-    display: block;
-	line-height: 18px;
-}
-.EditLayer .tabs.main .tab.main form label input {
-    width: unset;
-}
-.EditLayer .tabs.main .tab.main td.val{
-    width: 274px;
-}
-.EditLayer .tabs.main,
-.EditLayer .tabs.dop,
-.EditLayer .tabs.meta,
-.EditLayer .tabs.cols {
-    height: calc(100% - 20px);
-}
-.EditLayer .tabs.main .tab.main,
-.EditLayer .tabs.dop .tab.dop,
-.EditLayer .tabs.meta .tab.meta,
-.EditLayer .tabs.cols .tab.cols {
+.GetDirectoryContent .body {
     height: calc(100% - 60px);
-    overflow-y: auto;
 }
-.EditLayer .tabs.dop .tab.dop,
-.EditLayer .tabs.meta .tab.meta,
-.EditLayer .tabs.cols .tab.cols,
-.EditLayer .tabs.main .tab.main {
-    display: block;
+.GetDirectoryContent .table {
+    height: calc(100% - 74px);
+    overflow-y: scroll;
 }
-.EditLayer .tabs.meta .tab.meta td.val input {
-	max-width: max-content;
+.GetDirectoryContent table {
+	border-collapse: collapse;
+    width: 100%;
 }
+.GetDirectoryContent tbody tr {
+	border: 1px solid #dddddd;
+	border-left: unset;
+}
+.GetDirectoryContent thead button {
+	background: transparent;
+}
+.GetDirectoryContent thead {
+    background: url(/img/gradHeader.png) repeat-x scroll 0 -30px transparent;
+}
+.GetDirectoryContent .table tbody td.folder {
+    background-image: url(/img/folder.png);
+	    background-repeat: no-repeat;
+		background-position-y: center;
+margin: 6px 0 0 4px;
+    width: 13px;
+    height: 13px;
+	    padding-left: 20px;
+}
+.GetDirectoryContent .filter input {
+    width: 200px;
+}
+.GetDirectoryContent table td.col_0 {
+    width: 24px;
+}
+.GetDirectoryContent table td.col_1 {
+    min-width: 300px;
+}
+.GetDirectoryContent table td.col_2 {
+    width: 78px;
+}
+.GetDirectoryContent table td.col_3 {
+    width: 120px;
+}
+.GetDirectoryContent table td.col_4 {
+    width: 190px;
+}
+.GetDirectoryContent .table tbody td.col_0 {
+	text-align: center;
+}
+.GetDirectoryContent .table tbody td .choose {
+    background-image: url(/img/choose.png);
+    margin: 2px 3px -3px 0px;
+    width: 13px;
+    height: 13px;
+}
+.GetDirectoryContent .foot input {
+	width: 260px;
+}
+.GetDirectoryContent .foot :global(#zone) {
+    width: calc(100% - 260px);
+    background-color: #BDBDC0;
+	height: 24px;
+    /* height: 100%; */
+    display: inline-block;
+    right: 12px;
+    position: absolute;
+    text-align: right;
+}
+.GetDirectoryContent .foot .progressbar {
+    background-color: #DDDDDD;
+    position: absolute;
+    height: 24px;
+    right: 0;
+}
+.GetDirectoryContent .foot span.dropTitle {
+    padding: 0px 26px;
+    font-size: 24px;
+    color: #e7dede;
+    vertical-align: top;
 
-.EditLayer .tabs.dop li.dop,
-.EditLayer .tabs.meta li.meta,
-.EditLayer .tabs.cols li.cols,
-.EditLayer .tabs.main li.main {
-	border-bottom: 4px solid #6f9ed2;
 }
-.EditLayer .tabs ul li {
-	padding: 0;
-	cursor: pointer;
+.GetDirectoryContent .foot.active .progressbar {
+    width: 0%;
 }
-.EditLayer .tabs ul li:hover {
-	color: blue;
-}
-.EditLayer .tabs ul li button {
-	border: none;
-	    outline: none;
-	margin: 0;
-    padding: 6px;
-}
-.EditLayer .tabs ul {
-	display: flex;
-    list-style: none;
-	margin: 0;
-    padding: 0;
-}
-.EditLayer .tabs .tab {
+.GetDirectoryContent .foot.active .dropTitle {
     display: none;
 }
 
-.EditLayer button.geom {
-    background-image: url(/img/choose2.png);
-	padding: 0;
-    width: 16px;
-    height: 12px;
-    margin-left: 4px;
-}
-.EditLayer .manual button {
-    width: 24px;
-    height: 24px;
-    display: inline-block;
-    margin: 0;
-	padding: 0;
-    border: unset;
-	border-radius: unset;
-
-    outline: none;
-    cursor: pointer;
-    background-image: url(/img/manual_types.png);
-}
-.EditLayer .manual.polygon button.polygon {
-    background-position: -120px 0px;
-}
-.EditLayer .manual button.polygon {
-    background-position: -96px 0px;
-}
-.EditLayer .manual.linestring button.linestring {
-    background-position: -72px 0px;
-}
-.EditLayer .manual button.linestring {
-    background-position: -48px 0px;
-}
-.EditLayer .manual.point button.point {
-    background-position: -24px 0px;
-}
-.EditLayer .manual button.point {
-    background-position: -0px 0px;
-}
-.EditLayer table {
-    width: 100%;
-}
-
-.EditLayer textarea,
-.EditLayer input[type=text] {
-    width: calc(100% - 16px);
-	font-size: 1em;
-    font-family: Tahoma, Arial, sans-serif;
-}
-.EditLayer input[type=text].short {
-    width: calc(100% - 36px);
-}
-.EditLayer input[type=text].shablon {
-    width: 220px;
-}
-.EditLayer input[type=text].minzoom {
-    width: 22px;
-}
-.EditLayer .tabs.dop .tab.dop .TemporalLayer .maxshow {
-	    margin: 0 6px;
-    width: 22px;
+  .drop-zone {
+/*    display: grid;
+    align-items: center;
+    margin: auto;
+    width: 200px;
+    height: 100px;
+    background-color: #ff3e00;
+    color: white;*/
+  }
+  .over {
+    background-color: white;
+    color: #ff3e00;
+    border: #ff3e00 solid 2px;
+  }
+  .drop-zone p {
     text-align: center;
-}
+  }
 
 </style>
