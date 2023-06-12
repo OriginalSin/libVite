@@ -4,9 +4,10 @@
 	import { key } from './menu.js';
 	import MenuOption from './MenuOption.svelte';
 	import MenuDivider from './MenuDivider.svelte';
+	import Utils from '../Utils.js';
 
 	export let data;
-console.log('item', data);
+// console.log('item', data);
 	
 	let x;
 	let y;
@@ -39,32 +40,39 @@ console.log('item', data);
 	}
 	function selOp(it) {
 console.log('selOp', it, data);
+		if (!map._userInfo || !map._userInfo.UserID) {
+			Utils.notification.view('Необходимо авторизоваться', 'warn');
+			return;
+		}
 		items = undefined;
-		switch(it.cmd) {
-			case 'DownloadLayer':
-				L.gmxUtil.layerHelper.downloadLayer({t: data.layerID});
-				break;
-			case 'addObjects':
-				let params = {LayerName: data.layerID, FromLayer: data.FromLayer, Query: data.Query};
-				L.gmxUtil.layerHelper.appendLayerData(params);
-				break;
-			case 'attr':
-				map._showTableAttrs(data);
-				break;
-			case 'addObject':
-				map._showEditObject(data);
-			case 'props':
-				map._showEditLayer(data);
-				break;
+		if (it.fn) it.fn(it.cmd, data);
+		else {
+			switch(it.cmd) {
+				case 'DownloadLayer':
+					L.gmxUtil.layerHelper.downloadLayer({t: data.layerID});
+					break;
+				case 'addObjects':
+					let params = {LayerName: data.layerID, FromLayer: data.FromLayer, Query: data.Query};
+					L.gmxUtil.layerHelper.appendLayerData(params);
+					break;
+				case 'attr':
+					map._showTableAttrs(data);
+					break;
+				case 'addObject':
+					map._showEditObject(data);
+				case 'props':
+					map._showEditLayer(data);
+					break;
+			}
 		}
 	}
 	onMount(() => {
 		if (data) {
-			items = key[data.key].items;
+			items = data.items || key[data.key].items;
 			x = data.x;
 			y = data.y;
 		}
-		console.log('the component has mounted');
+		// console.log('the component has mounted');
 	});
 
 </script>

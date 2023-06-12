@@ -1,9 +1,9 @@
 <script>
 import Draggable from '../Modal/Draggable.svelte';
 // import Table from './Table.svelte'
-export let left = 100;
-export let top = 100;
-export let nw = 100;
+// export let left = 100;
+// export let top = 100;
+// export let nw = 100;
 export let onSelect;
 
 let map = L.gmx.gmxMap.leafletMap;
@@ -25,6 +25,9 @@ const selItem = (it) => {
 console.log('selItem', it);
 };
 console.log('features', features);
+const geoSummary = (geoJSON) => {
+	return geoJSON ? L.gmxUtil.getGeoJSONSummary(geoJSON) : '';
+}
 
 </script>
 
@@ -45,7 +48,7 @@ console.log('features', features);
 			<div>
 				<span class="Polygon"></span>
 				<button on:click={() => onSelect(it)} class="name">{name}</button>
-				<span class="summary">({L.gmxUtil.getGeoJSONSummary(geoJSON)})</span>
+				<span class="summary">({geoSummary(geoJSON)})</span>
 			</div>
 			{/each}
 		{:else}

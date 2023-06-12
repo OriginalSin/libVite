@@ -28,7 +28,7 @@ const Utils = {
 			return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 		}
 	},
-	
+
 	fileBrowserReq: (cmd, pars) => {
 		let url = prefix + 'FileBrowser/' + cmd + '.ashx?';
 		url += Object.keys(pars).map(k => k + '=' + pars[k]).join('&');
@@ -60,7 +60,21 @@ const Utils = {
 				}
 			});
 	},
-	
+
+	fileDownload: (cmd, folder, fileName) => {
+        const fd = new FormData();
+        fd.append('FullName', folder + fileName);
+		const url = prefix + 'FileBrowser/' + cmd + '.ashx';
+		return fetch(url, {method: 'POST', mode: 'cors', credentials: 'include', body: fd})
+			.then(res => res.blob())
+			.then(blob => {
+				const a = document.createElement("a");
+				a.href = window.URL.createObjectURL(blob);
+				a.download = fileName;
+				a.click();
+			});
+	},
+
 	createFolder: folder => {
 		return Utils.fileBrowserReq('CreateFolder', {FullName: folder});
 	},

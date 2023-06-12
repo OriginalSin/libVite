@@ -68,6 +68,9 @@ console.log('onSelect', geoJSON);
 	});
 
 };
+const geoSummary = () => {
+	return geoJSON ? L.gmxUtil.getGeoJSONSummary(geoJSON) : '';
+}
 let showModal = false;
 const ok = (ev) => {
 	showModal = false;
@@ -124,7 +127,7 @@ console.log('attributes', layerID, attr);
 			<td class="val">
 			{#if geoJSON}
 				<span class="name">{geoJSON.type}</span>
-				<span class="summary">({L.gmxUtil.getGeoJSONSummary(geoJSON)})</span>
+				<span class="summary">({geoSummary()})</span>
 			{/if}
 			</td>
 		</tr>

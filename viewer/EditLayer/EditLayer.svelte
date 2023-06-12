@@ -42,8 +42,10 @@ let TemporalLayer = false;
 let Quicklook;
 let colsArr = [];
 
+let load = true;
 const getItem = async layerID => {
 	props = await Utils.getLayerInfo(layerID);
+	load = false;
 	SourceType = props.SourceType || 'Файл';
 	GeometryType = props.GeometryType || 'linestring';
 	IsRasterCatalog = props.IsRasterCatalog;
@@ -181,6 +183,11 @@ console.log('attributes', layerID, attr);
 <Draggable {width} {height}>
 
 <div class="EditLayer">
+{#if load}
+	<div class="load">
+		<span class="title">Загрузка...</span>
+	</div>
+{:else}
 	<div class="header">
 		<span class="title">{layerID ? 'Слой: ' : 'Создать векторный слой'}<b>{props.Title || ''}</b></span>
 		<button on:click={closeMe} type="button" class="close">{@html closeIcon}</button>
@@ -504,6 +511,7 @@ console.log('attributes', layerID, attr);
 			{#if layerID}<button on:click={del} class="save">Удалить</button>{/if}
 		</div>
 	</div>
+{/if}
 </div>
 
 </Draggable>
@@ -516,6 +524,11 @@ console.log('attributes', layerID, attr);
 
     padding: 4px;
     font-size: 12px;
+}
+.EditLayer .load {
+	    text-align: center;
+    font-size: x-large;
+    /* color: red; */
 }
 .EditLayer .header {
     font-weight: bold;

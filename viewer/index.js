@@ -1,4 +1,5 @@
 import './viewer.css';
+import {_userInfo} from './stores.js';
 import LayersTree from './LayersTree/index.js'
 import Print from './Print/index.js'
 import { _dateInterval } from './stores.js';
@@ -7,10 +8,16 @@ import ContextMenu from './ContextMenu/Menu.svelte'
 import TableAttrs from './TableAttrs/index.svelte'
 import EditObject from './EditObject/EditObject.svelte';
 import EditLayer from './EditLayer/EditLayer.svelte';
+import Utils from './Utils.js';
 
 let map;
 const init = () => {
 	map = L.gmx.gmxMap.leafletMap;
+
+	_userInfo.subscribe(value => {
+		map._userInfo = value;
+		map._UserID = map._userInfo?.UserID;
+	});
 console.log('init', map);
 	map._showTableAttrs = showTableAttrs;	map._destroyTableAttrs = destroyTableAttrs;
 	map._showEditObject = showEditObject;	map._destroyEditObject = destroyEditObject;
@@ -24,6 +31,10 @@ console.log('init', map);
 }
 let contextMenu;
 const showContextMenu = (data) => {
+	if (!map._UserID) {
+		Utils.notification.view('Необходимо авторизоваться', 'warn');
+		return;
+	}
 	if (contextMenu) contextMenu.$destroy();
 	contextMenu = new ContextMenu({
 		target: document.body,

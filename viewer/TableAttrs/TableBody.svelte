@@ -6,7 +6,7 @@
 import Utils from '../Utils.js';
 
 	export let layerID;
-	export let attributes;
+	// export let attributes;
 	export let items;
 	export let selectItems = {};
 	export let selectCols = {};
@@ -325,11 +325,11 @@ tfoot,
 	display:inline-block;
 }
 .scrollTable .oper button.show {
-    background: url(../img/enlarge-circle.svg);
+    background: url(/img/enlarge-circle.svg);
 	display: none;
 }
 .scrollTable .oper button.edit {
-    background: url(../img/pen.svg);
+    background: url(/img/pen.svg);
 }
 .scrollTable .oper button.show,
 .scrollTable .oper button.edit {

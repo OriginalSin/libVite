@@ -2,7 +2,7 @@
 import DropFile from '@svelte-parts/drop-file'
 import Draggable from '../Modal/Draggable.svelte';
 // import CreateDescr from './CreateDescr.svelte';
-import DrawingList from '../DrawingList/DrawingList.svelte';
+// import DrawingList from '../DrawingList/DrawingList.svelte';
 import Utils from '../Utils.js';
 import {_drivesInfo, _userInfo} from '../stores.js';
 
@@ -21,16 +21,15 @@ let layersByID = gmxMap.layersByID;
 let properties = layersByID[layerID]._gmx.properties;
 // let attributes = props.attributes;
 // let attrTypes = props.attrTypes;
-	let drawingList;
-let TemporalPeriods = properties.TemporalPeriods || [];
+	// let drawingList;
 
 
 let closeIcon = L.gmxUtil.setSVGIcon('close');
 
-let gmxDrawing = L.gmx.gmxDrawing;
-let features = gmxDrawing.getFeatures();
-let geoJSON;
-let dialog;
+// let gmxDrawing = L.gmx.gmxDrawing;
+// let features = gmxDrawing.getFeatures();
+// let geoJSON;
+// let dialog;
 
 let props = {};
 let SourceType = 'Файл';
@@ -59,9 +58,9 @@ const onDrop = (arr) => {
 	// sendFiles(files);
 }
 
-const dropFiles = e => {
-  files = e.dataTransfer.files;
-}
+// const dropFiles = e => {
+  // files = e.dataTransfer.files;
+// }
 const sendFiles = async files => {
 	foot.classList.add('active');
 	let res = await Utils.upload(files, folder, progressbar);
@@ -86,9 +85,7 @@ _userInfo.subscribe(value => {
 		getFolder(folderMap);
 	}
 });
-_drivesInfo.subscribe(value => {
-	drives = value;
-});
+_drivesInfo.subscribe(value => drives = value);
 
 let sortAttr = {
 	key: 'Name',
@@ -103,9 +100,9 @@ const sortFolderCont = (arr) => {
 		return (+b.Directory) - (+a.Directory) || (desc * nn);
 	});
 };
-const pathCount1 = () => {
-	return folder.replace(/\\/g, '').split('/').length - 1;
-};
+// const pathCount1 = () => {
+	// return folder.replace(/\\/g, '').split('/').length - 1;
+// };
 const sortBy = (k) => {
 	if (sortAttr.key === k) sortAttr.desc = !sortAttr.desc;
 	sortAttr.key = k;
@@ -133,31 +130,68 @@ const getColumnsOption = (f) => {
 		return '<option value="' + n + '" ' + (f === n.toUpperCase() ? 'selected' : '') + '>' + n + '</option>';
 	});
 };
+const closeMe = () => {
+	map._directoryContent.$destroy();
+};
+const cmdContextMenu = async (cmd, data) => {
+	await Utils.fileBrowserReq(cmd, {FullName: folder + data.it.Name});
+	getFolder(folder);
+console.log('cmdContextMenu', data, cmd);
+};
+const onRightClick = (it, e) => {
+	gmxMap.leafletMap._showContextMenu({
+		it,
+		items: [
+			{text: 'Скачать', cmd: 'Download', fn: Download},
+			{text: 'Удалить', cmd: 'Delete', fn: cmdContextMenu},
+			{text: 'Очистить', cmd: 'CleanFolder', fn: cmdContextMenu},
+			{text: 'Упаковать', cmd: 'Zip', fn: cmdContextMenu},
+			{text: 'Извлечь', cmd: 'Unzip', fn: cmdContextMenu},
+		],
+		x: e.clientX, y: e.clientY
+	});
+	// _contextMenu.set({layerID, key: 'layerName'});
+console.log('onRightClick', it, e);
+}
+const Download = async (cmd, data) => {
+	Utils.fileDownload(cmd, folder, data.it.Name);
+	// https://maps.kosmosnimki.ru/FileBrowser/Download.ashx
+	// FullName: @SergikOriginal\Maps\sergt_gmxForest2.1\t\202226382.zip
+console.log('Download', data);
+};
+const Zip = async (data) => {
+	await Utils.fileBrowserReq('Zip', {FullName: folder + data.it.Name});
+	getFolder(folder);
+};
+const Unzip = async (data) => {
+	await Utils.fileBrowserReq('Unzip', {FullName: folder + data.it.Name});
+	getFolder(folder);
+console.log('Unzip', data);
+};
+const Delete = async (data) => {
+	await Utils.fileBrowserReq('Delete', {FullName: folder + data.it.Name});
+	getFolder(folder);
+};
+const CleanFolder = async (data) => {
+	await Utils.fileBrowserReq('CleanFolder', {FullName: folder + data.it.Name});
+	getFolder(folder);
+};
+
+const goSubFolder = (it) => {
+	getFolder(folder + it.Name + '/');
+console.log('goSubFolder', folder, it);
+};
+const goChoose = (ev) => {
+console.log('goChoose', ev);
+};
+
+console.log('attributes', layerID, attr);
+// {@debug	drives}
+/*
 
 L.gmx.gmxDrawing.on('drawstop', (ev) => {
 	features = gmxDrawing.getFeatures();
 });
-const closeMe = () => {
-	map._directoryContent.$destroy();
-	// map._destroyEditLayer(layerID);
-};
-const setGeo = (pt) => {
-// console.log('setGeo', pt);
-	if (map._drawingList) map._drawingList.$destroy();
-	map._drawingList = new DrawingList({
-		target: document.body,
-		props: {
-			onSelect: (it) => {
-				geoJSON = it.toGeoJSON().geometry;
-				map._drawingList.$destroy();
-console.log('onSelect', geoJSON);
-			},
-			left: 200,
-			top: 200
-		}
-	});
-
-};
 let showModal = false;
 const ok = (ev) => {
 	showModal = false;
@@ -187,23 +221,8 @@ console.log('save', ev);
 const del = (ev) => {
 console.log('del', ev);
 };
-let tab = 'main';
-const selTab = (ev) => {
-	const tabNode = ev.target.parentNode;
-	tab = tabNode.className;
-console.log('del', tab);
-};
-const goSubFolder = (it) => {
-	getFolder(folder + it.Name + '/');
-console.log('goSubFolder', folder, it);
-};
-const goChoose = (ev) => {
-console.log('goChoose', ev);
-};
-
-console.log('attributes', layerID, attr);
-// {@debug	drives}
-
+// let tab = 'main';
+*/
 </script>
 
 <Draggable {width} {height}>
@@ -261,7 +280,7 @@ console.log('attributes', layerID, attr);
 				{#if it.Directory}
 				<tr on:click={() => goSubFolder(it)}>
 					<td class="col_0"></td>
-					<td class="col_1 folder">{it.name}</td>
+					<td class="col_1 folder"><button on:contextmenu|stopPropagation|preventDefault={e => onRightClick(it, e)}>{it.name}</button></td>
 					<td class="col_2"></td>
 					<td class="col_3">Папка</td>
 					<td class="col_4">{it.date}</td>
@@ -269,7 +288,7 @@ console.log('attributes', layerID, attr);
 				{:else}
 				<tr>
 					<td class="col_0">{#if choose}<button class="choose img" on:click={goChoose} />{/if}</td>
-					<td class="col_1">{it.name}</td>
+					<td class="col_1"><button on:contextmenu|stopPropagation|preventDefault={e => onRightClick(it, e)}>{it.name}</button></td>
 					<td class="col_2">{it.type}</td>
 					<td class="col_3">{it.size}</td>
 					<td class="col_4">{it.date}</td>
@@ -477,9 +496,6 @@ margin: 6px 0 0 4px;
     background-color: white;
     color: #ff3e00;
     border: #ff3e00 solid 2px;
-  }
-  .drop-zone p {
-    text-align: center;
   }
 
 </style>

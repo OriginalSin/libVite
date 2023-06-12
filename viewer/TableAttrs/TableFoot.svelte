@@ -165,16 +165,16 @@ console.log('setPage', foot);
 	padding: 2px
 }
 .table-foot .col_2 button.first {
-    background: url(../img/first.png);
+    background: url(/img/first.png);
 }
 .table-foot .col_2 button.prev {
-    background: url(../img/prev.png);
+    background: url(/img/prev.png);
 }
 .table-foot .col_2 button.next {
-    background: url(../img/next.png);
+    background: url(/img/next.png);
 }
 .table-foot .col_2 button.last {
-    background: url(../img/last.png);
+    background: url(/img/last.png);
 }
 .table-foot .col_2 button.first,
 .table-foot .col_2 button.prev,
@@ -191,16 +191,16 @@ console.log('setPage', foot);
     display: inline-block;
 }
 .fileBrowser-progress {
-    background: url(../img/progress.gif);
+    background: url(/img/progress.gif);
     width: 16px;
     height: 16px;
     display: none;
     vertical-align: middle;
     margin: 0px 0px 3px 3px;
 }
-.tablePages .header .value{
-	font-weight: bold;
-}
+/* .tablePages .header .value{ */
+	/* font-weight: bold; */
+/* } */
 
 .tablePages button.next.active,
 .tablePages button.last.active,

@@ -42,6 +42,12 @@ console.log('onSelect', geoJSON);
 		});
 
 	};
+	const geoSummary = () => {
+		return geoJSON ? L.gmxUtil.getGeoJSONSummary(geoJSON) : '';
+	}
+	const setSVGIcon = (key) => {
+		return L.gmxUtil.setSVGIcon(key);
+	}
 	const find = () => {
 		let query = '';
 		if (textarea.value) query += textarea.value;
@@ -162,8 +168,8 @@ console.log('FindAttr', attributes, formsKeys, FindAttr);
 				<div>
 					<span class="{geoJSON.type}"></span>
 					<span class="name">{geoJSON.type}</span>
-					<span class="summary">({L.gmxUtil.getGeoJSONSummary(geoJSON)})</span>
-					<button on:click={() => geoJSON = undefined} class="name">{@html L.gmxUtil.setSVGIcon('close')}</button>
+					<span class="summary">({geoSummary()})</span>
+					<button on:click={() => geoJSON = undefined} class="name">{@html setSVGIcon('close')}</button>
 				</div>
 				{/if}
 
