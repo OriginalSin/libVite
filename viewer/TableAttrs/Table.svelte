@@ -49,19 +49,10 @@ let attributes = lprops.properties.attributes;
 		};
 	const getPage = async (pars) => {
 console.log('pars', pars);
-		// let loading;
-		// loading = true;
 		foot = {...foot, loading: true};
 		if (!lprops) {
-			lprops = await Utils.getLayerJson(layerID);
-
-			// let url = prefix + 'Layer/GetLayerJson.ashx?WrapStyle=none&LayerName=' + layerID;
-			// lprops = await fetch(url).then(_respJson);
-			// if (lprops.Status === 'error') showInfo.view('Серверная ошибка: ' + lprops.ErrorInfo.ErrorMessage, 'error');
-			// lprops = lprops.Result;
+			lprops = await Utils.getJson({cmd: 'GetLayerJson', path: 'Layer', pars:{LayerName: layerID}});
 		}
-		// else {
-			// lprops = lprops.Result;
 		attributes = lprops.properties.attributes;
 		identityField = lprops.properties.identityField;
 		

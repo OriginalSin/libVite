@@ -2,7 +2,7 @@
 import Draggable from '../Modal/Draggable.svelte';
 // import CreateDescr from './CreateDescr.svelte';
 import DrawingList from '../DrawingList/DrawingList.svelte';
-import GetDirectoryContent from './GetDirectoryContent.svelte';
+import FileBrowser from './FileBrowser.svelte';
 import Utils from '../Utils.js';
 
 export let attr = {};
@@ -44,7 +44,7 @@ let colsArr = [];
 
 let load = true;
 const getItem = async layerID => {
-	props = await Utils.getLayerInfo(layerID);
+	props = await Utils.getJson({cmd: 'GetLayerInfo', path: 'Layer', pars:{LayerName: layerID}});
 	load = false;
 	SourceType = props.SourceType || 'Файл';
 	GeometryType = props.GeometryType || 'linestring';
@@ -158,22 +158,21 @@ console.log('delCol', GeometryType);
 };
 const setDirectory = (pt) => {
 // console.log('setGeo', pt);
-	map._directoryContent = new GetDirectoryContent({
+	map._fileBrowser = new FileBrowser({
 		target: document.body,
 		props: {
 			attr: {
 				layerID,
-				onSelect: (it) => {
-					geoJSON = it.toGeoJSON().geometry;
-					map._directoryContent.$destroy();
-	console.log('onSelect', geoJSON);
+				onSourceColumns: (it) => {
+					// geoJSON = it.toGeoJSON().geometry;
+					// map._fileBrowser.$destroy();
+	console.log('onSourceColumns', it);
 				},
 				left: 200,
 				top: 200
 			}
 		}
 	});
-
 };
 
 console.log('attributes', layerID, attr);

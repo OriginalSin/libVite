@@ -40,21 +40,6 @@
 	};
 	const getSquare = () => {
 		dispatch('notify', {cmd: 'getSquare'});
-		// const prefix = 'https://maps.kosmosnimki.ru/';
-		// let url = prefix + 'VectorLayer/Search.ashx?WrapStyle=none&layer=' + foot.layerID;
-			// let url = prefix + 'Layer/GetLayerJson.ashx?WrapStyle=none&LayerName=' + layerID;
-// layer: 41661D2970A9417698BC9BA039C579AF
-// query: left("SCENE_ID", 3)='15J';
-// columns: [{value: "[GeomixerGeoJson]"}]
-			
-		// let sr = await fetch(url, {method: 'POST', mode: 'cors', credentials: 'include', body: fd}).then(_respJson);
-		// columns: [{value: "[GeomixerGeoJson]"}]
-	// <button on:click={getCsv} class="csv">Скачать csv</button>
-	// <button on:click={getGeojson} class="geojson">Скачать geojson</button>
-	// <button on:click={createLayer} class="createLayer">Создать слой</button>
-	// <button on:click={copyObjects} class="copyObjects">Копировать объекты</button>
-	// <button on:click={getSquare} class="square">Суммарная площадь</button>
-		// L.gmxUtil.layerHelper.downloadLayer({t: foot.layerID});
 	};
 	const setPageSize = (ev) => {
 		const target = ev.target;

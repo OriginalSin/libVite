@@ -35,75 +35,7 @@ import Utils from '../Utils.js';
 			showInfo.view('Серверная ошибка: ' + resp.status, 'error');
 		}
 	};
-/*
-	const getPage = async (pars) => {
-console.log('pars', pars);
-		loading = true;
-		if (!lprops) {
-			let url = prefix + 'Layer/GetLayerJson.ashx?WrapStyle=none&LayerName=' + layerID;
-			lprops = await fetch(url).then(_respJson);
-			if (lprops.Status === 'error') showInfo.view('Серверная ошибка: ' + lprops.ErrorInfo.ErrorMessage, 'error');
-			lprops = lprops.Result;
-		}
-		// else {
-			// lprops = lprops.Result;
-		identityField = lprops.properties.identityField;
-		let sprefix = prefix + 'VectorLayer/Search.ashx?WrapStyle=none&layer=' + layerID;
-		let sr = await fetch(sprefix+ '&count=true').then(_respJson);
-		if (sr.Status === 'ok') count = sr.Result || 0;
-		let url = prefix + 'VectorLayer/Search.ashx';
-		let columns = [
-			{"Value":"GeomIsEmpty([geomixergeojson])","Alias":"__GeomIsEmpty__"},
-			{"Value":'[' + identityField + ']'}
-		];
-		lprops.properties.attributes.forEach(key => {
-			columns.push({"Value":'[' + key + ']'});
-		});
 
-		let params = {
-			page: cPage,
-			pagesize: pSize,
-			orderBy: orderBy || identityField,
-			orderdirection,
-			layer: layerID,
-			columns,
-			WrapStyle: 'none'
-		};
-		// url += '&page=' + cPage;
-		// url += '&pagesize=' + pSize;
-		// url += '&orderBy=' + (orderBy || identityField);
-		// url += '&orderdirection=' + orderdirection;
-//[{"Value":"GeomIsEmpty([geomixergeojson])","Alias":"__GeomIsEmpty__"},{"Value":"[gmx_id]"},
-// {"Value":"[region]"},{"Value":"[forestry]"},{"Value":"[district_f]"},{"Value":"[district]"},{"Value":"[kv]"},{"Value":"[area]"},{"Value":"[id]"}]
-        const fd = new FormData();
-        fd.append('WrapStyle', 'None');
-        fd.append('layer', layerID);
-        fd.append('columns', JSON.stringify(columns));
-        fd.append('orderdirection', orderdirection);
-        fd.append('orderBy', orderBy || identityField);
-        fd.append('pagesize', pSize);
-        fd.append('page', cPage);
-
-		sr = await fetch(url, {method: 'POST', mode: 'cors', credentials: 'include', body: fd}).then(_respJson);
-		if (sr.Status === 'ok') {
-			items = sr.Result || 0;
-			items.indexes = items.fields.reduce((a, c, i) => {
-				a[c] = i;
-				return a;
-			}, {});
-			// items.rawKeys = items.fields.filter(k => k !== identityField);
-			// items.rawKeys.unshift(identityField);
-			mPage = Math.floor(count / pSize);
-		}
-		loading = undefined;
-
-console.log('getPage', lprops, count, items);
-
-		// }
-
-		// const lprops = await fetch(prefix + 'Layer/GetLayerJson.5ashx?WrapStyle=none&LayerName=' + pars.layerID).then(_respJson);
-	};
-*/
 	onMount(() => {
 		thead.style.transform = 'translate(0, -2px)';
 		// console.log('ggggggggg', attrsTableParent);
@@ -114,48 +46,10 @@ console.log('getPage', lprops, count, items);
 		thead.style.transform = 'translate(0, ' + (target.scrollTop - 2) + 'px)';
 console.log('scrollMe', target.scrollTop);
 	};
-/*
-	const setPageSize = (ev) => {
-		const target = ev.target;
-		pSize = target.options[target.selectedIndex].value;
-console.log('setPageSize', pSize);
-		getPage({});
-	};
-	const setPage = (nm) => {
-		cPage = nm;
-		mPage = Math.floor(count / pSize);
-		if (cPage < 0) cPage = 0;
-		else if (cPage * pSize > count) cPage = Math.floor(count / pSize);
-		pStart = 10 * Math.floor(cPage / 10);
-		const d = mPage - pStart - 10;
-		if (d <  0) pStart += d + 1;
-console.log('setPage', pStart, mPage);
-		getPage({});
-		selectItems = {...selectItems};
-	};
-	if (layerID) {
-		getPage({});
-		// setPage(0);
-	}
 
-	const selPageItems = (ev) => {
-		const target = ev.target;
-		if (!target.checked) selectItems = {};
-		else {
-			items.values.forEach(it => {
-				const id = it[items.indexes[identityField]];
-				selectItems[id] = it;
-			});
-		}
-		selectItems = {...selectItems};
-	}
-*/
 	const selItem = (it) => {
 		const id = it[items.indexes[identityField]];
 		dispatch('notify', {cmd: 'selItem', id, it});
-		// if (selectItems[id]) delete selectItems[id];
-		// else selectItems[id] = it;
-		// selectItems = {...selectItems};
 	};
 	const showItem = async (it) => {
 		const id = it[items.indexes[identityField]];
@@ -188,23 +82,7 @@ console.log('onSelect', it);
 			}
 		});
 console.log('editItem', data);
-/*
-		// const id = it[items.indexes[identityField]];
-		if (map._editObject) map._editObject.$destroy();
-		map._editObject = new EditObject({
-			target: document.body,
-			props: {
-				data,
-				indexes: items.indexes,
-				layerID,
-				onSelect: (it) => {
-					// geoJSON = it.toGeoJSON().geometry;
-					map._editObject.$destroy();
-console.log('onSelect', it);
-				}
-			}
-		});
-*/
+
 	};
 	const sortItems = (key) => {
 		dispatch('notify', {cmd: 'sortItems', key});

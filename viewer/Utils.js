@@ -29,38 +29,6 @@ const Utils = {
 		}
 	},
 
-	fileBrowserReq: (cmd, pars) => {
-		let url = prefix + 'FileBrowser/' + cmd + '.ashx?';
-		url += Object.keys(pars).map(k => k + '=' + pars[k]).join('&');
-		return fetch(url, options)
-			.then(Utils.respJson)
-			.then(json => {
-				if (json.Status === 'auth') {
-					Utils.notification.view('Серверная ошибка: Необходимо авторизоваться', 'error');
-				} else if (json.Status !== 'ok') {
-					Utils.notification.view('Серверная ошибка: ' + json.ErrorInfo.ErrorMessage, 'error');
-					return json.ErrorInfo;
-				} else {
-					let ret;
-					switch(cmd) {
-						case 'CreateFolder':
-							ret = json.Status;
-							break;
-						case 'GetDirectoryContent':
-							ret = json.Result.map(it => {
-								it.date = new Date(it.Date * 1000).toLocaleString();
-								if (it.Size) it.size = Utils.formatBytes(it.Size);
-								it.name = it.Name.match(/([^\.]+)/)[0];
-								it.type = it.Name.match(/\.([^.]+)$|$/)[1];
-								return it;
-							});
-							break;
-					}
-					return ret;
-				}
-			});
-	},
-
 	fileDownload: (cmd, folder, fileName) => {
         const fd = new FormData();
         fd.append('FullName', folder + fileName);
@@ -75,13 +43,6 @@ const Utils = {
 			});
 	},
 
-	createFolder: folder => {
-		return Utils.fileBrowserReq('CreateFolder', {FullName: folder});
-	},
-	
-	getDirectoryContent: folder => {
-		return Utils.fileBrowserReq('GetDirectoryContent', {root: folder});
-	},
 	upload: (files, folder, progressbar) => {
         let fd = new FormData();
         let tSize = 0;
@@ -128,6 +89,7 @@ const Utils = {
 			)
 			.then(Utils.respJson)
 			.then(json => {
+				if (progressbar) progressbar.style.width = 'unset';
 				if (json.Status !== 'ok') {
 					Utils.notification.view('Серверная ошибка: ' + json.ErrorInfo.ErrorMessage, 'error');
 					return json.ErrorInfo;
@@ -136,6 +98,47 @@ const Utils = {
 				}
 			});
 	},
+/*
+	// createFolder: folder => {
+		// return Utils.fileBrowserReq('CreateFolder', {FullName: folder});
+	// },
+	
+	// getDirectoryContent: folder => {
+		// return Utils.fileBrowserReq('GetDirectoryContent', {root: folder});
+	// },
+
+	fileBrowserReq: (cmd, pars) => {
+		let url = prefix + 'FileBrowser/' + cmd + '.ashx?';
+		url += Object.keys(pars).map(k => k + '=' + pars[k]).join('&');
+		return fetch(url, options)
+			.then(Utils.respJson)
+			.then(json => {
+				if (json.Status === 'auth') {
+					Utils.notification.view('Серверная ошибка: Необходимо авторизоваться', 'error');
+				} else if (json.Status !== 'ok') {
+					Utils.notification.view('Серверная ошибка: ' + json.ErrorInfo.ErrorMessage, 'error');
+					return json.ErrorInfo;
+				} else {
+					let ret;
+					switch(cmd) {
+						case 'CreateFolder':
+							ret = json.Status;
+							break;
+						// case 'GetDirectoryContent':
+							// ret = json.Result.map(it => {
+								// it.date = new Date(it.Date * 1000).toLocaleString();
+								// if (it.Size) it.size = Utils.formatBytes(it.Size);
+								// it.name = it.Name.match(/([^\.]+)/)[0];
+								// it.type = it.Name.match(/\.([^.]+)$|$/)[1];
+								// return it;
+							// });
+							// break;
+					}
+					return ret;
+				}
+			});
+	},
+*//*
 	upload33: async (files, folder, progressbar) => {
         let fd = new FormData();
         let tSize = 0;
@@ -254,6 +257,19 @@ const Utils = {
 			}, form);
 		});
 	},
+	getLayerJson: (layerID) => {
+		const url = Utils.prefix + 'Layer/GetLayerJson.ashx?WrapStyle=none&LayerName=' + layerID;
+		return fetch(url)
+			.then(Utils.respJson)
+			.then(json => {
+				if (json.Status !== 'ok') {
+					Utils.notification.view('Серверная ошибка: ' + json.ErrorInfo.ErrorMessage, 'error');
+					return json.ErrorInfo;
+				} else {
+					return json.Result;
+				}
+			});
+	},
 	getLayerInfo: layerID => {
 		let url = Utils.prefix + 'Layer/GetLayerInfo.ashx';
 		return new Promise(resolve => {
@@ -271,9 +287,13 @@ const Utils = {
 			});
 		});
 	},
-	getLayerJson: (layerID) => {
-		const url = Utils.prefix + 'Layer/GetLayerJson.ashx?WrapStyle=none&LayerName=' + layerID;
-		return fetch(url)
+*/
+	getJson: (attr = {}) => {
+		let {pars, opt = {}, path = 'VectorLayer', cmd = 'Search',  ext='.ashx', host = prefix} = attr;
+		let url = host + path + '/' + cmd + ext;
+		if (!pars.WrapStyle) pars.WrapStyle = 'none';
+		url += '?' + Object.keys(pars).map(k => k + '=' + pars[k]).join('&');
+		return fetch(url, {...options, ...opt})
 			.then(Utils.respJson)
 			.then(json => {
 				if (json.Status !== 'ok') {
