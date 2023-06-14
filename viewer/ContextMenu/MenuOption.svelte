@@ -59,7 +59,7 @@
 		// if (pNode !== cont && !isOver && item.items) {
 			const rect = target.getBoundingClientRect();
 			const prect = target.parentNode.getBoundingClientRect();
-			x = rect.width - 0, y = rect.y - 18;
+			x = rect.width, y = 0;
 			// x = rect.x + rect.width;
 			// y = rect.y + rect.height;
 // console.log('handleOver', toElement, rect, target.parentNode);
@@ -77,7 +77,7 @@
   // class:over={isOver}
 </script>
 
-<div bind:this={cont} class="level1" class:over={isOver} class:disabled={isDisabled}
+<div bind:this={cont} class="level1 {items ? 'menuMarkerRight':''}" class:over={isOver} class:disabled={isDisabled}
   on:click={handleClick}
   on:mouseover|stopImmediatePropagation|preventDefault={handleOver}
   on:mouseout|stopImmediatePropagation|preventDefault={handleOut}
@@ -95,40 +95,50 @@
 		{/each}
 	</div>
 	{/if}
+	
 </div>
 
 <style>
-	div.level1.over div.level {
-		display: block;
-	}
-	div.level2,
-	div.level1 {
-		padding: 4px 15px;
-		cursor: default;
-		font-size: 14px;
-		display: flex;
-		align-items: center;
-		grid-gap: 5px;
-	}
-	div:hover {
-		background: #0002;
-	}
-	div.disabled {
-		color: #0006;
-	}
-	div.disabled:hover {
-		background: white;
-	}
-	div.level {
-		position: absolute;
-		display: none;
-		border: 1px solid #0003;
-		box-shadow: 2px 2px 5px 0px #0002;
-		background: white;
-		/* z-index: 1000;
-		left: 173px;
-		top: 46px;
-		 */
-		white-space: nowrap;
-	}
+div.menuMarkerRight::after {
+	content: '';
+    height: 10px;
+    width: 10px;
+	position: absolute;
+    right: 5px;
+    background: url(/img/arrows.png) -5px -5px no-repeat;
+}
+div.level1.over div.level {
+	display: block;
+}
+div.level2,
+div.level1 {
+	padding: 4px 15px;
+	cursor: default;
+	font-size: 14px;
+	display: flex;
+		position: relative;
+	align-items: center;
+	grid-gap: 5px;
+}
+div:hover {
+	background: #0002;
+}
+div.disabled {
+	color: #0006;
+}
+div.disabled:hover {
+	background: white;
+}
+div.level {
+	position: absolute;
+	display: none;
+	border: 1px solid #0003;
+	box-shadow: 2px 2px 5px 0px #0002;
+	background: white;
+	/* z-index: 1000;
+	left: 173px;
+	top: 46px;
+	 */
+	white-space: nowrap;
+}
 </style>
