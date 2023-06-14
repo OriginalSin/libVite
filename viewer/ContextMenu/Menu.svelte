@@ -37,9 +37,10 @@
 		if (e.target === menuEl || menuEl.contains(e.target)) return;
 		dispatch('clickoutside');
 		items = undefined;
+		map.__contextMenu = items;
 	}
-	function selOp(it) {
-console.log('selOp', it, data);
+	function selOp(it, it1) {
+console.log('selOp', it, it1, data);
 		if (!map._userInfo || !map._userInfo.UserID) {
 			Utils.notification.view('Необходимо авторизоваться', 'warn');
 			return;
@@ -65,15 +66,25 @@ console.log('selOp', it, data);
 					break;
 			}
 		}
+		map.__contextMenu = items;
 	}
 	onMount(() => {
 		if (data) {
 			items = data.items || key[data.key].items;
 			x = data.x;
 			y = data.y;
+			map.__contextMenu = true;
 		}
 		// console.log('the component has mounted');
 	});
+	// function selOver(it, it1) {
+// console.log('selOver', it, it1, data);
+	// }
+	// let overNum;
+	// function selOver(nm) {
+		// menuEl.classList.
+// console.log('selOver', nm);
+	// }
 
 </script>
 
@@ -81,9 +92,10 @@ console.log('selOp', it, data);
 
 <div transition:fade={{ duration: 100 }} bind:this={menuEl} style="top: {y}px; left: {x}px;">
 	{#each (items || []) as it, i}
-		<MenuOption 
+		<MenuOption
 			on:click={() => {selOp(it);}} 
-			text={it.text} />
+			item={it}>
+		</MenuOption>
 	{/each}
 </div>
 

@@ -1,5 +1,6 @@
 import './viewer.css';
 import {_userInfo} from './stores.js';
+import HeaderWidget from './HeaderWidget.svelte'
 import LayersTree from './LayersTree/index.js'
 import Print from './Print/index.js'
 import { _dateInterval } from './stores.js';
@@ -19,6 +20,7 @@ const init = () => {
 		map._UserID = map._userInfo?.UserID;
 	});
 console.log('init', map);
+	map._showHeaderWidget = showHeaderWidget;	map._destroyHeaderWidget = destroyHeaderWidget;
 	map._showTableAttrs = showTableAttrs;	map._destroyTableAttrs = destroyTableAttrs;
 	map._showEditObject = showEditObject;	map._destroyEditObject = destroyEditObject;
 	map._showEditLayer = showEditLayer;		map._destroyEditLayer = destroyEditLayer;
@@ -26,6 +28,7 @@ console.log('init', map);
 	map._setViewerData = setData;
 
 	// ContextMenu();
+	map._showHeaderWidget();
 	LayersTree();
 	Print();
 }
@@ -42,6 +45,7 @@ const showContextMenu = (data) => {
 			  data
 		 } 
 	});
+	
 }
 
 let tableAttrs = {};
@@ -80,7 +84,22 @@ const setData = (data) => {
 		_dateInterval.update(data.dateInterval);
 	}
 }
+
+let headerWidget;
+const destroyHeaderWidget = () => {
+	headerWidget.$destroy();
+}
+const showHeaderWidget = () => {
+	if (headerWidget) destroyHeaderWidget();
+	headerWidget = new HeaderWidget({
+		target: document.querySelector('.header'),
+		  props: {
+		 } 
+	});
+}
+
 export default {
+	showHeaderWidget,	destroyHeaderWidget,
 	showEditLayer,	destroyEditLayer,
 	showEditObject,	destroyEditObject,
 	showTableAttrs,	destroyTableAttrs,
