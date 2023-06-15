@@ -5,7 +5,6 @@
 	const dispatch = createEventDispatcher();	
 	
 	export let isDisabled = false;
-	export let isOver1 = false;
 	export let item = {};
 	
 	let text = item.text || '';
@@ -79,6 +78,8 @@
 
 <div bind:this={cont} class="level1 {items ? 'menuMarkerRight':''}" class:over={isOver} class:disabled={isDisabled}
   on:click={handleClick}
+  on:blur={()=>{}}
+  on:focus={()=>{}}
   on:mouseover|stopImmediatePropagation|preventDefault={handleOver}
   on:mouseout|stopImmediatePropagation|preventDefault={handleOut}
 >
@@ -135,10 +136,6 @@ div.level {
 	border: 1px solid #0003;
 	box-shadow: 2px 2px 5px 0px #0002;
 	background: white;
-	/* z-index: 1000;
-	left: 173px;
-	top: 46px;
-	 */
 	white-space: nowrap;
 }
 </style>

@@ -12,8 +12,13 @@ const Utils = {
 	notification: L.gmxUtil.Notification,
 	MAX_UPLOAD_SIZE: 500*1024*1024,
 	respJson: (resp) => {
-		if (resp.status === 200) return resp.json ? resp.json() : JSON.parse(resp.responseText);
-		else {
+		if (resp.status === 200) {
+			let out = '';
+			if (resp.json) out = resp.json();
+			else if (resp.responseText && resp.responseText.substr(0, 1) === '{') out = JSON.parse(resp.responseText);
+			return out;
+			// return resp.json ? resp.json() : (resp.responseText.substr(0, 1) === '{' ? JSON.parse(resp.responseText) : '');
+		} else {
 			Utils.notification.view('Серверная ошибка: ' + resp.status, 'error');
 		}
 	},
@@ -288,8 +293,21 @@ const Utils = {
 		});
 	},
 */
+	postJson: (attr = {}) => {
+		let {pars = {}, opt = {}, path = 'VectorLayer', cmd = 'Search',  ext='', host = prefix} = attr;
+		let url = host + path + '/' + cmd + ext;
+        let fd = new FormData();
+        fd.append('WrapStyle', 'None');
+		Object.keys(pars).forEach(k => fd.append(k, pars[k]));
+		return fetch(url, {method: 'POST', mode: 'cors', credentials: 'include', body: fd})
+			.then(Utils.respJson)
+			.then(json => {
+				if (json.Status !== 'ok') return json.Error;
+				return json.Result;
+			});
+	},
 	getJson: (attr = {}) => {
-		let {pars, opt = {}, path = 'VectorLayer', cmd = 'Search',  ext='.ashx', host = prefix} = attr;
+		let {pars = {}, opt = {}, path = 'VectorLayer', cmd = 'Search',  ext='.ashx', host = prefix} = attr;
 		let url = host + path + '/' + cmd + ext;
 		if (!pars.WrapStyle) pars.WrapStyle = 'none';
 		url += '?' + Object.keys(pars).map(k => k + '=' + pars[k]).join('&');

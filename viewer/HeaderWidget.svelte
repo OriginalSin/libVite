@@ -1,11 +1,19 @@
 <script>
-// import Draggable from '../Modal/Draggable.svelte';
-// import CreateDescr from './CreateDescr.svelte';
+import {_userInfo} from './stores.js';
+import Utils from './Utils.js';
+import UserPlugin from './UserPlugin/UserPlugin.svelte';
 
 export let data;
 
+const mapsPref = '//maps.kosmosnimki.ru/';
 let gmxMap = L.gmx.gmxMap,
-	map = gmxMap.leafletMap;
+	map = gmxMap.leafletMap,
+	userMapUrl,
+	userInfo;
+
+_userInfo.subscribe(value => {
+	userInfo = value;
+});
 
 const save = (ev) => {
 console.log('save', ev);
@@ -14,6 +22,38 @@ const cmdContextMenu = async (cmd, data) => {
 console.log('cmdContextMenu', cmd, data);
 	// await Utils.getJson({cmd, path: 'FileBrowser', pars:{FullName: folder + data.it.Name}});
 	// getFolder(folder);
+};
+const cmdUserInfo = async (cmd, data) => {
+console.log('', cmd, data);
+	// await Utils.getJson({cmd, path: 'FileBrowser', pars:{FullName: folder + data.it.Name}});
+	// getFolder(folder); Login
+		const a = document.createElement("a");
+	switch (cmd) {
+		case 'userMap':
+			if (userInfo) {
+				a.href = mapsPref + 'api/index.html?%40' + userInfo.Login.replace('@', '%40');
+				a.target =  '_blank'; a.click();
+			}
+			break;
+		case 'admin':
+			a.href = mapsPref + 'admin'; a.target =  '_blank'; a.click();
+			break;
+			
+		case 'Logout':
+			let arr = await Utils.getJson({cmd: 'Logout', path: '..', pars:{WithoutRedirection: 1}});
+			return fetch('my.kosmosnimki.ru/Handler/Logout', {mode: 'cors', credentials: 'include'})
+			.then(resp => resp.text())
+			.then(json => {
+				location.href = '/';
+console.log('Logout', json);
+			});
+
+			// arr = await Utils.getJson({cmd: 'Logout', path: 'Handler', ext: '', host:'my.kosmosnimki.ru'});
+			// https://
+			// my.kosmosnimki.ru/Handler/Logout?callback=gmx_unique_4&0.4928076100872849
+
+			break;
+	}
 };
 let menus = {
 	mapMenu: [
@@ -73,6 +113,29 @@ let menus = {
 		{text: 'Поиск снимков', cmd: 'Open', fn: cmdContextMenu},
 		{text: 'Веб-ГИС GeoMixer', cmd: 'Open', fn: cmdContextMenu},
 	],
+	setUser: [
+		{text: 'Личный кабинет', cmd: 'ProfilePlugin', fn: cmdUserInfo},
+		{text: 'Личная карта', cmd: 'userMap', fn: cmdUserInfo},
+		{text: 'Системные настройки', cmd: 'admin', fn: cmdUserInfo},
+		{text: 'Управление группами', cmd: 'UserGroupWidget', fn: cmdUserInfo},
+		{text: 'Выйти', cmd: 'Logout', fn: cmdUserInfo},
+	],
+};
+const userLogin = (pt) => {
+console.log('userLogin', pt);
+	if (map._userPlugin) map._userPlugin.$destroy();
+	map._userPlugin = new UserPlugin({
+		target: document.body,
+		props: {
+			onSelect: (it) => {
+				map._userPlugin.$destroy();
+console.log('onSelect', geoJSON);
+			},
+			width: 250, height: 210,
+			left: 200, top: 200
+		}
+	});
+
 };
 
 const menu = (e, it) => {
@@ -80,6 +143,12 @@ const menu = (e, it) => {
 		type = target.getAttribute('data-key');
 	const rect = target.getBoundingClientRect();
 // console.log('ddddd', e.clientX, e.clientY, rect);
+	if (type === 'setUser' && !userInfo) {
+		userLogin();
+console.log('setUser', e.clientX, e.clientY, rect);
+
+return;
+	}
 	if (menus[type]) {	
 		map._showContextMenu({
 			items: menus[type],
@@ -90,33 +159,36 @@ const menu = (e, it) => {
 }
 const handleOver = e => {
 	if (map.__contextMenu) menu(e);
-
+}
+const setLang = lang => {
+	window.language = lang;
 }
 
 let cont;
 
 </script>
 
-<section bind:this={cont} on:mousedown={save} class="headerCont">
+<section bind:this={cont} on:mousedown={save} class="headerCont" on:click|stopPropagation|preventDefault on:mouseover|stopImmediatePropagation|preventDefault on:focus>
     <span class="logo">
-	   <img class="headerWidget-logo" src="/img/logotypes/geomixer_transpar_small.svg">
+	   <img class="headerWidget-logo" src="/img/logotypes/geomixer_transpar_small.svg" alt="" />
     </span>
-    <span class="cmdCont" on:mouseover|stopImmediatePropagation|preventDefault={handleOver}>
-		<button on:click|stopPropagation|preventDefault={menu} data-key="mapMenu" class="mapMenu">Карта</button>
-		<button on:click|stopPropagation|preventDefault={menu} data-key="mapData" class="mapData">Данные</button>
-		<button on:click|stopPropagation|preventDefault={menu} data-key="mapView" class="mapView">Вид</button>
-		<button on:click|stopPropagation|preventDefault={menu} data-key="mapInstr" class="mapInstr">Инструменты</button>
-		<button on:click|stopPropagation|preventDefault={menu} data-key="mapService" class="mapService">Сервисы</button>
-		<button on:click|stopPropagation|preventDefault={menu} data-key="mapInfo" class="mapInfo">Справка</button>
-		<button on:click|stopPropagation|preventDefault={menu} data-key="mapLinks" class="mapLinks">Ссылки</button>
+    <span class="cmdCont" on:mouseover={handleOver} on:focus>
+		<button on:click={menu} data-key="mapMenu" class="mapMenu">Карта</button>
+		<button on:click={menu} data-key="mapData" class="mapData">Данные</button>
+		<button on:click={menu} data-key="mapView" class="mapView">Вид</button>
+		<button on:click={menu} data-key="mapInstr" class="mapInstr">Инструменты</button>
+		<button on:click={menu} data-key="mapService" class="mapService">Сервисы</button>
+		<button on:click={menu} data-key="mapInfo" class="mapInfo">Справка</button>
+		<button on:click={menu} data-key="mapLinks" class="mapLinks">Ссылки</button>
     </span>
     <span class="lang">
-		<button class="">Ru</button>
-		<button class="">En</button>
+		<button on:click={()=>setLang('rus')} class="">Ru</button>
+		<button on:click={()=>setLang('eng')} class="">En</button>
     </span>
     <span class="userPanel">
 		<i class="userIcon" />
-		<span>Сергей Алексеев</span>
+		<button on:click={menu} on:mouseover={handleOver} data-key="setUser" class="setUser" on:focus>{userInfo?.FullName || 'Войти'}</button>
+		{#if userInfo}
 		<i class="icon-angle-down" />
 
 		<div class="itemDropdown">
@@ -128,6 +200,7 @@ let cont;
 				<li class="logout"><span>Выйти</span></li>
 			</ul>
 		</div>
+		{/if}
     </span>
 </section>
 
@@ -145,40 +218,37 @@ let cont;
     padding: 4px;
     font-size: 12px;*/
 }
-.headerCont .cmdCont button {
+.headerCont .lang button {
+	padding: 8px 3px;
+}
+.headerCont button {
     text-align: center;
     /* color: #000000; */
     font-family: tahoma;
     font-size: 12px;
     font-weight: normal;
-    padding: 8px 10px 8px 10px;
+    padding: 8px 10px;
     background: transparent;
     outline: none;
     border-radius: unset;
     border: 1px solid transparent;
 }
-.headerCont i.userPanel {
+.headerCont .userPanel {
+	padding-left: 20px;
+}
+.headerCont .userPanel button.setUser {
+	padding: 8px 0;
+}
+.headerCont .userPanel i.userIcon {
     background-image: url(/img/user.png);
     background-repeat: no-repeat;
     display: inline-block;
+	    width: 18px;
+    height: 17px;
 }
-.ui-icon, .ui-widget-content .ui-icon {
-    background-image: url(/img/ui-icons_444444_256x240.png);
-}
-.ui-icon-newwin {
-    background-position: -48px -80px;
-}
-.ui-icon {
-    width: 16px;
-    height: 16px;
-}
-.ui-icon {
-    display: block;
-    text-indent: -99999px;
-    overflow: hidden;
-    background-repeat: no-repeat;
-}
+
 .headerCont i.icon-angle-down:before {
-    content: '\';
+	content: '\';
 }
+
 </style>
