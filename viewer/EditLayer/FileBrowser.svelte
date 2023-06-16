@@ -10,7 +10,7 @@ let {layerID, width = 800, height = 460} = attr;
 let gmxMap = L.gmx.gmxMap,
 	map = gmxMap.leafletMap,
 	layersByID = gmxMap.layersByID,
-	properties = layersByID[layerID]._gmx.properties;
+	properties = layersByID[layerID]?._gmx.properties;
 
 let props = {},	drives,
 	folder = '', folderMap,
@@ -114,7 +114,7 @@ const onRightClick = (it, e) => {
 }
 const getSourceColumns = async it => {
 	let arr = await Utils.getJson({cmd: 'GetSourceColumns', pars:{SourceName: folder + it.Name}});
-	attr.onSourceColumns(arr);
+	attr.onSourceColumns(arr, it.name, {Path: folder + it.Name, Exists: true});
 };
 
 // {@debug	drives}

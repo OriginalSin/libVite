@@ -1,4 +1,5 @@
 <script>
+import { afterUpdate } from 'svelte';
 import Draggable from '../Modal/Draggable.svelte';
 // import CreateDescr from './CreateDescr.svelte';
 import DrawingList from '../DrawingList/DrawingList.svelte';
@@ -13,16 +14,13 @@ export let attr = {};
 
 let {layerID, width, height = 460} = attr;
 // let layerID = data.layerID;
-let gmxMap = L.gmx.gmxMap;
-let map = gmxMap.leafletMap;
-let layersByID = gmxMap.layersByID;
+let gmxMap = L.gmx.gmxMap,
+	map = gmxMap.leafletMap,
+	layersByID = gmxMap.layersByID,
+	properties = layersByID[layerID]?._gmx.properties || {},
+	TemporalPeriods = properties.TemporalPeriods || [];
 
-let properties = layersByID[layerID]._gmx.properties;
-// let attributes = props.attributes;
-// let attrTypes = props.attrTypes;
-	let drawingList;
-let TemporalPeriods = properties.TemporalPeriods || [];
-
+// let drawingList;
 
 let closeIcon = L.gmxUtil.setSVGIcon('close');
 
@@ -31,30 +29,34 @@ let features = gmxDrawing.getFeatures();
 let geoJSON;
 let dialog;
 
-let props = {};
-let SourceType = 'Файл';
-let GeometryType = 'linestring';
-let IsRasterCatalog = false;
-let isOpenMaxPeriod = false;
-let isOpenShablon = false;
-let isQuicklook = false;
-let TemporalLayer = false;
-let Quicklook;
-let colsArr = [];
-
+let props = {},
+	SourceType = 'file',
+	GeometryType = 'polygon',
+	IsRasterCatalog = false,
+	isOpenMaxPeriod = false,
+	isOpenShablon = false,
+	isQuicklook = false,
+	TemporalLayer = false,
+	Quicklook,
+	colsArr = [];
+const setcolsArr = (arr) => colsArr = (arr || []).filter(it => !it.IsPrimary && it.name !== 'GMX_RasterCatalogID' && it.name !== 'wkb_geometry');
+// $: {
+	// console.log(`the current title is `, props);
+// }
 let load = true;
 const getItem = async layerID => {
 	props = await Utils.getJson({cmd: 'GetLayerInfo', path: 'Layer', pars:{LayerName: layerID}});
 	load = false;
-	SourceType = props.SourceType || 'Файл';
-	GeometryType = props.GeometryType || 'linestring';
+	SourceType = props.SourceType || 'file';
+	GeometryType = props.GeometryType || 'polygon';
 	IsRasterCatalog = props.IsRasterCatalog;
 	TemporalLayer = props.TemporalLayer;
 	if (props.Quicklook) {
 		Quicklook = JSON.parse(props.Quicklook);
 		isQuicklook = true;
 	}
-	colsArr = (props.Columns || []).filter(it => !it.IsPrimary && it.name !== 'GMX_RasterCatalogID' && it.name !== 'wkb_geometry');
+	setcolsArr(props.Columns);
+	// colsArr = (props.Columns || []).filter(it => !it.IsPrimary && it.name !== 'GMX_RasterCatalogID' && it.name !== 'wkb_geometry');
 
 
 console.log('getItem', props, properties);
@@ -63,7 +65,8 @@ console.log('getItem', props, properties);
 	// data = res.values[0];
 	// geoJSON = L.gmxUtil.geometryToGeoJSON(data[indexes.geomixergeojson], true, true);
 };
-layerID && getItem(layerID);
+if (layerID) getItem(layerID);
+else load = false;
 
 const getColumnsOption = (f) => {
 	// f = f.toUpperCase();
@@ -74,13 +77,7 @@ const getColumnsOption = (f) => {
 };
 const getEncodeSourceOption = (f) => {
 	return [
-		'windows-1251',
-		'utf-8',
-		'koi8-r',
-		'utf-7',
-		'iso-8859-5',
-		'koi8-u',
-		'cp866'
+		'windows-1251', 'utf-8', 'koi8-r', 'utf-7', 'iso-8859-5', 'koi8-u', 'cp866'
 	].map(n => {
 		// const n = it.Name;
 		return '<option value="' + n + '" ' + (f === n ? 'selected' : '') + '>' + n + '</option>';
@@ -151,10 +148,37 @@ const selGeometryType = (ev) => {
 	GeometryType = tabNode.className;
 console.log('del', GeometryType);
 };
+// let setFocus;
+	// afterUpdate(() => {
+		// if (setFocus) {
+			// setFocus = false;
+			// const cols = props.Columns || [];
+		// }
+		// console.log('the component just updated');
+	// });
+const addCol = (ev) => {
+	const target = ev.target;
+	const Name = target.value;
+	const type = target.getAttribute('data-key');
+	target.value = '';	target.blur();
+	if (type === 'Columns') {
+		const cols = props.Columns || [];
+		props.Columns = [...cols, {Name,OldName: Name, ColumnSimpleType: 'string', IsComputed: false,IsIdentity: false,IsPrimary: false}];
+		setcolsArr(props.Columns);
+	} else if (type === 'MetaProperties') {
+		props.MetaProperties[Name] = {Type: 'String', Value: ''};
+	}
+	props = {...props};
+// console.log('addCol', target.value, props.Columns);
+};
 const delCol = (ev) => {
 	// const tabNode = ev.target;
 	// GeometryType = tabNode.className;
 console.log('delCol', GeometryType);
+};
+
+const selTable = (pt) => {
+console.log('selTable', pt);
 };
 const setDirectory = (pt) => {
 // console.log('setGeo', pt);
@@ -163,13 +187,14 @@ const setDirectory = (pt) => {
 		props: {
 			attr: {
 				layerID,
-				onSourceColumns: (it) => {
-					// geoJSON = it.toGeoJSON().geometry;
-					// map._fileBrowser.$destroy();
-	console.log('onSourceColumns', it);
+				onSourceColumns: (it, Title, ShapePath) => {
+					props.Title = Title;
+					props.ShapePath = ShapePath;
+					props.Columns = it;
+					setcolsArr(it);
+					map._fileBrowser.$destroy();
 				},
-				left: 200,
-				top: 200
+				left: 200, top: 200
 			}
 		}
 	});
@@ -203,97 +228,84 @@ console.log('attributes', layerID, attr);
 			<table class="propertiesTable">
 			<tbody>
 				<tr>
-					<td class="title">
-						<span>Имя</span>
-					</td>
-					<td class="val">
-						<input type="text" data-key='Title' value={props.Title || ''} />
-					</td>
+					<td class="title"><span>Имя</span></td>
+					<td class="val"><input type="text" data-key='Title' value={props.Title || ''} /></td>
 				</tr>
 				<tr>
-					<td class="title">
-						<span>Копирайт</span>
-					</td>
-					<td class="val">
-						<input type="text" data-key='Copyright' value={props.Copyright || ''} />
-					</td>
-				</tr>
-				<tr>
-					<td class="title">
-						<span>Описание</span>
-					</td>
-					<td class="val">
-						<textarea type="text" data-key='Description' value={props.Description || ''} />
-					</td>
+					<td class="title"><span>Копирайт</span></td>
+					<td class="val"><input type="text" data-key='Copyright' value={props.Copyright || ''} /></td>
 				</tr>
 				{#if layerID}
-					<tr>
-						<td class="title">
-							<span>Геометрия</span>
-						</td>
-						<td class="val">
-							<input type="text" disabled data-key='GeometryType' value={props.GeometryType || ''} />
-						</td>
-					</tr>
-					<tr>
-						{#if SourceType === 'file'}
-						<td class="title">
-							<span>Источник:<br> Файл</span>
-						</td>
-						<td class="val">
-							<input type="text" value={props.ShapePath?.Path || ''} class="ShapePath short {props.ShapePath?.Exists ? 'Exists' : ''}" /><button on:click={setDirectory} class="img geom" />
-							<div class="manual">
-								<span>Кодировка</span>
-								<select class="EncodeSource">
-									{@html getEncodeSourceOption(props.EncodeSource)}
-								</select>
-							</div>
-							<div class="otherEncoding">
-								<label><input type="checkbox" /> Другая</label>
-								<input class="VectorLayerEncodingInput" disabled="disabled" />
-							</div>
-						</td>
-						{:else if SourceType === 'table'}
-						<td class="title">
-							<span>Источник:<br> Таблица</span>
-						</td>
-						<td class="val">
-							<input type="text" value={props.TableName || ''} class="TableName short" /><button on:click={setGeo} class="img geom" />
-							<div class="manual">
-								<span>Проекция</span>
-								<select class="selectEPSG">
-									<option value="EPSG:4326" selected={props.TableCS === 'EPSG:4326'}>Широта/Долгота (EPSG:4326)</option>
-									<option value="EPSG:3395" selected={props.TableCS === 'EPSG:3395'}>Меркатор (EPSG:3395)</option>
-								</select>
-							</div>
-						</td>
-						{:else if SourceType === 'manual'}
-						<td class="title">
-							<span>Геометрия:</span>
-						</td>
-						<td class="val">
-							<span class="manual {GeometryType}">
-								<button on:click={selGeometryType} class="polygon" title="полигоны"></button>
-								<button on:click={selGeometryType} class="linestring" title="линии"></button>
-								<button on:click={selGeometryType} class="point" title="точки"></button>
-							</span>
-						</td>
+				<tr>
+					<td class="title"><span>ID</span></td>
+					<td class="val"><input type="text" data-key='ID' value={layerID || ''} /></td>
+				</tr>
+				{/if}
+				<tr>
+					<td class="title"><span>Описание</span></td>
+					<td class="val"><textarea type="text" data-key='Description' value={props.Description || ''} /></td>
+				</tr>
+				{#if layerID}
+				<tr>
+					<td class="title"><span>Геометрия</span></td>
+					<td class="val"><input type="text" disabled data-key='GeometryType' value={props.GeometryType || ''} /></td>
+				</tr>
+					{#if SourceType === 'file'}
+				<tr>
+					<td class="title"><span>Источник:<br> Файл</span></td>
+					<td class="val">
+						<input type="text" value={props.ShapePath?.Path || ''} class="ShapePath short {props.ShapePath?.Exists ? 'Exists' : ''}" /><button on:click={setDirectory} class="img geom" />
+						{#if props.ShapePath?.Exists}
+						<div class="manual">
+							<span>Кодировка</span>
+							<select class="EncodeSource">{@html getEncodeSourceOption(props.EncodeSource)}</select>
+						</div>
+						<div class="otherEncoding">
+							<label><input type="checkbox" /> Другая</label>
+							<input class="VectorLayerEncodingInput" disabled="disabled" />
+						</div>
 						{/if}
-					</tr>
+					</td>
+				</tr>
+					{:else if SourceType === 'table'}
+				<tr>
+					<td class="title"><span>Источник:<br> Таблица</span></td>
+					<td class="val">
+						<input type="text" value={props.TableName || ''} class="TableName short" /><button on:click={selTable} class="img geom" />
+						<div class="manual">
+							<span>Проекция</span>
+							<select class="selectEPSG">
+								<option value="EPSG:4326" selected={props.TableCS === 'EPSG:4326'}>Широта/Долгота (EPSG:4326)</option>
+								<option value="EPSG:3395" selected={props.TableCS === 'EPSG:3395'}>Меркатор (EPSG:3395)</option>
+							</select>
+						</div>
+					</td>
+				</tr>
+					{/if}
 				{:else}
 				<tr>
 					<td class="title">
 						<form>
 							<label><input type="radio" bind:group={SourceType} value="file">Файл</label>
-							<label><input type="radio" bind:group={SourceType} value="Таблица">Таблица</label>
+							<label><input type="radio" bind:group={SourceType} value="table">Таблица</label>
 							<label><input type="radio" bind:group={SourceType} value="manual">Вручную</label>
 						</form>
 					</td>
 					<td class="val">
 						{#if SourceType === 'file'}
-							<input type="text" value="" class="ShapePath short" /><button on:click={setGeo} class="img geom" />
+							<input type="text" value={props.ShapePath?.Path || ''} class="ShapePath short {!layerID || props.ShapePath?.Exists ? 'Exists' : ''}" /><button on:click={setDirectory} class="img geom" />
+							{#if props.ShapePath?.Exists}
+							<div class="manual">
+								<span>Кодировка</span>
+								<select class="EncodeSource">{@html getEncodeSourceOption(props.EncodeSource)}</select>
+							</div>
+							<div class="otherEncoding">
+								<label><input type="checkbox" /> Другая</label>
+								<input class="VectorLayerEncodingInput" disabled="disabled" />
+							</div>
+							{/if}
 						{:else if SourceType === 'table'}
-							<input type="text" value="" class="TableName short" /><button on:click={setGeo} class="img geom" />
+							<input type="text" value="" class="TableName short" /><button on:click={selTable} class="img geom" />
 							<div class="manual">
 								<span>Проекция</span>
 								<select class="selectEPSG">
@@ -311,6 +323,7 @@ console.log('attributes', layerID, attr);
 						{/if}
 					</td>
 				</tr>
+				
 				{/if}
 			</tbody>
 			</table>
@@ -329,10 +342,10 @@ console.log('attributes', layerID, attr);
 				{#if flag}
 				<tr>
 					<td class="title">
-						<input type="text" data-key={name} value={name || ''} />
+						<input type="text" autofocus data-key={name} value={name || ''} disabled={SourceType !== 'manual'} />
 					</td>
 					<td class="val">
-						<select class="typesselect">
+						<select class="typesselect" disabled={SourceType !== 'manual'}>
 							<option value="float" class="float" selected={type === 'float'}>Float</option>
 							<option value="integer" class="integer" selected={type === 'integer'}>Integer</option>
 							<option value="string" class="string" selected={type === 'string'}>String</option>
@@ -341,18 +354,20 @@ console.log('attributes', layerID, attr);
 							<option value="datetime" class="datetime" selected={type === 'datetime'}>DateTime</option>
 							<option value="boolean" class="boolean" selected={type === 'boolean'}>Boolean</option>
 						</select>
-						<button on:click={delCol} class="img del" />
+						{#if SourceType === 'manual'}<button on:click={delCol} class="img del" />{/if}
 					</td>
 				</tr>
 				{/if}
 				{/each}
+				{#if SourceType === 'manual'}
 				<tr class="newRaw">
 					<td class="title">
-						<input type="text" value={''} />
+						<input data-key='Columns' type="text" value={''} on:input={addCol} />
 					</td>
 					<td class="val">
 					</td>
 				</tr>
+				{/if}
 			</tbody>
 			</table>
 		</div>
@@ -368,7 +383,7 @@ console.log('attributes', layerID, attr);
 				{@const it = props.MetaProperties[k]}
 				<tr>
 					<td class="title">
-						<input type="text" data-key='title' value={k || ''} />
+						<input type="text" autofocus data-key='meta' value={k || ''} />
 					</td>
 					<td class="val">
 						<input type="text" data-key='val' value={it.Value || ''} />
@@ -378,12 +393,9 @@ console.log('attributes', layerID, attr);
 				{/each}
 				<tr>
 					<td class="title">
-						<input type="text" data-key='title' value={''} />
+						<input type="text" data-key='MetaProperties' value={''} on:input={addCol} />
 					</td>
-					<td class="val">
-						<input type="text" data-key='val' value={''} />
-						<button on:click={delCol} class="img del" />
-					</td>
+					<td class="val"></td>
 				</tr>
 			</tbody>
 			</table>
@@ -444,27 +456,15 @@ console.log('attributes', layerID, attr);
 								{#each Object.keys(props.MetaProperties || {}) as k}
 								{@const it = props.MetaProperties[k]}
 								<tr>
-									<td class="title">
-										<input type="text" data-key='title' value={k || ''} />
-									</td>
-									<td class="val">
-										<input type="text" data-key='title' value={it.Value || ''} />
-									</td>
-									<td class="op">
-										<button on:click={delCol} class="img del" />
-									</td>
+									<td class="title"><input type="text" data-key='title' value={k || ''} /></td>
+									<td class="val"><input type="text" data-key='title' value={it.Value || ''} /></td>
+									<td class="op"><button on:click={delCol} class="img del" /></td>
 								</tr>
 								{/each}
 								<tr>
-									<td class="title">
-										<input type="text" data-key='title' />
-									</td>
-									<td class="val">
-										<input type="text" data-key='title' />
-									</td>
-									<td class="op">
-										<button on:click={delCol} class="img del" />
-									</td>
+									<td class="title"><input type="text" data-key='title' /></td>
+									<td class="val"><input type="text" data-key='title' /></td>
+									<td class="op"><button on:click={delCol} class="img del" /></td>
 								</tr>
 							</tbody>
 							</table>
@@ -546,6 +546,13 @@ console.log('attributes', layerID, attr);
     padding: 0;
     width: 12px;
     height: 12px;
+}
+
+.EditLayer .tabs.main .tab.main input.ShapePath {
+    background-color: wheat;
+}
+.EditLayer .tabs.main .tab.main input.ShapePath.Exists {
+    background-color: unset;
 }
 .EditLayer .tabs.main .tab.main form {
     min-width: 88px;

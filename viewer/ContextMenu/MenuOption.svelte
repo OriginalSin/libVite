@@ -19,7 +19,7 @@
 	
 	const handleClick = e => {
 		if (isDisabled) return;
-		dispatch('click');
+		dispatch('click', {item});
 		// dispatchClick();
 	}
 	const handleOut = e => {
@@ -77,7 +77,7 @@
 </script>
 
 <div bind:this={cont} class="level1 {items ? 'menuMarkerRight':''}" class:over={isOver} class:disabled={isDisabled}
-  on:click={handleClick}
+  on:click={()=> dispatch('click', item)}
   on:blur={()=>{}}
   on:focus={()=>{}}
   on:mouseover|stopImmediatePropagation|preventDefault={handleOver}
@@ -89,7 +89,7 @@
 		{#each (items || []) as it, i}
 		<div class="level2"
 		  class:disabled={isDisabled}
-		  on:click={handleClick}
+		  on:click={()=> dispatch('click', it)}
 		>
 		{it.text || ''}
 		</div>

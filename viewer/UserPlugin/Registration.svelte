@@ -172,7 +172,7 @@ console.log('registration', arr);
 				<span class="col_2">
 					<span class="loginLabel">Введите число</span>
 					<input name="captcha" class="RegLastName" type="text" placeholder="" />
-					<img src="https://my.kosmosnimki.ru/Account/Captcha?r={Math.round(Math.random() * Math.pow(10, 9))}" />
+					<img src="https://my.kosmosnimki.ru/Account/Captcha?r={Math.round(Math.random() * Math.pow(10, 9))}" alt="" />
 				</span>
 			</div>
 		</div>
@@ -252,6 +252,12 @@ console.log('registration', arr);
     border: 1px solid;
     margin-top: 8px;
 }
+
+.Registration table {
+    width: 100%;
+}
+.Registration input {
+}
 */
 .Registration .loginLinks button {
 	color: white;
@@ -266,9 +272,4 @@ console.log('registration', arr);
 
 }
 
-.Registration table {
-    width: 100%;
-}
-.Registration input {
-}
 </style>

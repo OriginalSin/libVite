@@ -73,7 +73,7 @@ let menus = {
 		{text: 'Открыть слой', cmd: 'Open', fn: cmdContextMenu},
 		{text: 'Создать слой', cmd: 'Open', items: [
 			{text: 'Растровый', cmd: 'Open', fn: cmdContextMenu},
-			{text: 'Векторный', cmd: 'Open', fn: cmdContextMenu},
+			{text: 'Векторный', cmd: 'props'},
 			{text: 'Мультислой', cmd: 'Open', fn: cmdContextMenu},
 			{text: 'Виртуальный', cmd: 'Open', fn: cmdContextMenu},
 			{text: 'Каталог растров', cmd: 'Open', fn: cmdContextMenu},

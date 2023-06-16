@@ -202,10 +202,11 @@ console.log('onSelect', geoJSON);
     display: block;
     height: 14px;
 }
-
+/*
 .UserPlugin table {
     width: 100%;
 }
+*/
 .UserPlugin input {
     width: calc(100% - 16px);
 }

@@ -39,8 +39,8 @@
 		items = undefined;
 		map.__contextMenu = items;
 	}
-	function selOp(it, it1) {
-console.log('selOp', it, it1, data);
+	function selOp(it) {
+// console.log('selOp', it, it.cmd);
 		if (!map._userInfo || !map._userInfo.UserID) {
 			Utils.notification.view('Необходимо авторизоваться', 'warn');
 			return;
@@ -93,7 +93,7 @@ console.log('selOp', it, it1, data);
 <div transition:fade={{ duration: 100 }} bind:this={menuEl} style="top: {y}px; left: {x}px;">
 	{#each (items || []) as it, i}
 		<MenuOption
-			on:click={() => {selOp(it);}} 
+			on:click={(pt) => selOp(pt.detail)} 
 			item={it}>
 		</MenuOption>
 	{/each}
