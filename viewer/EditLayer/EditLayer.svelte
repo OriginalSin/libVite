@@ -30,6 +30,8 @@ let geoJSON;
 let dialog;
 
 let props = {},
+	metaArr = [],
+	ColumnTagLinksArr = [],
 	SourceType = 'file',
 	GeometryType = 'polygon',
 	IsRasterCatalog = false,
@@ -51,6 +53,15 @@ const getItem = async layerID => {
 	GeometryType = props.GeometryType || 'polygon';
 	IsRasterCatalog = props.IsRasterCatalog;
 	TemporalLayer = props.TemporalLayer;
+	metaArr = Object.keys(props.MetaProperties || {}).map(key => {
+		let att = props.MetaProperties[key];
+		return {...att, key};
+	});
+	ColumnTagLinksArr = Object.keys(props.ColumnTagLinks || {}).map(key => {
+		return {val: props.ColumnTagLinks[key], key};
+	});
+
+	if (metaArr.length) metaArr[metaArr.length - 1].autofocus = true;
 	if (props.Quicklook) {
 		Quicklook = JSON.parse(props.Quicklook);
 		isQuicklook = true;
@@ -88,8 +99,7 @@ L.gmx.gmxDrawing.on('drawstop', (ev) => {
 	features = gmxDrawing.getFeatures();
 });
 const closeMe = () => {
-	map._destroyEditLayer(layerID);
-	// map._destroyEditLayer(layerID);
+	map._EditLayerDestroy(layerID);
 };
 const setGeo = (pt) => {
 // console.log('setGeo', pt);
@@ -154,6 +164,8 @@ console.log('del', GeometryType);
 			// setFocus = false;
 			// const cols = props.Columns || [];
 		// }
+// let arr = document.body.querySelectorAll('[data-key="meta"]');
+// if (arr.length) arr[arr.length - 1].focus();
 		// console.log('the component just updated');
 	// });
 const addCol = (ev) => {
@@ -166,15 +178,30 @@ const addCol = (ev) => {
 		props.Columns = [...cols, {Name,OldName: Name, ColumnSimpleType: 'string', IsComputed: false,IsIdentity: false,IsPrimary: false}];
 		setcolsArr(props.Columns);
 	} else if (type === 'MetaProperties') {
-		props.MetaProperties[Name] = {Type: 'String', Value: ''};
+		const cols = metaArr || [];
+		metaArr = [...cols, {key: Name, Type: 'String', Value: ''}];
+	} else if (type === 'ColumnTagLinksArr') {
+		const cols = ColumnTagLinksArr || [];
+		ColumnTagLinksArr = [...cols, {key: Name, val: ''}];
 	}
 	props = {...props};
 // console.log('addCol', target.value, props.Columns);
 };
 const delCol = (ev) => {
-	// const tabNode = ev.target;
-	// GeometryType = tabNode.className;
-console.log('delCol', GeometryType);
+	const target = ev.target;
+	const type = target.getAttribute('data-key');
+	const num = target.getAttribute('data-num');
+	if (type === 'Columns') {
+		props.Columns = props.Columns || [];
+		props.Columns.splice(num, 1);
+	} else if (type === 'MetaProperties') {
+		metaArr.splice(num, 1);
+		metaArr = [...metaArr];
+	} else if (type === 'ColumnTagLinksArr') {
+		ColumnTagLinksArr.splice(num, 1);
+		ColumnTagLinksArr = [...ColumnTagLinksArr];
+	}
+	props = {...props};
 };
 
 const selTable = (pt) => {
@@ -218,12 +245,13 @@ console.log('attributes', layerID, attr);
 	</div>
 	 <div class="tabs {tab}">
 		<ul>
-			<li class="main"><button on:click={selTab}>Общие</button></li>
-			<li class="cols"><button on:click={selTab}>Колонки</button></li>
-			<li class="meta"><button on:click={selTab}>Метаданные</button></li>
-			<li class="dop"><button on:click={selTab}>Дополнительно</button></li>
+			<li class="main"><button on:click={() => tab = 'main'}>Общие</button></li>
+			<li class="cols"><button on:click={() => tab = 'cols'}>Колонки</button></li>
+			<li class="meta"><button on:click={() => tab = 'meta'}>Метаданные</button></li>
+			<li class="dop"><button on:click={() => tab = 'dop'}>Дополнительно</button></li>
 		</ul>
 	
+{#if tab === 'main'}
 		<div class="main tab">
 			<table class="propertiesTable">
 			<tbody>
@@ -328,6 +356,7 @@ console.log('attributes', layerID, attr);
 			</tbody>
 			</table>
 		</div>
+{:else if tab === 'cols'}
 
 		<div class="cols tab scrollbar">
 			<table class="propertiesTable">
@@ -342,10 +371,10 @@ console.log('attributes', layerID, attr);
 				{#if flag}
 				<tr>
 					<td class="title">
-						<input type="text" autofocus data-key={name} value={name || ''} disabled={SourceType !== 'manual'} />
+						<input autofocus on:change={e => props.Columns[i].Name = e.target.value} type="text" data-key={name} value={name || ''} disabled={SourceType !== 'manual'} />
 					</td>
 					<td class="val">
-						<select class="typesselect" disabled={SourceType !== 'manual'}>
+						<select on:change={e => props.Columns[i].ColumnSimpleType = e.target.options[e.target.selectedIndex].value} class="typesselect" disabled={SourceType !== 'manual'}>
 							<option value="float" class="float" selected={type === 'float'}>Float</option>
 							<option value="integer" class="integer" selected={type === 'integer'}>Integer</option>
 							<option value="string" class="string" selected={type === 'string'}>String</option>
@@ -354,7 +383,7 @@ console.log('attributes', layerID, attr);
 							<option value="datetime" class="datetime" selected={type === 'datetime'}>DateTime</option>
 							<option value="boolean" class="boolean" selected={type === 'boolean'}>Boolean</option>
 						</select>
-						{#if SourceType === 'manual'}<button on:click={delCol} class="img del" />{/if}
+						{#if SourceType === 'manual'}<button data-num={i} data-key='Columns' on:click={delCol} class="img del" />{/if}
 					</td>
 				</tr>
 				{/if}
@@ -372,6 +401,7 @@ console.log('attributes', layerID, attr);
 			</table>
 		</div>
 
+{:else if tab === 'meta'}
 
 		<div class="meta tab scrollbar">
 			<table class="propertiesTable">
@@ -379,15 +409,14 @@ console.log('attributes', layerID, attr);
 				<tr><th>Параметр</th><th>Значение</th></tr>
 			</thead>
 			<tbody>
-				{#each Object.keys(props.MetaProperties || {}) as k}
-				{@const it = props.MetaProperties[k]}
+				{#each metaArr as it, i}
 				<tr>
 					<td class="title">
-						<input type="text" autofocus data-key='meta' value={k || ''} />
+						<input autofocus type="text" data-key='meta' value={it.key || ''} on:change={e => metaArr[i].key = e.target.value} />
 					</td>
 					<td class="val">
 						<input type="text" data-key='val' value={it.Value || ''} />
-						<button on:click={delCol} class="img del" />
+						<button data-num={i} data-key='MetaProperties' on:click={delCol} class="img del" />
 					</td>
 				</tr>
 				{/each}
@@ -400,6 +429,7 @@ console.log('attributes', layerID, attr);
 			</tbody>
 			</table>
 		</div>
+{:else if tab === 'dop'}
 
 		<div class="dop tab scrollbar">
 			<div class="TemporalLayer">
@@ -412,7 +442,7 @@ console.log('attributes', layerID, attr);
 					</div>
 					<div class="line">
 						<span>Колонка даты</span>
-						<select class="columnSelect">
+						<select class="columnSelect scrollbar">
 							{#each (props.Columns || []).filter(it => it.ColumnSimpleType === 'date' || it.ColumnSimpleType === 'datetime') as it}
 							{@const name = it.Name}
 								<option value={name} selected={name === props.TemporalColumnName}>{name}</option>
@@ -453,18 +483,17 @@ console.log('attributes', layerID, attr);
 								<tr><th>Параметр слоя</th><th>Атрибут объекта</th><th></th></tr>
 							</thead>
 							<tbody>
-								{#each Object.keys(props.MetaProperties || {}) as k}
-								{@const it = props.MetaProperties[k]}
+								{#each (ColumnTagLinksArr || []) as it, i}
 								<tr>
-									<td class="title"><input type="text" data-key='title' value={k || ''} /></td>
-									<td class="val"><input type="text" data-key='title' value={it.Value || ''} /></td>
-									<td class="op"><button on:click={delCol} class="img del" /></td>
+									<td class="title"><input autofocus type="text" data-key='title' value={it.key || ''} /></td>
+									<td class="val"><input type="text" data-key='title' value={it.val || ''} /></td>
+									<td class="op"><button data-num={i} data-key='ColumnTagLinksArr' on:click={delCol} class="img del" /></td>
 								</tr>
 								{/each}
 								<tr>
-									<td class="title"><input type="text" data-key='title' /></td>
-									<td class="val"><input type="text" data-key='title' /></td>
-									<td class="op"><button on:click={delCol} class="img del" /></td>
+									<td class="title"><input type="text" data-key='ColumnTagLinksArr' on:input={addCol} /></td>
+									<td class="val"><input type="text" data-key='ColumnTagLinksArr' on:input={addCol} /></td>
+									<td class="op"><button disabled class="img del" /></td>
 								</tr>
 							</tbody>
 							</table>
@@ -487,8 +516,8 @@ console.log('attributes', layerID, attr);
 								{@const xo = getColumnsOption(Quicklook[x] || x)}
 								{@const yo = getColumnsOption(Quicklook[y] || y)}
 								<tr>
-									<td class="error">{x}<select data-name="{x}" class="point">{@html xo}</select></td>
-									<td class="error">{y}<select data-name="{y}" class="point">{@html yo}</select></td>
+									<td class="error">{x}<select data-name="{x}" class="scrollbar point">{@html xo}</select></td>
+									<td class="error">{y}<select data-name="{y}" class="scrollbar point">{@html yo}</select></td>
 								</tr>
 								{/each}
 							</tbody></table>
@@ -504,6 +533,7 @@ console.log('attributes', layerID, attr);
 				
 			</div>
 		</div>
+{/if}
 
 		<div class="foot">
 			<button on:click={save} class="save">{layerID ? 'Изменить' : 'Создать'}</button>
@@ -567,6 +597,9 @@ console.log('attributes', layerID, attr);
 .EditLayer .tabs.main .tab.main td.val{
     width: 274px;
 }
+.EditLayer .tabs .dop {
+    overflow-x: hidden;
+}
 .EditLayer .tabs.main,
 .EditLayer .tabs.dop,
 .EditLayer .tabs.meta,
@@ -621,6 +654,7 @@ console.log('attributes', layerID, attr);
 .EditLayer button.img {
     background-repeat: no-repeat;
     display: inline-block;
+	    outline: none;
 }
 .EditLayer button.del {
     background-image: url(/img/recycle.png);
@@ -672,6 +706,10 @@ console.log('attributes', layerID, attr);
     width: 100%;
 }
 
+.EditLayer .dop textarea {
+	height: 40px;
+}
+
 .EditLayer textarea,
 .EditLayer input[type=text] {
     width: calc(100% - 16px);
@@ -682,6 +720,9 @@ console.log('attributes', layerID, attr);
     height: 14px;
     padding: 2px;
     margin: 1px 3px;
+}
+.EditLayer .quicklook select {
+	    width: 90%;
 }
 .EditLayer select {
 	border: 1px solid #AFC0D5;
@@ -702,6 +743,9 @@ console.log('attributes', layerID, attr);
 	    margin: 0 6px;
     width: 22px;
     text-align: center;
+}
+.EditLayer table.lqw td {
+	text-align: center;
 }
 
 </style>

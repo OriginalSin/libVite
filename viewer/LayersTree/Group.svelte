@@ -75,5 +75,40 @@ dispatch('refresh', ev.detail);
 
 <style>
 
+ul.grp {
+	padding-inline-start: 14px;
+	margin-top: 0;
+	margin-bottom: 0;
+}
+li.layer,
+li.group {
+	list-style-type: none;
+}
+/*
+li.layer.gmx_drag span.leaflet-drag-target,
+*/
+li.layer.gmx_drag,
+li.group.gmx_drag {
+	pointer-events: none;
+}
+.group .hitarea {
+    background: url('/icons2.png') -97px -4px no-repeat;
+    height: 16px;
+    width: 6px;
+	margin: 4px 0 0 0px;
+    float: left;
+    cursor: pointer;
 
+    z-index: 2;
+    position: relative;
+
+}
+.group.closed .hitarea {
+    background-position: -115px -3px;
+}
+/*
+.group .line {
+    cursor: pointer;
+}
+*/
 </style>

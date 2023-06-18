@@ -9,16 +9,16 @@ const key = {
 	},
 	layerName: {
 		items: [
-			{text: 'Свойства', cmd: 'props'},
+			{text: 'Свойства', cmd: 'EditLayer'},
 			{text: 'Стили', cmd: 'styles'},
-			{text: 'Таблица атрибутов', cmd: 'attr'},
+			{text: 'Таблица атрибутов', cmd: 'TableAttrs'},
 			{text: 'Права доступа', cmd: 'rightLayers'},
 			{text: 'Скачать', cmd: 'DownloadLayer'},
 			{text: 'Удалить', cmd: 'styles'},
 			{text: 'Копировать стиль', cmd: 'copyStyle'},
 			{text: 'Создать копию слоя', cmd: 'copyLayer'},
 			{text: 'Вставить объекты', cmd: 'addObjects'},
-			{text: 'Добавить объект', cmd: 'addObject'},
+			{text: 'Добавить объект', cmd: 'EditObject'},
 			{text: 'Добавить в таймлайн', cmd: 'addTimeLine'},
 		]
 	}

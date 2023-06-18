@@ -1,4 +1,5 @@
 <script>
+	import './app.css'
     import { onMount, onDestroy, beforeUpdate, afterUpdate, createEventDispatcher } from 'svelte';
 	import Group from './Group.svelte'
 	import DateRange from '../DateRange/DateRange.svelte'
@@ -46,4 +47,26 @@
 
 
 <style>
+.mainmap-title {
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    overflow-x: hidden;
+    /* width: 320px; */
+    text-overflow: ellipsis;
+	padding: 7px 8px 7px 8px;
+
+}
+
+.layers-before,
+.layers {
+	border: 1px solid #DDD;
+    /* padding: 10px 0px 10px 0px; */
+    margin: 10px 5px;
+}
+/*
+.leftPanelCont  div.layers > ul {
+    margin-left: -8px;
+}
+*/
 </style>

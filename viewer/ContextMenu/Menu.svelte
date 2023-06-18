@@ -56,13 +56,14 @@
 					let params = {LayerName: data.layerID, FromLayer: data.FromLayer, Query: data.Query};
 					L.gmxUtil.layerHelper.appendLayerData(params);
 					break;
-				case 'attr':
-					map._showTableAttrs(data);
+				case 'TableAttrs':
+					map._TableAttrs(data);
 					break;
-				case 'addObject':
-					map._showEditObject(data);
-				case 'props':
-					map._showEditLayer(data);
+				case 'EditObject':
+					map._EditObject(data);
+					break;
+				case 'EditLayer':
+					map._EditLayer(data);
 					break;
 			}
 		}

@@ -31,6 +31,7 @@ export default defineConfig({
     }),
 	svelte({
 	  onwarn(warning, defaultHandler) {
+		if (warning.code === 'a11y-autofocus') return;
 		if (warning.code === 'a11y-distracting-elements') return;
 		if (warning.code === 'a11y-click-events-have-key-events') return;
 		// console.log('warning.code', warning.code);

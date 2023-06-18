@@ -1,4 +1,5 @@
 <script>
+	import Draggable from '../Modal/Draggable.svelte';
 	// import Draggable from '../Modal/Draggable.svelte';
 	// import Modal from '../Modal/Modal.svelte';
 	import './Table.css';
@@ -12,6 +13,7 @@ import Utils from '../Utils.js';
 
 	export let layerID;
 
+let width = '', height = 460;
 	// let layerID = data.layerID;
 let gmxMap = L.gmx.gmxMap;
 let map = gmxMap.leafletMap;
@@ -154,7 +156,7 @@ console.log('setPage', pStart, mPage);
 console.log('editItem', it);
 	};
 	const closeMe = () => {
-		map._destroyTableAttrs(layerID);
+		map._TableAttrsDestroy(layerID);
 		// $$self.$destroy();
 console.log('closeMe');
 	};
@@ -226,7 +228,7 @@ console.log('notify', selectCols);
 
 </script>
 
-<section class="TableAttrs">
+<Draggable {width} {height}>
 
 <div class='TableAttrs {open ? 'active' : ''}'>
 	<div class="header">
@@ -245,7 +247,7 @@ console.log('notify', selectCols);
 
 	</div>
 </div>
-</section>
+</Draggable>
 
 <style>
 .TableAttrs {

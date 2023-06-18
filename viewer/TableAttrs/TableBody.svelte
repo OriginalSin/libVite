@@ -69,7 +69,7 @@ console.log('scrollMe', target.scrollTop);
 	const editItem = (data) => {
 		const id = data[items.indexes[identityField]];
 		const key = id + '_' + layerID;
-		map._showEditObject({
+		map._EditObject({
 			layerID,
 			id,
 			identityField,
@@ -77,7 +77,7 @@ console.log('scrollMe', target.scrollTop);
 			onSelect: (it) => {
 				// geoJSON = it.toGeoJSON().geometry;
 				// map._editObject.$destroy();
-				map._destroyEditObject(key);
+				map._EditObjectDestroy(key);
 console.log('onSelect', it);
 			}
 		});

@@ -1,17 +1,14 @@
 import './viewer.css';
-import {_userInfo} from './stores.js';
-import HeaderWidget from './HeaderWidget.svelte'
-import LayersTree from './LayersTree/index.js'
-import Print from './Print/index.js'
-import { _dateInterval } from './stores.js';
-import ContextMenu from './ContextMenu/Menu.svelte'
-// import TableAttrs from './TableAttrs/Table.svelte'
-import TableAttrs from './TableAttrs/index.svelte'
-import EditObject from './EditObject/EditObject.svelte';
-import EditLayer from './EditLayer/EditLayer.svelte';
 import Utils from './Utils.js';
+import {_userInfo} from './stores.js';
+import { _dateInterval } from './stores.js';
+
+import Sidebar from './IconSidebar/index.js';
+import Print from './Print/index.js';
+import ContextMenu from './ContextMenu/Menu.svelte';
 
 let map;
+
 const init = () => {
 	map = L.gmx.gmxMap.leafletMap;
 
@@ -19,17 +16,45 @@ const init = () => {
 		map._userInfo = value;
 		map._UserID = map._userInfo?.UserID;
 	});
-console.log('init', map);
-	map._showHeaderWidget = showHeaderWidget;	map._destroyHeaderWidget = destroyHeaderWidget;
-	map._showTableAttrs = showTableAttrs;	map._destroyTableAttrs = destroyTableAttrs;
-	map._showEditObject = showEditObject;	map._destroyEditObject = destroyEditObject;
-	map._showEditLayer = showEditLayer;		map._destroyEditLayer = destroyEditLayer;
+
+	[
+		'HeaderWidget',
+		'TableAttrs',
+		'EditObject',
+		'EditLayer'
+	].forEach(key => {
+		map['_' + key] =  async (attr) => {
+			let dynamic = window.gmx.dynamic;
+			if (dynamic[key]) {
+				let it;
+				switch(key) {
+					case 'HeaderWidget':
+						it = (await import('../dynamic/HeaderWidget.js'));
+						break;
+					case 'TableAttrs':
+						it = (await import('../dynamic/TableAttrs.js'));
+						break;
+					case 'EditObject':
+						it = (await import('../dynamic/EditObject.js'));
+						break;
+					case 'EditLayer':
+						it = (await import('../dynamic/EditLayer.js'));
+						break;
+				}
+				map['_' + key] = it.show;
+				map['_' + key + 'Destroy'] = it.destroy;
+				if(it.show) it.show(attr);
+// console.log('init', key, it);
+			}
+		}
+	});
+
 	map._showContextMenu = showContextMenu;
 	map._setViewerData = setData;
 
-	// ContextMenu();
-	map._showHeaderWidget();
-	LayersTree();
+	map._HeaderWidget();
+	Sidebar();
+// console.log('Sidebar', Sidebar);
 	Print();
 }
 let contextMenu;
@@ -48,61 +73,13 @@ const showContextMenu = (data) => {
 	
 }
 
-let tableAttrs = {};
-const destroyTableAttrs = (layerID) => {
-	if (tableAttrs[layerID]) tableAttrs[layerID].$destroy();
-}
-const showTableAttrs = (data) => {
-	const layerID = data.layerID;
-	destroyTableAttrs(layerID);
-	tableAttrs[layerID] = new TableAttrs({
-		target: document.body,
-		  props: {
-			  layerID
-		 } 
-	});
-}
-let editObjects = {};
-const destroyEditObject = (key) => { if (editObjects[key]) editObjects[key].$destroy(); }
-const showEditObject = (attr) => {
-	const {layerID, id} = attr;
-	const key = id + '_' + layerID;
-	destroyEditObject(key);
-	editObjects[key] = new EditObject({target: document.body, props: {attr}});
-}
-
-let editLayers = {};
-const destroyEditLayer = (layerID) => { if (editLayers[layerID]) editLayers[layerID].$destroy(); }
-const showEditLayer = (attr) => {
-	const {layerID} = attr;
-	if (!attr.width) attr.width = 380;
-	destroyEditLayer(layerID);
-	editLayers[layerID] = new EditLayer({target: document.body, props: {attr}});
-}
 const setData = (data) => {
 	if (data.dateInterval) {
 		_dateInterval.update(data.dateInterval);
 	}
 }
 
-let headerWidget;
-const destroyHeaderWidget = () => {
-	headerWidget.$destroy();
-}
-const showHeaderWidget = () => {
-	if (headerWidget) destroyHeaderWidget();
-	headerWidget = new HeaderWidget({
-		target: document.querySelector('.header'),
-		  props: {
-		 } 
-	});
-}
-
 export default {
-	showHeaderWidget,	destroyHeaderWidget,
-	showEditLayer,	destroyEditLayer,
-	showEditObject,	destroyEditObject,
-	showTableAttrs,	destroyTableAttrs,
 	showContextMenu,
 	setData,
 	init

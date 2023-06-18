@@ -3,7 +3,7 @@ import {_userInfo} from './stores.js';
 import Utils from './Utils.js';
 import UserPlugin from './UserPlugin/UserPlugin.svelte';
 
-export let data;
+// export let data;
 
 const mapsPref = '//maps.kosmosnimki.ru/';
 let gmxMap = L.gmx.gmxMap,
@@ -24,7 +24,7 @@ console.log('cmdContextMenu', cmd, data);
 	// getFolder(folder);
 };
 const cmdUserInfo = async (cmd, data) => {
-console.log('', cmd, data);
+// console.log('', cmd, data);
 	// await Utils.getJson({cmd, path: 'FileBrowser', pars:{FullName: folder + data.it.Name}});
 	// getFolder(folder); Login
 		const a = document.createElement("a");
@@ -45,7 +45,7 @@ console.log('', cmd, data);
 			.then(resp => resp.text())
 			.then(json => {
 				location.href = '/';
-console.log('Logout', json);
+// console.log('Logout', json);
 			});
 
 			// arr = await Utils.getJson({cmd: 'Logout', path: 'Handler', ext: '', host:'my.kosmosnimki.ru'});
@@ -73,7 +73,7 @@ let menus = {
 		{text: 'Открыть слой', cmd: 'Open', fn: cmdContextMenu},
 		{text: 'Создать слой', cmd: 'Open', items: [
 			{text: 'Растровый', cmd: 'Open', fn: cmdContextMenu},
-			{text: 'Векторный', cmd: 'props'},
+			{text: 'Векторный', cmd: 'EditLayer'},
 			{text: 'Мультислой', cmd: 'Open', fn: cmdContextMenu},
 			{text: 'Виртуальный', cmd: 'Open', fn: cmdContextMenu},
 			{text: 'Каталог растров', cmd: 'Open', fn: cmdContextMenu},
@@ -146,8 +146,7 @@ const menu = (e, it) => {
 	if (type === 'setUser' && !userInfo) {
 		userLogin();
 console.log('setUser', e.clientX, e.clientY, rect);
-
-return;
+		return;
 	}
 	if (menus[type]) {	
 		map._showContextMenu({

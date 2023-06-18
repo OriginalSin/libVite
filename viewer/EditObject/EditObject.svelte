@@ -7,11 +7,10 @@ import Utils from '../Utils.js';
 export let attr = {};
 
 // export 
-let indexes = {};
 // export let layerID = data.layerID;
 
-let {layerID, id} = attr;
-let fields = attr.indexes;
+let {layerID, id, width} = attr;
+let indexes = attr.indexes;
 let data = [];
 let contNode;
 
@@ -20,7 +19,9 @@ let map = gmxMap.leafletMap;
 let layersByID = gmxMap.layersByID;
 let props = layersByID[layerID]._gmx.properties;
 let attributes = props.attributes;
+let fields;
 if (!fields) fields = attributes;
+if (!indexes) indexes = Utils.getIndexes(fields);
 	let drawingList;
 
 let closeIcon = L.gmxUtil.setSVGIcon('close');
@@ -49,7 +50,7 @@ L.gmx.gmxDrawing.on('drawstop', (ev) => {
 const closeMe = () => {
 	const key = id + '_' + layerID;
 	// map._editObject.$destroy();
-	map._destroyEditObject(key);
+	map._EditObjectDestroy(key);
 };
 const setGeo = (pt) => {
 // console.log('setGeo', pt);
@@ -107,11 +108,11 @@ const del = (ev) => {
 console.log('del', ev);
 };
 
-console.log('attributes', layerID, attr);
+// console.log('attributes', layerID, attr);
 
 </script>
 
-<Draggable>
+<Draggable {width}>
 
 <div class="EditObject" bind:this={contNode}>
 	<div class="header"> 

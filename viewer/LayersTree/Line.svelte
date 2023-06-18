@@ -218,4 +218,28 @@ console.log('onRightClick', layerID);
 </div>
 
 <style>
+/*
+svg.svgIcon.timeline {
+    width: 13px;
+    height: 13px;
+    fill: #999999;
+}
+span.colorIcon img.svg {
+    width: 7px;
+}
+*/
+span.colorIcon {
+    width: 10px;
+    height: 12px;
+	display: inline-block;
+    user-select: none;
+	cursor: pointer;
+}
+.line .beforeIcon {
+	width: 12px;
+    display: inline-block;
+    /* margin-left: -16px; */
+    /* position: absolute; */
+}
+
 </style>

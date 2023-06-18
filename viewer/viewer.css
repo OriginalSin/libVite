@@ -12,14 +12,26 @@ input.warn {
     border-bottom: 1px solid #d8e1e8;
 }
 
+/*   leftMenu   */
+
 .leftMenu {
     position: absolute;
     height: calc(100% - 36px);
     overflow: hidden;
 }
+/*
 .leftMenu.active ~ div#map {
 	left: 400px;
 	width: calc(100% - 400px);
+}
+*/
+body.leftMenuOn.leftMenuOpen > .all > .map {
+	left: 400px;
+	width: calc(100% - 400px);
+}
+
+body.leftMenuOn > .all > .map {
+	left: 40px;
 }
 
 body > .all.leftMenuOn .map {
@@ -33,14 +45,6 @@ body > .all.leftMenuOn .map {
 .leftPanelCont {
     overflow-y: auto;
     height: calc(100% - 42px);
-}
-.scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 8px;
-  background-color: #aaa;
-}
-.scrollbar::-webkit-scrollbar-thumb {
-  background-color: #686b8494;
 }
 
 /*
@@ -106,4 +110,12 @@ button svg {
     text-transform: none;
     line-height: 1em;
     margin-left: 0.2em;
+}
+.scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 8px;
+  background-color: #aaa;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color: #686b8494;
 }
