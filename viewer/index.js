@@ -6,6 +6,7 @@ import { _dateInterval } from './stores.js';
 import Sidebar from './IconSidebar/index.js';
 import Print from './Print/index.js';
 import ContextMenu from './ContextMenu/Menu.svelte';
+import PopupWindow from './PopupWindow.svelte';
 
 let map;
 
@@ -49,6 +50,19 @@ const init = () => {
 		}
 	});
 
+	map._popupShow = (attr) => {
+	// const popupWindow = (attr) => {
+	console.log('_popupShow', attr);
+		if (map._popupWindow) map._popupWindow.$destroy();
+		map._popupWindow = new PopupWindow({
+			target: document.body,
+			props: {
+				attr,
+				
+			}
+		});
+	};
+
 	map._showContextMenu = showContextMenu;
 	map._setViewerData = setData;
 
@@ -59,9 +73,10 @@ const init = () => {
 }
 let contextMenu;
 const showContextMenu = (data) => {
+console.log('showContextMenu', data);
 	if (!map._UserID) {
-		Utils.notification.view('Необходимо авторизоваться', 'warn');
-		return;
+		// Utils.notification.view('Необходимо авторизоваться', 'warn');
+		// return;
 	}
 	if (contextMenu) contextMenu.$destroy();
 	contextMenu = new ContextMenu({

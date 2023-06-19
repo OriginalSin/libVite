@@ -6,9 +6,51 @@ import fetchProgress from 'fetch-progress';
 // const notification = new Notification();
 const prefix = 'https://maps.kosmosnimki.ru/';
 const options = {mode: 'cors', credentials: 'include'};
+const contentTypes = {
+    json: 'application/json',
+    form: 'application/x-www-form-urlencoded',
+    formData: 'multipart/form-data',
+}
+
 const Utils = {
-	prefix: 'https://maps.kosmosnimki.ru/',
-	// prefix: '/',
+	getUrlEncoded: function(par) {
+		return Object.keys(par).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(par[key]); }).join('&');
+	},
+	postJson: (attr = {}) => {
+		let {pars = {}, opt = {}, path = 'VectorLayer', cmd = 'Search', ext='', type='', host = prefix} = attr;
+		let url = host + path + '/' + cmd + ext;
+        // let ropt = {...options, method: 'POST', ...opt};
+		// if (!pars.WrapStyle) pars.WrapStyle = 'None';
+        let body = '';
+		if (type === 'form') {
+			if (!opt.headers) opt.headers = {
+				'Accept': 'application/json',
+				'Content-Type': contentTypes[type]
+				};
+			// ropt.headers = { 'Content-Type': contentTypes[type] };
+			body = Utils.getUrlEncoded(pars);
+		} else {
+			body = new FormData();
+					// headers: {'Accept': 'application/json'},
+			// if (!opt.headers) opt.headers = {
+				// 'Accept': 'application/json'
+				// };
+
+			// body.append('WrapStyle', 'None');
+			Object.keys(pars).forEach(k => body.append(k, pars[k]));
+			// let ropt = {...options, method: 'POST', body: fd, ...opt};
+		}
+		return fetch(url, {...options, method: 'POST', ...opt, body}) 
+		// {method: 'POST', mode: 'cors', credentials: 'include', body: fd}
+		// )
+			.then(Utils.respJson)
+			.then(json => {
+				if (json.Status !== 'ok') return json.Error;
+				return json.Result;
+			});
+	},
+	// prefix: 'https://maps.kosmosnimki.ru/',
+	prefix,
 	notification: L.gmxUtil.Notification,
 	MAX_UPLOAD_SIZE: 500*1024*1024,
 	respJson: (resp) => {
@@ -104,19 +146,6 @@ const Utils = {
 			});
 	},
 
-	postJson: (attr = {}) => {
-		let {pars = {}, opt = {}, path = 'VectorLayer', cmd = 'Search',  ext='', host = prefix} = attr;
-		let url = host + path + '/' + cmd + ext;
-        let fd = new FormData();
-        fd.append('WrapStyle', 'None');
-		Object.keys(pars).forEach(k => fd.append(k, pars[k]));
-		return fetch(url, {method: 'POST', mode: 'cors', credentials: 'include', body: fd})
-			.then(Utils.respJson)
-			.then(json => {
-				if (json.Status !== 'ok') return json.Error;
-				return json.Result;
-			});
-	},
 	getJson: (attr = {}) => {
 		let {pars = {}, opt = {}, path = 'VectorLayer', cmd = 'Search',  ext='.ashx', host = prefix} = attr;
 		let url = host + path + '/' + cmd + ext;
@@ -138,6 +167,14 @@ const Utils = {
 			a[c] = i;
 			return a;
 		}, {});
+	},
+	copyToClipboard: async (txt) => {
+		try {
+			await navigator.clipboard.writeText(txt);
+			//console.log('Content copied to clipboard');
+		} catch (err) {
+			console.error('Failed to copy: ', err);
+		}
 	},
 	search: (pars) => {
         const fd = new FormData();

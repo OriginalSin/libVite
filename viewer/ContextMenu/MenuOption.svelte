@@ -8,6 +8,7 @@
 	export let item = {};
 	
 	let text = item.text || '';
+	// let disabled = item.disabled || '';
 	let items = item.items;
 	let isOver = false;
 	let x;
@@ -16,12 +17,12 @@
 	let overCont;
 
 	// const { dispatchClick } = getContext(key);
-	
-	const handleClick = e => {
+/*	const handleClick = e => {
 		if (isDisabled) return;
 		dispatch('click', {item});
 		// dispatchClick();
 	}
+*/
 	const handleOut = e => {
 		const target = e.target,
 			toElement = e.toElement,
@@ -126,6 +127,7 @@ div:hover {
 }
 div.disabled {
 	color: #0006;
+	pointer-events: none;
 }
 div.disabled:hover {
 	background: white;

@@ -18,10 +18,52 @@ _userInfo.subscribe(value => {
 const save = (ev) => {
 console.log('save', ev);
 };
+
 const cmdContextMenu = async (cmd, data) => {
 console.log('cmdContextMenu', cmd, data);
-	// await Utils.getJson({cmd, path: 'FileBrowser', pars:{FullName: folder + data.it.Name}});
-	// getFolder(folder);
+	let input = '';
+	switch (cmd) {
+		case 'MapSaveAs':
+			map._popupShow({
+				width: 420, height: 100,
+				inputs: [
+					{name: 'mTitle', val: gmxMap.properties.title + ' (copy)'}
+				],
+				buttons: [{
+					title: 'Сохранить',
+					onClick: (arr) => {
+						map._popupWindow.$destroy();
+		console.log('onSelect', arr[0].value);
+					},
+				}],
+				title: 'Сохранить карту как'
+			});
+			break;
+		case 'MapLink':
+			// let c = L.Projection.Mercator.project(map.getCenter());
+			// gmxMap.options.position = {...c, z: 17 - map.getZoom()};
+			let c = map.getCenter();
+			gmxMap.options.position = {...c, z: map.getZoom()};
+			let pars = {
+				content: JSON.stringify({...gmxMap.options, ver: 2}),
+				temp: false
+			};
+console.log('MapLink1', pars);
+			let id = await Utils.getJson({cmd: 'Create', path: 'TinyReference', type: 'formData', pars});
+			let val = Utils.prefix + 'api/index.html?permalink=' + id;
+			map._popupShow({
+				width: 420, height: 60,
+				inputs: [
+					{val, autofocus: true}
+				],
+				title: 'Ссылка на текущее состояние карты'
+			});
+			Utils.copyToClipboard(val);
+			// let arr = await Utils.postJson({cmd: 'Create', path: 'TinyReference', type: 'formData', pars});
+			let pl1 = await Utils.getJson({cmd: 'Get', path: 'TinyReference', pars: {id}});
+console.log('MapLink', id, pars, pl1);
+			break;
+	}
 };
 const cmdUserInfo = async (cmd, data) => {
 // console.log('', cmd, data);
@@ -57,26 +99,26 @@ const cmdUserInfo = async (cmd, data) => {
 };
 let menus = {
 	mapMenu: [
-		{text: 'Открыть', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Создать', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Сохранить', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Сохранить как', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Экспорт', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Поделиться', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Добавить закладку', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Печать', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Свойства', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Добавить группу', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Права доступа', cmd: 'Open', fn: cmdContextMenu},
+		{text: 'Открыть', cmd: 'MapOpen', chkType: 'hidden', fn: cmdContextMenu},
+		{text: 'Создать', cmd: 'MapCreate', chkType: 'hidden', fn: cmdContextMenu},
+		{text: 'Сохранить', cmd: 'MapSave', chkType: 'hidden', fn: cmdContextMenu},
+		{text: 'Сохранить как', cmd: 'MapSaveAs', chkType: 'hidden', fn: cmdContextMenu},
+		{text: 'Экспорт', cmd: 'MapExport', chkType: 'disabled', fn: cmdContextMenu},
+		{text: 'Поделиться', cmd: 'MapLink', fn: cmdContextMenu},
+		{text: 'Добавить закладку', cmd: 'MapLink2', chkType: 'hidden', fn: cmdContextMenu},
+		{text: 'Печать', cmd: 'Print', fn: cmdContextMenu},
+		{text: 'Свойства', cmd: 'MapProps', chkType: 'disabled', fn: cmdContextMenu},
+		{text: 'Добавить группу', cmd: 'FolderAdd', chkType: 'disabled', fn: cmdContextMenu},
+		{text: 'Права доступа', cmd: 'MapRights', chkType: 'disabled', fn: cmdContextMenu},
 	],
 	mapData: [
-		{text: 'Открыть слой', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Создать слой', cmd: 'Open', items: [
-			{text: 'Растровый', cmd: 'Open', fn: cmdContextMenu},
-			{text: 'Векторный', cmd: 'EditLayer'},
-			{text: 'Мультислой', cmd: 'Open', fn: cmdContextMenu},
-			{text: 'Виртуальный', cmd: 'Open', fn: cmdContextMenu},
-			{text: 'Каталог растров', cmd: 'Open', fn: cmdContextMenu},
+		{text: 'Открыть слой', cmd: 'LayerOpen', chkType: 'hidden', fn: cmdContextMenu},
+		{text: 'Создать слой', cmd: 'LayerCreate', items: [
+			{text: 'Растровый', cmd: 'EditLayer', st: 'Raster', fn: cmdContextMenu},
+			{text: 'Векторный', cmd: 'EditLayer', st: 'Vector'},
+			{text: 'Мультислой', cmd: 'EditLayer', st: 'MultiRaster', fn: cmdContextMenu},
+			{text: 'Виртуальный', cmd: 'EditLayer', st: 'Virtual', fn: cmdContextMenu},
+			{text: 'Каталог растров', cmd: 'EditLayer', st: 'CR', fn: cmdContextMenu},
 			]},
 		{text: 'Базовые слои', cmd: 'Open', fn: cmdContextMenu},
 		{text: 'Загрузить объекты', cmd: 'Open', fn: cmdContextMenu},
@@ -121,6 +163,7 @@ let menus = {
 		{text: 'Выйти', cmd: 'Logout', fn: cmdUserInfo},
 	],
 };
+
 const userLogin = (pt) => {
 console.log('userLogin', pt);
 	if (map._userPlugin) map._userPlugin.$destroy();
@@ -137,20 +180,31 @@ console.log('onSelect', geoJSON);
 	});
 
 };
+let getMenu = (type) => {
+	switch(type) {
+		case 'setUser':
+		case 'mapData':
+			// if (!map._UserID) return;
+			break;
+	}
+	return menus[type];
+};
 
 const menu = (e, it) => {
 	let target = e.target,
 		type = target.getAttribute('data-key');
 	const rect = target.getBoundingClientRect();
-// console.log('ddddd', e.clientX, e.clientY, rect);
+console.log('type', type, rect);
 	if (type === 'setUser' && !userInfo) {
 		userLogin();
 console.log('setUser', e.clientX, e.clientY, rect);
 		return;
 	}
-	if (menus[type]) {	
+	let items = getMenu(type);	
+	if (items) {	
 		map._showContextMenu({
-			items: menus[type],
+			type,
+			items,
 			x: (rect.x - rect.width / 2), y: rect.height
 			// x: e.clientX, y: e.clientY
 		});

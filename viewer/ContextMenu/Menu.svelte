@@ -39,34 +39,54 @@
 		items = undefined;
 		map.__contextMenu = items;
 	}
-	function selOp(it) {
-// console.log('selOp', it, it.cmd);
-		if (!map._userInfo || !map._userInfo.UserID) {
-			Utils.notification.view('Необходимо авторизоваться', 'warn');
-			return;
+	function filterItems(it) {
+// console.log('filterItems', it.chkType, it.cmd);
+		let right = map._UserID;
+		if (it.chkType !== 'hidden') {
+			return true;
 		}
-		items = undefined;
+		if (!map._UserID) {
+			// if (it.chkType !== 'disabled') return true;
+			return false;
+		}
+		// switch(it.cmd) {
+			// case 'setUser':
+			// case 'mapData':
+				// break;
+		// }
+		// return menus[type];
+		return true;
+	}
+	function selOp(it) {
+console.log('selOp', it, it.cmd);
 		if (it.fn) it.fn(it.cmd, data);
 		else {
-			switch(it.cmd) {
-				case 'DownloadLayer':
-					L.gmxUtil.layerHelper.downloadLayer({t: data.layerID});
-					break;
-				case 'addObjects':
-					let params = {LayerName: data.layerID, FromLayer: data.FromLayer, Query: data.Query};
-					L.gmxUtil.layerHelper.appendLayerData(params);
-					break;
-				case 'TableAttrs':
-					map._TableAttrs(data);
-					break;
-				case 'EditObject':
-					map._EditObject(data);
-					break;
-				case 'EditLayer':
-					map._EditLayer(data);
-					break;
+			if (!map._userInfo || !map._userInfo.UserID) {
+				Utils.notification.view('Необходимо авторизоваться', 'warn');
+				return;
+			}
+			else {
+				switch(it.cmd) {
+					case 'DownloadLayer':
+						L.gmxUtil.layerHelper.downloadLayer({t: data.layerID});
+						break;
+					case 'addObjects':
+						let params = {LayerName: data.layerID, FromLayer: data.FromLayer, Query: data.Query};
+						L.gmxUtil.layerHelper.appendLayerData(params);
+						break;
+					case 'TableAttrs':
+						map._TableAttrs(data);
+						break;
+					case 'EditObject':
+						map._EditObject(data);
+						break;
+					case 'EditLayer':
+						map._EditLayer(data);
+						break;
+				}
 			}
 		}
+		items = undefined;
 		map.__contextMenu = items;
 	}
 	onMount(() => {
@@ -92,9 +112,11 @@
 <svelte:body on:click={onPageClick} />
 
 <div transition:fade={{ duration: 100 }} bind:this={menuEl} style="top: {y}px; left: {x}px;">
-	{#each (items || []) as it, i}
-		<MenuOption
+	{#each (items || []).filter(filterItems) as it, i}
+		{@const isDisabled = !map._UserID && it.chkType === 'disabled' }
+		<MenuOption 
 			on:click={(pt) => selOp(pt.detail)} 
+				{isDisabled}
 			item={it}>
 		</MenuOption>
 	{/each}
