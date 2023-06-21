@@ -222,10 +222,12 @@ const utils = {
 				.replace(/([^><])=([^><])/g, '$1 === $2')
 				.replace(/! ===/g, '!==')
 				.replace(/<>/g, ' !== ')
-
+				.replace(/ CONTAINS \'(.+?)\'/g, '.indexOf(\'$1\') !== -1')
 				.replace(/\bAND\b/g, '&&')
 				.replace(/\bOR\b/g, '||')
 				.replace(/(floor\()/g, 'Math.$1');
+				// .replace(/ CONTAINS \'(.+?)\'/g, '.indexOf(\'$1\') !== -1')
+				// .replace(/"(.+?)" CONTAINS \'(.+?)\'/g, 'props[indexes[\'$1\']].indexOf(\'$2\') !== -1')
 			// test = new Function('props', 'indexes', 'return ' + body + ';');
 			// console.log('test', test);
 		}

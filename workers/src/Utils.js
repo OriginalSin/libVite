@@ -225,7 +225,9 @@ const utils = {
 
 				.replace(/\bAND\b/g, '&&')
 				.replace(/\bOR\b/g, '||')
-				.replace(/(floor\()/g, 'Math.$1');
+				.replace(/(floor\()/g, 'Math.$1')
+				.replace(/ CONTAINS \'(.+?)\'/g, '.indexOf(\'$1\') !== -1')
+				;
 			// test = new Function('props', 'indexes', 'return ' + body + ';');
 			// console.log('test', test);
 		}

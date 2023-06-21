@@ -114,16 +114,7 @@ const MapInit = () => {
 			// togglable: true,
 			title: 'Печать'
 		})
-		.on('click', function (ev) {
-			// const target = ev.target;
-			// const flag = target.options.isActive;
-			const flag = true;
-			const body = document.body;
-			if (flag) body.classList.add('printMap');
-			else body.classList.remove('printMap');
-
-			console.log("active", flag);
-		})
+		.on('click', (ev) => { map._print(); })
 	);
 	map.addControl(L.control.gmxCenter({}));
 let c = L.control.gmxLocation({coordinatesFormat: 2});

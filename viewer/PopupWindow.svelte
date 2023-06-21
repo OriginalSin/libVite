@@ -41,13 +41,12 @@ console.log('attributes', width, attr);
 	</div>
 	<div class="body scrollbar">
 				{#each (attr.inputs || []) as it, i}
-				{@const auto = it.autofocus}
-			<input
-		{#if auto}
-			autofocus onfocus="this.select()"
+				{@const auto = it.autofocus ? 'autofocus onfocus="this.select()"':''}
+		{#if it.autofocus}
+			<input name={it.name || ''} value={it.val || ''} autofocus onfocus="this.select()" />
+		{:else}
+			<input name={it.name || ''} value={it.val || ''} />
 		{/if}
-			 name={it.name || ''} value={it.val || ''}
-			/>
 				{/each}
 	</div>
 	<div class="foot">
@@ -93,5 +92,7 @@ console.log('attributes', width, attr);
 
 .PopupWindow input {
     width: calc(100% - 16px);
+    border: 1px solid #AFC0D5;
+	outline: none;
 }
 </style>

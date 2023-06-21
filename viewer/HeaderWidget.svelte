@@ -99,33 +99,33 @@ const cmdUserInfo = async (cmd, data) => {
 };
 let menus = {
 	mapMenu: [
-		{text: 'Открыть', cmd: 'MapOpen', chkType: 'hidden', fn: cmdContextMenu},
+		{text: 'Открыть', cmd: 'MapOpen', chkType: 'hidden'},
 		{text: 'Создать', cmd: 'MapCreate', chkType: 'hidden', fn: cmdContextMenu},
 		{text: 'Сохранить', cmd: 'MapSave', chkType: 'hidden', fn: cmdContextMenu},
 		{text: 'Сохранить как', cmd: 'MapSaveAs', chkType: 'hidden', fn: cmdContextMenu},
 		{text: 'Экспорт', cmd: 'MapExport', chkType: 'disabled', fn: cmdContextMenu},
 		{text: 'Поделиться', cmd: 'MapLink', fn: cmdContextMenu},
 		{text: 'Добавить закладку', cmd: 'MapLink2', chkType: 'hidden', fn: cmdContextMenu},
-		{text: 'Печать', cmd: 'Print', fn: cmdContextMenu},
+		{text: 'Печать', cmd: 'Print', fn: () => {map._print();}},
 		{text: 'Свойства', cmd: 'MapProps', chkType: 'disabled', fn: cmdContextMenu},
 		{text: 'Добавить группу', cmd: 'FolderAdd', chkType: 'disabled', fn: cmdContextMenu},
 		{text: 'Права доступа', cmd: 'MapRights', chkType: 'disabled', fn: cmdContextMenu},
 	],
 	mapData: [
-		{text: 'Открыть слой', cmd: 'LayerOpen', chkType: 'hidden', fn: cmdContextMenu},
-		{text: 'Создать слой', cmd: 'LayerCreate', items: [
-			{text: 'Растровый', cmd: 'EditLayer', st: 'Raster', fn: cmdContextMenu},
-			{text: 'Векторный', cmd: 'EditLayer', st: 'Vector'},
-			{text: 'Мультислой', cmd: 'EditLayer', st: 'MultiRaster', fn: cmdContextMenu},
-			{text: 'Виртуальный', cmd: 'EditLayer', st: 'Virtual', fn: cmdContextMenu},
-			{text: 'Каталог растров', cmd: 'EditLayer', st: 'CR', fn: cmdContextMenu},
+		{text: 'Открыть слой', cmd: 'LayerOpen', chkType: 'disabled', fn: cmdContextMenu},
+		{text: 'Создать слой', cmd: 'LayerCreate', chkType: 'disabled', items: [
+			{text: 'Растровый', cmd: 'EditLayer', chkType: 'disabled', st: 'Raster', fn: cmdContextMenu},
+			{text: 'Векторный', cmd: 'EditLayer', chkType: 'disabled', st: 'Vector'},
+			{text: 'Мультислой', cmd: 'EditLayer', chkType: 'disabled', st: 'MultiRaster', fn: cmdContextMenu},
+			{text: 'Виртуальный', cmd: 'EditLayer', chkType: 'disabled', st: 'Virtual', fn: cmdContextMenu},
+			{text: 'Каталог растров', cmd: 'EditLayer', chkType: 'disabled', st: 'CR', fn: cmdContextMenu},
 			]},
-		{text: 'Базовые слои', cmd: 'Open', fn: cmdContextMenu},
+		{text: 'Базовые слои', cmd: 'Open', chkType: 'disabled', fn: cmdContextMenu},
 		{text: 'Загрузить объекты', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Загрузить фотографии', cmd: 'Open', fn: cmdContextMenu},
+		{text: 'Загрузить фотографии', cmd: 'Open', chkType: 'disabled', fn: cmdContextMenu},
 		{text: 'Подключить WFS/WMS', cmd: 'Open', fn: cmdContextMenu},
 		{text: 'Загрузить растры', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Каталоги растров', cmd: 'Open', fn: cmdContextMenu},
+		{text: 'Каталоги растров', cmd: 'Open', chkType: 'disabled', fn: cmdContextMenu},
 	],
 	mapView: [
 		{text: 'Дополнительные карты', cmd: 'Open', fn: cmdContextMenu},
@@ -135,11 +135,11 @@ let menus = {
 	mapInstr: [
 		{text: 'Координатная сетка', cmd: 'Open', fn: cmdContextMenu},
 		{text: 'Индексная сетка', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Создание буферных зон', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Ручная привязка растров', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Краудсорсинг данных', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Пакетный геокодинг', cmd: 'Open', fn: cmdContextMenu},
-		{text: 'Маршруты', cmd: 'Open', fn: cmdContextMenu},
+		{text: 'Создание буферных зон', cmd: 'Open', chkType: 'disabled', fn: cmdContextMenu},
+		{text: 'Ручная привязка растров', cmd: 'Open', chkType: 'disabled', fn: cmdContextMenu},
+		{text: 'Краудсорсинг данных', cmd: 'Open', chkType: 'disabled', fn: cmdContextMenu},
+		{text: 'Пакетный геокодинг', cmd: 'Open', chkType: 'disabled', fn: cmdContextMenu},
+		{text: 'Маршруты', cmd: 'Open', chkType: 'disabled', fn: cmdContextMenu},
 	],
 	mapService: [
 		{text: 'Кадастр Росреестра', cmd: 'Open', fn: cmdContextMenu},
@@ -234,26 +234,28 @@ let cont;
 		<button on:click={menu} data-key="mapInfo" class="mapInfo">Справка</button>
 		<button on:click={menu} data-key="mapLinks" class="mapLinks">Ссылки</button>
     </span>
-    <span class="lang">
-		<button on:click={()=>setLang('rus')} class="">Ru</button>
-		<button on:click={()=>setLang('eng')} class="">En</button>
-    </span>
-    <span class="userPanel">
-		<i class="userIcon" />
-		<button on:click={menu} on:mouseover={handleOver} data-key="setUser" class="setUser" on:focus>{userInfo?.FullName || 'Войти'}</button>
-		{#if userInfo}
-		<i class="icon-angle-down" />
+    <span class="right">
+		<span class="lang">
+			<button on:click={()=>setLang('rus')} class="">Ru</button>
+			<button on:click={()=>setLang('eng')} class="">En</button>
+		</span>
+		<span class="userPanel">
+			<i class="userIcon" />
+			<button on:click={menu} on:mouseover={handleOver} data-key="setUser" class="setUser" on:focus>{userInfo?.FullName || 'Войти'}</button>
+			{#if userInfo}
+			<i class="icon-angle-down" />
 
-		<div class="itemDropdown">
-			<ul>
-				<li class="cab"><span>Личный кабинет</span></li>
-				<li class="myMap"><span>Личная карта</span></li>
-				<li class="nastr"><span>Системные настройки</span></li>
-				<li class="group"><span>Управление группами</span></li>
-				<li class="logout"><span>Выйти</span></li>
-			</ul>
-		</div>
-		{/if}
+			<div class="itemDropdown">
+				<ul>
+					<li class="cab"><span>Личный кабинет</span></li>
+					<li class="myMap"><span>Личная карта</span></li>
+					<li class="nastr"><span>Системные настройки</span></li>
+					<li class="group"><span>Управление группами</span></li>
+					<li class="logout"><span>Выйти</span></li>
+				</ul>
+			</div>
+			{/if}
+		</span>
     </span>
 </section>
 
@@ -285,6 +287,10 @@ let cont;
     outline: none;
     border-radius: unset;
     border: 1px solid transparent;
+}
+.headerCont span.right {
+    right: 16px;
+    position: absolute;
 }
 .headerCont .userPanel {
 	padding-left: 20px;

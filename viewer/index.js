@@ -4,7 +4,7 @@ import {_userInfo} from './stores.js';
 import { _dateInterval } from './stores.js';
 
 import Sidebar from './IconSidebar/index.js';
-import Print from './Print/index.js';
+import Print from './Print/Print.svelte';
 import ContextMenu from './ContextMenu/Menu.svelte';
 import PopupWindow from './PopupWindow.svelte';
 
@@ -19,14 +19,15 @@ const init = () => {
 	});
 
 	[
+		'MapOpen',
 		'HeaderWidget',
 		'TableAttrs',
 		'EditObject',
 		'EditLayer'
 	].forEach(key => {
 		map['_' + key] =  async (attr) => {
-			let dynamic = window.gmx.dynamic;
-			if (dynamic[key]) {
+			// let dynamic = window.gmx.dynamic;
+			// if (dynamic[key]) {
 				let it;
 				switch(key) {
 					case 'HeaderWidget':
@@ -41,12 +42,15 @@ const init = () => {
 					case 'EditLayer':
 						it = (await import('../dynamic/EditLayer.js'));
 						break;
+					case 'MapOpen':
+						it = (await import('../dynamic/MapOpen.js'));
+						break;
 				}
 				map['_' + key] = it.show;
 				map['_' + key + 'Destroy'] = it.destroy;
 				if(it.show) it.show(attr);
 // console.log('init', key, it);
-			}
+			// }
 		}
 	});
 
@@ -62,6 +66,12 @@ const init = () => {
 			}
 		});
 	};
+	map._print = () => {
+		if (map._printInst) map._printInst.$destroy();
+		map._printInst = new Print({
+			target: document.getElementsByClassName('all')[0]
+		});
+	};
 
 	map._showContextMenu = showContextMenu;
 	map._setViewerData = setData;
@@ -69,7 +79,7 @@ const init = () => {
 	map._HeaderWidget();
 	Sidebar();
 // console.log('Sidebar', Sidebar);
-	Print();
+	// Print();
 }
 let contextMenu;
 const showContextMenu = (data) => {

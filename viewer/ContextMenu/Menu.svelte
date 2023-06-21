@@ -83,6 +83,9 @@ console.log('selOp', it, it.cmd);
 					case 'EditLayer':
 						map._EditLayer(data);
 						break;
+					case 'MapOpen':
+						map._MapOpen(data);
+						break;
 				}
 			}
 		}

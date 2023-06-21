@@ -1,63 +1,51 @@
 <script>
-    import { beforeUpdate, createEventDispatcher } from 'svelte';
+    import { tick, beforeUpdate, onMount, onDestroy } from 'svelte';
 
-    export let visible = false;
-
-    const dispatch = createEventDispatcher();
     const map = L.gmx.map;
-
 	const mapCont = map.getContainer();
-	const BIG = 1150, SMALL = BIG / 1.4142;
-	const layout = {
-		width: SMALL + 'px',
-		height: BIG + 'px'
-	};
+	const classList = document.body.classList;
+	let ptype = 'landscape';
 
-    function close(ev) {
-		visible = false;
-		setType();
-		dispatch('visible', { visible });
-    }
-    function print(ev) {
-		window.print();
-    }
-    function typeSel(ev) {
-		setType(ev.target.value);
-    }
-    function setType(type) {
-		// console.log('typeSel', type);
-		let width = '', height = '';
-		if (type === 'layout') {
-			width = BIG + 'px', height = SMALL + 'px';
-		} else if (type === 'portrait') {
-			width = SMALL + 'px', height = BIG + 'px';
-		}
-		mapCont.style.width = width;
-		mapCont.style.height = height;
+    async function close() {
+		classList.remove('printMap');
+		map._printInst.$destroy();
+		await tick();
 		map.invalidateSize();
-	}
+    }
 	beforeUpdate(() => {
-		setType(visible ? 'portrait' : '');
+		if (ptype === 'portrait') classList.add('portrait');
+		else classList.remove('portrait');
+		map.invalidateSize();
+	});
+	onMount(() => {
+		classList.add('printMap');
+	});
+	onDestroy(() => {
+		classList.remove('printMap');
 	});
 
 </script>
 
-<div class="print-ui {visible ? '' : 'disabled'}">
+<div class="print-ui">
 	<span class="print-ui-inner">
-		<button on:click|preventDefault|stopPropagation ={close}>Закрыть</button>
-		<button on:click={print} class="print">Печать</button>
+		<button on:click|preventDefault|stopPropagation={close}>Закрыть</button>
+		<button on:click={() => window.print()} class="print">Печать</button>
 		<span class="layoutContainer">
 			<label>
-				<input on:click={typeSel} type="radio" name="layout" value="portrait">портретная
+				<input bind:group={ptype} type="radio" value="portrait">портретная
 			</label>
 			<label>
-				<input on:click={typeSel} type="radio" name="layout" value="layout">альбомная
+				<input bind:group={ptype} type="radio" value="landscape">альбомная
 			</label>
 		</span>
 	</span>
 </div>
 
 <style>
+:root {
+  --print-big: 1150px;
+  --print-small: calc(1150px / 1.4142);
+}
 .print-ui.disabled {
 	display: none;
 }

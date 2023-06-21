@@ -154,7 +154,9 @@ const Utils = {
 		return fetch(url, {...options, ...opt})
 			.then(Utils.respJson)
 			.then(json => {
-				if (json.Status !== 'ok') {
+				if (Array.isArray(json)) {
+					return json;
+				} else if (json.Status !== 'ok') {
 					Utils.notification.view('Серверная ошибка: ' + json.ErrorInfo.ErrorMessage, 'error');
 					return json.ErrorInfo;
 				} else {

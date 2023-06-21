@@ -115,12 +115,15 @@ div.level1.over div.level {
 div.level2,
 div.level1 {
 	padding: 4px 15px;
-	cursor: default;
+	cursor: pointer;
 	font-size: 14px;
 	display: flex;
 		position: relative;
 	align-items: center;
 	grid-gap: 5px;
+}
+div.level1.menuMarkerRight {
+	cursor: default;
 }
 div:hover {
 	background: #0002;

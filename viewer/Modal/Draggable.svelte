@@ -87,16 +87,13 @@
   --tableAttrs-height: 320px;
 }
 .draggable {
-	
     max-width: 80%;
-
-		overflow: hidden;
-		white-space: nowrap;
+	overflow: hidden;
+	white-space: nowrap;
 	user-select: none;
-	border: solid 1px gray;
 	position: absolute;
 	z-index: 1000;
-	/* width: 700px; */
+	border: 1px solid #dddddd;
 	box-shadow: rgba(100, 100, 100, 0.7) 0px 0px 3px;
 	background-color: white;
 	padding: 4px;
@@ -109,60 +106,15 @@
 	position: absolute;
 	color: red;
 }
-.draggable .n {
-	cursor: n-resize;
-	width: 100%;
-	height: 4px;
-	left: 0;
-	top: 0;
-}
-.draggable .e {
-	cursor: e-resize;
-	height: 100%;
-	width: 4px;
-	top: 0;
-	right: 0;
-}
-.draggable .s {
-	cursor: s-resize;
-	width: 100%;
-	height: 4px;
-	left: 0;
-	bottom: 0;
-}
-.draggable .w {
-	cursor: w-resize;
-	height: 100%;
-	width: 4px;
-	top: 0;
-	left: 0;
-}
-.draggable .se {
-	cursor: se-resize;
-	width: 10px;
-	height: 10px;
-	right: -7px;
-	bottom: -7px;
-}
+.draggable .n { cursor: n-resize; width: 100%; height: 4px; left: 0; top: 0; }
+.draggable .e {	cursor: e-resize; height: 100%;	width: 4px;	right: 0; top: 0; }
+.draggable .s {	cursor: s-resize; width: 100%; height: 4px;	left: 0; bottom: 0; }
+.draggable .w {	cursor: w-resize; height: 100%;	width: 4px;	top: 0;	left: 0; }
+.draggable .se { cursor: se-resize;	width: 10px; height: 10px; right: -7px;	bottom: -7px; }
 .draggable .sw,
 .draggable .ne,
-.draggable .nw {
-	width: 7px;
-	height: 7px;
-}
-.draggable .sw {
-	cursor: sw-resize;
-	left: 0;
-	bottom: 0;
-}
-.draggable .ne {
-	cursor: ne-resize;
-	right: 0;
-	top: 0;
-}
-.draggable .nw {
-	cursor: nw-resize;
-	left: 0;
-	top: 0;
-}
+.draggable .nw { width: 7px; height: 7px; }
+.draggable .sw { cursor: sw-resize;	left: 0; bottom: 0; }
+.draggable .ne { cursor: ne-resize;	right: 0; top: 0; }
+.draggable .nw { cursor: nw-resize;	left: 0; top: 0; }
 </style>
