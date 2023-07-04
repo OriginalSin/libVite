@@ -5,9 +5,11 @@
 	export let layersCont;
 	export let childs = [];
 	export let layerID = '';
+	export let list;
+
 	// export let props = {};
 	// export let type = '';
-
+let listParent = list;
 	const dispatch = createEventDispatcher();
 	// dtNm = dtNm + ':' + cnm;
 	$: arr = childs.slice();
@@ -61,11 +63,14 @@ dispatch('refresh', ev.detail);
 		{@const title = prp.title || ''}
 		{@const layerID = prp.LayerID || prp.GroupID || ''}
 		{@const closed = prp.expanded ? '' : 'closed'}
+		{@const list = prp.list}
 
 		<li class="{type} {closed}" data-id={layerID} data-nm={i}>
+			{#if prp.childrenСount > 0}
 			<div title="Показать/Свернуть" class="hitarea" on:click={toggle} style="visibility: {visibility}"></div>
-			<Line {layerID} {prp} {layersCont} on:refresh={refresh} />
-			<svelte:self bind:childs={item.content.children} {layerID} {layersCont} />
+			{/if}
+			<Line {layerID} {prp} {layersCont} on:refresh={refresh} {listParent} />
+			<svelte:self bind:childs={item.content.children} {layerID} {layersCont} {list} />
 		</li>
 
 	{/each}

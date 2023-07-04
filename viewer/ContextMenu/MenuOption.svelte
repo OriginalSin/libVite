@@ -28,7 +28,7 @@
 			toElement = e.toElement,
 			pNode = target.parentNode;
 // let flag = pNode === cont;
-		if (toElement.classList.contains('level1')) {
+		if (toElement && toElement.classList.contains('level1')) {
 		// if (toElement.classList.contains('level') || toElement.classList.contains('level2')) return;
 		// if (toElement.classList.contains('level')) return;
 // console.log('handleOut', toElement);
@@ -77,7 +77,10 @@
   // class:over={isOver}
 </script>
 
-<div bind:this={cont} class="level1 {items ? 'menuMarkerRight':''}" class:over={isOver} class:disabled={isDisabled}
+<div bind:this={cont} class="level1 {items ? 'menuMarkerRightOpt':''}"
+  class:over={isOver}
+  class:disabled={isDisabled}
+  class:isLink={item.isLink}
   on:click={()=> dispatch('click', item)}
   on:blur={()=>{}}
   on:focus={()=>{}}
@@ -101,7 +104,7 @@
 </div>
 
 <style>
-div.menuMarkerRight::after {
+div.menuMarkerRightOpt::after {
 	content: '';
     height: 10px;
     width: 10px;
@@ -109,6 +112,16 @@ div.menuMarkerRight::after {
     right: 5px;
     background: url(/img/arrows.png) -5px -5px no-repeat;
 }
+div.level1.isLink::after {
+	content: '';
+    right: 4px;
+    position: absolute;
+    width: 16px;
+    height: 16px;
+	background-position: -48px -80px;
+	background-image: url(/img/ui-icons_444444_256x240.png);
+}
+
 div.level1.over div.level {
 	display: block;
 }
@@ -122,7 +135,11 @@ div.level1 {
 	align-items: center;
 	grid-gap: 5px;
 }
-div.level1.menuMarkerRight {
+div.level1 {
+	padding-right: 24px;
+}
+
+div.level1.menuMarkerRightOpt {
 	cursor: default;
 }
 div:hover {

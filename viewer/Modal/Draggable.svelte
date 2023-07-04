@@ -39,7 +39,7 @@
 		}
 	}
 	onMount(() => {
-			height = cont.clientHeight - 8, width = cont.clientWidth - 8;
+			height = cont.clientHeight - 0, width = cont.clientWidth - 0;
 			left = cont.offsetLeft; top = cont.offsetTop;
 		// thead.style.transform = 'translate(0, -2px)';
 		// console.log('ggggggggg', attrsTableParent);

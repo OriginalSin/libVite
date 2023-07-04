@@ -245,7 +245,7 @@ let cont;
 			{#if userInfo}
 			<i class="icon-angle-down" />
 
-			<div class="itemDropdown">
+			<!--div class="itemDropdown">
 				<ul>
 					<li class="cab"><span>Личный кабинет</span></li>
 					<li class="myMap"><span>Личная карта</span></li>
@@ -253,7 +253,7 @@ let cont;
 					<li class="group"><span>Управление группами</span></li>
 					<li class="logout"><span>Выйти</span></li>
 				</ul>
-			</div>
+			</div-->
 			{/if}
 		</span>
     </span>
@@ -291,6 +291,7 @@ let cont;
 .headerCont span.right {
     right: 16px;
     position: absolute;
+	    background: #f3f7fa;
 }
 .headerCont .userPanel {
 	padding-left: 20px;

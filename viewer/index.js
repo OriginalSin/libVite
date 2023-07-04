@@ -56,7 +56,7 @@ const init = () => {
 
 	map._popupShow = (attr) => {
 	// const popupWindow = (attr) => {
-	console.log('_popupShow', attr);
+console.log('_popupShow', attr);
 		if (map._popupWindow) map._popupWindow.$destroy();
 		map._popupWindow = new PopupWindow({
 			target: document.body,
@@ -65,6 +65,7 @@ const init = () => {
 				
 			}
 		});
+		return map._popupWindow;
 	};
 	map._print = () => {
 		if (map._printInst) map._printInst.$destroy();

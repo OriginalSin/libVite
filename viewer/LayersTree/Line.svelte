@@ -7,9 +7,10 @@ import Utils from '../Utils.js';
 export let layerID;
 export let prp = {};
 	export let layersCont;
-// export let type;
+export let listParent;
 // export let props;
 const dispatch = createEventDispatcher();
+// console.log('_____', layerID, listParent);
 
 let nodeItem;
 
@@ -199,16 +200,21 @@ console.log('showPos', beg, end);
 	}
 }
 const onRightClick = e => {
-	gmxMap.leafletMap._showContextMenu({layerID, key: 'layerName', x: e.clientX, y: e.clientY });
+	const key = prp.GroupID ? 'group':'layerName';
+	
+	gmxMap.leafletMap._showContextMenu({key, source: prp, x: e.clientX, y: e.clientY, node: e.target.parentNode.parentNode });
+	// gmxMap.leafletMap._showContextMenu({layerID, prp, key, x: e.clientX, y: e.clientY });
 	// _contextMenu.set({layerID, key: 'layerName'});
-console.log('onRightClick', layerID);
+console.log('onRightClick', layerID, prp);
 }
 
 </script>
 
-<div bind:this={nodeItem} class="line" on:contextmenu|stopPropagation|preventDefault={onRightClick}>
+<div bind:this={nodeItem} class="line" on:contextmenu={onRightClick}>
 	<span class="beforeIcon" on:click={clickMe} title={titleTimeLine}>{@html beforeIcon}</span>
-	{#if showCheckbox}<input type="checkbox" name="root" class="box" checked={visible} on:click={toggleLayer} />{/if}
+	{#if showCheckbox}
+		<input type="{listParent ? 'radio':'checkbox'}" name="root" class="box" checked={visible} on:click={toggleLayer} />
+	{/if}
 	{#if gmxStyle}<span class="colorIcon" title="Редактировать стили" style={iconStyle}>{@html iconImage}</span>{/if}
 	<span class="layer" on:click={showPos} title={titleLayer}>{name}</span>
 	<span class="layerDescription"></span>

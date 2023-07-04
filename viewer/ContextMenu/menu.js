@@ -2,7 +2,7 @@ const key = {
 	mapName: {
 		items: [
 			{text: 'Свойства', cmd: 'props'},
-			{text: 'Добавить группу', cmd: 'addGroup'},
+			{text: 'Добавить группу', cmd: 'AddGroup'},
 			{text: 'Права доступа', cmd: 'rights'},
 			{text: 'Права доступа к слоям', cmd: 'rightLayers'},
 		]

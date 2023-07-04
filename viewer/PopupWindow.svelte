@@ -9,12 +9,15 @@ export let attr = {};
 
 let gmxMap = L.gmx.gmxMap;
 let map = gmxMap.leafletMap;
-let {layerID, height, width} = attr;
+let {layerID, left, top, height, width} = attr;
 let contNode;
 let closeIcon = L.gmxUtil.setSVGIcon('close');
 
 const closeMe = () => {
 	map._popupWindow.$destroy();
+};
+const bodyClick = (ev) => {
+	if (attr.bodyClick) attr.bodyClick(ev);
 };
 const save = () => {
 console.log('attributes', contNode);
@@ -32,21 +35,35 @@ console.log('attributes', width, attr);
 
 </script>
 
-<Draggable {width} {height}>
+<Draggable {left} {top} {width} {height}>
 
 <div class="PopupWindow" bind:this={contNode}>
 	<div class="header"> 
 		<span class="title">{attr.title}: </span>
 		<button on:click={closeMe} type="button" class="close">{@html closeIcon}</button>
 	</div>
-	<div class="body scrollbar">
+	<div on:click={bodyClick} class="body scrollbar">
 				{#each (attr.inputs || []) as it, i}
+				{@const name = it.name || ''}
+				{@const val = it.val || ''}
+				{@const disabled = it.disabled ? 'disabled':''}
 				{@const auto = it.autofocus ? 'autofocus onfocus="this.select()"':''}
-		{#if it.autofocus}
-			<input name={it.name || ''} value={it.val || ''} autofocus onfocus="this.select()" />
-		{:else}
-			<input name={it.name || ''} value={it.val || ''} />
+		<div class="line">
+		{#if it.title}
+			<label for={name}>{it.title}</label>
 		{/if}
+		{#if it.html}
+			{@html it.html}
+		{:else}
+			{#if it.autofocus}
+				<input name={name} value={val} autofocus onfocus="this.select()" {disabled} />
+			{:else if it.onInput}
+				<input on:input={it.onInput} name={name} value={val} {disabled} />
+			{:else}
+				<input name={name} value={val} {disabled} />
+			{/if}
+		{/if}
+		</div>
 				{/each}
 	</div>
 	<div class="foot">
@@ -61,11 +78,19 @@ console.log('attributes', width, attr);
 <style>
 .PopupWindow {
     background-color: #FFFFFF;
-	width: calc(100% - 8px);
+	/*width: calc(100% - 8px);*/
+	
     height: calc(100% - 8px);
 
     padding: 4px;
     font-size: 12px;
+}
+
+.PopupWindow :global(.fill-available) {
+    width: -moz-available;
+	width: -webkit-fill-available;
+	width: fill-available;
+	text-align: center;
 }
 .PopupWindow .header {
     font-weight: bold;
@@ -85,13 +110,24 @@ console.log('attributes', width, attr);
   /*  height: 400px;*/
     overflow-y: auto;
 }
+.PopupWindow .body .line {
+    display: flex;
+    align-items: center;
+    border: 1px solid #dddddd;
+    padding: 4px;
+}
+.PopupWindow .body .line label {
+    width: 140px;
+    display: inline-flex;
+    white-space: break-spaces;
+}
 .PopupWindow .foot {
     text-align: center;
     margin-top: 4px;
 }
 
 .PopupWindow input {
-    width: calc(100% - 16px);
+ /*   width: calc(100% - 16px);*/
     border: 1px solid #AFC0D5;
 	outline: none;
 }

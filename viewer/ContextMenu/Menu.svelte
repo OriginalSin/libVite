@@ -9,8 +9,7 @@
 	export let data;
 // console.log('item', data);
 	
-	let x;
-	let y;
+	let map = L.gmx.gmxMap.leafletMap, x, y;
 	// whenever x and y is changed, restrict box to be within bounds
 	$: (() => {
 		if (!menuEl) return;
@@ -29,7 +28,6 @@
 		// }
 	// });
 	
-	let map = L.gmx.gmxMap.leafletMap;
 	let items;
 	let menuEl;
 	function onPageClick(e) {
@@ -85,6 +83,7 @@ console.log('selOp', it, it.cmd);
 						break;
 					case 'MapOpen':
 						map._MapOpen(data);
+		items = undefined;
 						break;
 				}
 			}

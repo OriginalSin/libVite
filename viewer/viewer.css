@@ -1,3 +1,10 @@
+:root {
+    --headerHeight: 45px;
+    --leftMenuOn: 40px;
+    --leftMenuOpen: 400px;
+}
+
+
 body > .all > .header {
     white-space: nowrap;
     overflow: hidden;
